@@ -1,20 +1,38 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies, headers } from 'next/headers'
 import {
-  DEBUG_AUTH_TOKEN,
-  DEBUG_USER_ID,
   SUPABASE_URL,
   SUPABASE_ANON_KEY,
   SUPABASE_SERVICE_ROLE_KEY,
 } from '@/shared/config'
 import { logger } from '@/shared/lib/logger'
 
+function getSupabaseUrl() {
+  return process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_URL || ''
+}
+
+function getSupabaseAnonKey() {
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY || ''
+}
+
+function getSupabaseServiceRoleKey() {
+  return process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_SERVICE_ROLE_KEY || ''
+}
+
+function getDebugAuthToken() {
+  return process.env.DEBUG_AUTH_TOKEN || ''
+}
+
+function getDebugUserId() {
+  return process.env.DEBUG_USER_ID || ''
+}
+
 export async function createClient() {
   const cookieStore = await cookies()
 
   return createServerClient(
-    SUPABASE_URL!,
-    SUPABASE_ANON_KEY!,
+    getSupabaseUrl(),
+    getSupabaseAnonKey(),
     {
       cookies: {
         getAll() {
@@ -35,16 +53,20 @@ export async function createClient() {
 export async function createClientWithDebug() {
   const isDev = process.env.NODE_ENV !== 'production'
   const headersList = await headers()
-  const isDebug = isDev && !!DEBUG_AUTH_TOKEN && headersList.get('x-debug-token') === DEBUG_AUTH_TOKEN
+  const debugToken = getDebugAuthToken()
+  const debugUserId = getDebugUserId()
+  const serviceRoleKey = getSupabaseServiceRoleKey()
+  const anonKey = getSupabaseAnonKey()
+  const isDebug = isDev && !!debugToken && headersList.get('x-debug-token') === debugToken
 
   if (isDebug) {
-    if (!SUPABASE_SERVICE_ROLE_KEY) {
+    if (!serviceRoleKey) {
       logger.warn('shared/auth/server', 'SUPABASE_SERVICE_ROLE_KEY not set, debug mode will use anon key')
     }
 
     const supabase = createServerClient(
-      SUPABASE_URL!,
-      SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY!,
+      getSupabaseUrl(),
+      serviceRoleKey || anonKey,
       {
         cookies: {
           getAll: () => [],
@@ -56,7 +78,7 @@ export async function createClientWithDebug() {
     return {
       supabase,
       user: {
-        id: DEBUG_USER_ID || 'debug-user',
+        id: debugUserId || 'debug-user',
         email: 'debug@example.com',
       },
     }
@@ -69,8 +91,8 @@ export async function createClientWithDebug() {
 
 export function createServiceClient() {
   return createServerClient(
-    SUPABASE_URL!,
-    SUPABASE_SERVICE_ROLE_KEY!,
+    getSupabaseUrl(),
+    getSupabaseServiceRoleKey(),
     {
       cookies: {
         getAll: () => [],

@@ -5,8 +5,11 @@ import { DesktopNav } from './desktop-nav'
 // Mock lucide-react icons
 vi.mock('lucide-react', () => ({
   LayoutDashboard: () => <div data-testid="dashboard-icon" />,
+  FileText: () => <div data-testid="filetext-icon" />,
   FileUp: () => <div data-testid="fileup-icon" />,
+  Globe: () => <div data-testid="globe-icon" />,
   History: () => <div data-testid="history-icon" />,
+  MessageSquare: () => <div data-testid="messagesquare-icon" />,
   CreditCard: () => <div data-testid="creditcard-icon" />,
   Settings: () => <div data-testid="settings-icon" />,
 }))

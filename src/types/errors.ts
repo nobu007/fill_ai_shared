@@ -28,7 +28,7 @@ export const ERROR_MESSAGES = {
   insufficientCredits: 'クレジットが不足しています',
 
   // Proofread / WordPress
-  contentRequired: 'Content is required',
+  contentRequired: '本文が必要です',
   contentTooLong: (max: number) => `本文は${max.toLocaleString()}文字以内にしてください`,
   contentTooShort: (min: number) => `本文は${min}文字以上で入力してください`,
   tokenExpired: 'トークンの有効期限が切れました。接続情報を再設定してください。',

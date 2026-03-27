@@ -95,15 +95,15 @@ describe('ERROR_MESSAGES', () => {
     })
   })
 
-  it('should NOT have dead proof_ai error messages', () => {
-    const deadKeys = [
+  it('should include proof-ai shared error messages', () => {
+    const proofKeys = [
       'contentRequired', 'contentTooLong', 'contentTooShort',
       'tokenExpired', 'wpAuthFailed', 'wpApiError', 'wpFetchFailed',
       'sessionSaveFailed', 'wpUpdateFailed', 'wpPostSaveFailed',
       'siteNotFound', 'postNotFound', 'batchLimit', 'siteInfoNotFound',
     ]
-    deadKeys.forEach((key) => {
-      expect(Object.keys(ERROR_MESSAGES)).not.toContain(key)
+    proofKeys.forEach((key) => {
+      expect(Object.keys(ERROR_MESSAGES)).toContain(key)
     })
   })
 
@@ -127,6 +127,7 @@ describe('ERROR_MESSAGES', () => {
     expect(ERROR_MESSAGES.notFound).toBe('リソースが見つかりません')
     expect(ERROR_MESSAGES.insufficientCredits).toBe('クレジットが不足しています')
     expect(ERROR_MESSAGES.internalError).toBe('内部エラーが発生しました')
+    expect(ERROR_MESSAGES.contentRequired).toBe('本文が必要です')
     // Validation messages
     expect(ERROR_MESSAGES.requiredField).toBe('必須項目が入力されていません')
     expect(ERROR_MESSAGES.invalidEmail).toBe('無効なメールアドレス形式です')
