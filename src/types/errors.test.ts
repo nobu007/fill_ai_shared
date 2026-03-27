@@ -95,15 +95,17 @@ describe('ERROR_MESSAGES', () => {
     })
   })
 
-  it('should include proof-ai shared error messages', () => {
-    const proofKeys = [
+  it('should include fill_ai specific error messages (no proof_ai remnants)', () => {
+    // Phase 3 構造分離完了: proof_ai由来看削除済み
+    const removedKeys = [
       'contentRequired', 'contentTooLong', 'contentTooShort',
       'tokenExpired', 'wpAuthFailed', 'wpApiError', 'wpFetchFailed',
       'sessionSaveFailed', 'wpUpdateFailed', 'wpPostSaveFailed',
       'siteNotFound', 'postNotFound', 'batchLimit', 'siteInfoNotFound',
+      'promptRequired', 'invalidModelName',
     ]
-    proofKeys.forEach((key) => {
-      expect(Object.keys(ERROR_MESSAGES)).toContain(key)
+    removedKeys.forEach((key) => {
+      expect(Object.keys(ERROR_MESSAGES)).not.toContain(key)
     })
   })
 
@@ -127,7 +129,6 @@ describe('ERROR_MESSAGES', () => {
     expect(ERROR_MESSAGES.notFound).toBe('リソースが見つかりません')
     expect(ERROR_MESSAGES.insufficientCredits).toBe('クレジットが不足しています')
     expect(ERROR_MESSAGES.internalError).toBe('内部エラーが発生しました')
-    expect(ERROR_MESSAGES.contentRequired).toBe('本文が必要です')
     // Validation messages
     expect(ERROR_MESSAGES.requiredField).toBe('必須項目が入力されていません')
     expect(ERROR_MESSAGES.invalidEmail).toBe('無効なメールアドレス形式です')
@@ -145,8 +146,6 @@ describe('ERROR_MESSAGES', () => {
     expect(ERROR_MESSAGES.pdfOnly).toBe('PDFファイルのみ対応しています')
     expect(ERROR_MESSAGES.emptyUserData).toBe('ユーザーデータが空です。少なくとも1つのデータを入力してください。')
     expect(ERROR_MESSAGES.invalidMappings).toBe('マッピングの形式が不正です')
-    expect(ERROR_MESSAGES.promptRequired).toBe('プロンプトが必要です')
-    expect(ERROR_MESSAGES.invalidModelName).toBe('無効なモデル名です')
     // Function messages
     expect(typeof ERROR_MESSAGES.pdfTooLarge).toBe('function')
     expect(ERROR_MESSAGES.pdfTooLarge(10)).toBe('PDFファイルは10MB以内にしてください')
