@@ -1,14 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { APP_VARIANT, SUPABASE_ANON_KEY, SUPABASE_URL } from '@/shared/config'
+import { APP_VARIANT } from '@/shared/config'
 import { logger } from '@/shared/lib/logger'
 
 function getSupabaseUrl() {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_URL || ''
+  return process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 }
 
 function getSupabaseAnonKey() {
-  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY || ''
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 }
 
 function getDebugAuthToken() {

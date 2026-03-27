@@ -1,22 +1,17 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies, headers } from 'next/headers'
-import {
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY,
-  SUPABASE_SERVICE_ROLE_KEY,
-} from '@/shared/config'
 import { logger } from '@/shared/lib/logger'
 
 function getSupabaseUrl() {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_URL || ''
+  return process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 }
 
 function getSupabaseAnonKey() {
-  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || SUPABASE_ANON_KEY || ''
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 }
 
 function getSupabaseServiceRoleKey() {
-  return process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_SERVICE_ROLE_KEY || ''
+  return process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 }
 
 function getDebugAuthToken() {
