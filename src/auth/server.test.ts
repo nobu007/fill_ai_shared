@@ -75,6 +75,50 @@ describe('createClient', () => {
     )
   })
 
+  it('getAll callback delegates to cookieStore.getAll', async () => {
+    const testCookies = [
+      { name: 'sb-access-token', value: 'token123' },
+      { name: 'sb-refresh-token', value: 'refresh456' },
+    ]
+    const mockCookieStore = {
+      getAll: mockGetAll.mockReturnValue(testCookies),
+      set: vi.fn(),
+    }
+    mockCookies.mockResolvedValue(mockCookieStore)
+
+    const mockSupabaseClient = {
+      auth: { getUser: mockGetUser },
+    }
+    mockCreateServerClient.mockReturnValue(mockSupabaseClient)
+
+    const { createClient } = await import('./server')
+    await createClient()
+
+    // Extract and invoke the getAll callback to cover line 34
+    const getAllCallback = mockCreateServerClient.mock.calls[0][2].cookies.getAll
+    expect(getAllCallback()).toEqual(testCookies)
+    expect(mockGetAll).toHaveBeenCalled()
+  })
+
+  it('getAll callback returns empty array when no cookies', async () => {
+    const mockCookieStore = {
+      getAll: mockGetAll.mockReturnValue([]),
+      set: vi.fn(),
+    }
+    mockCookies.mockResolvedValue(mockCookieStore)
+
+    const mockSupabaseClient = {
+      auth: { getUser: mockGetUser },
+    }
+    mockCreateServerClient.mockReturnValue(mockSupabaseClient)
+
+    const { createClient } = await import('./server')
+    await createClient()
+
+    const getAllCallback = mockCreateServerClient.mock.calls[0][2].cookies.getAll
+    expect(getAllCallback()).toEqual([])
+  })
+
   it('handles cookie setAll errors gracefully', async () => {
     const mockCookieStore = {
       getAll: mockGetAll.mockReturnValue([]),
@@ -133,6 +177,39 @@ describe('createClientWithDebug', () => {
           }),
         })
       )
+    })
+
+    it('debug mode getAll callback returns empty array (no cookie access)', async () => {
+      const mockHeadersList = new Headers({
+        'x-debug-token': 'test-debug-token',
+      })
+      mockHeaders.mockResolvedValue(mockHeadersList)
+
+      const mockSupabaseClient = {}
+      mockCreateServerClient.mockReturnValue(mockSupabaseClient)
+
+      const { createClientWithDebug } = await import('./server')
+      const { supabase: _supabase, user: _user } = await createClientWithDebug()
+
+      // Extract and invoke the getAll callback to cover line 67
+      const getAllCallback = mockCreateServerClient.mock.calls[0][2].cookies.getAll
+      expect(getAllCallback()).toEqual([])
+    })
+
+    it('debug mode setAll callback is a no-op', async () => {
+      const mockHeadersList = new Headers({
+        'x-debug-token': 'test-debug-token',
+      })
+      mockHeaders.mockResolvedValue(mockHeadersList)
+
+      const mockSupabaseClient = {}
+      mockCreateServerClient.mockReturnValue(mockSupabaseClient)
+
+      const { createClientWithDebug } = await import('./server')
+      const { supabase: _supabase, user: _user } = await createClientWithDebug()
+
+      const setAllCallback = mockCreateServerClient.mock.calls[0][2].cookies.setAll
+      expect(() => setAllCallback([{ name: 'test', value: 'val' }])).not.toThrow()
     })
 
     it('uses default debug user id when DEBUG_USER_ID is not set', async () => {
