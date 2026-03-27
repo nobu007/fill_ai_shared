@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { APP_VARIANT } from '@/shared/config'
+import { APP_VARIANT, AUTH_PUBLIC_PATHS } from '@/shared/config'
 import { logger } from '@/shared/lib/logger'
 
 function getSupabaseUrl() {
@@ -61,8 +61,9 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    const publicPaths = ['/', '/auth', '/api', '/terms', '/privacy', '/commercial-law', '/contact', '/invite']
-    const isPublic = publicPaths.some(p => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(p + '/'))
+    const isPublic = AUTH_PUBLIC_PATHS.some(
+      p => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(p + '/')
+    )
     if (!isPublic) {
       const url = request.nextUrl.clone()
       if (getAppVariant() === 'proof') {
