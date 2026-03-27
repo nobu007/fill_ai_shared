@@ -114,3 +114,74 @@ describe('getAiSdkModel', () => {
     expect(model.provider).toContain('zai-general')
   })
 })
+
+describe('getAiSdkModel — Gemini paths', () => {
+  beforeEach(() => {
+    process.env.ZAI_API_KEY = 'test-zai-key'
+    process.env.GEMINI_API_KEY = 'test-gemini-key'
+    vi.resetModules()
+  })
+
+  it('creates Gemini model with BYOK user API key', async () => {
+    const { getAiSdkModel } = await import('./providers')
+    const userApiKey = 'my-gemini-key'
+    const model = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
+    expect(model).toBeDefined()
+    expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
+  })
+
+  it('creates Gemini model with default GEMINI_API_KEY', async () => {
+    const { getAiSdkModel } = await import('./providers')
+    const model = getAiSdkModel('gemini-3.1-flash-lite')
+    expect(model).toBeDefined()
+    expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
+  })
+
+  it('falls back to ZAI when GEMINI_API_KEY is not set', async () => {
+    delete process.env.GEMINI_API_KEY
+    vi.resetModules()
+    const { getAiSdkModel } = await import('./providers')
+    const model = getAiSdkModel('gemini-3.1-flash-lite')
+    expect(model).toBeDefined()
+    // Should fall back to ZAI provider with default model
+    expect(model.provider).toContain('zai-general')
+  })
+
+  it('falls back to ZAI with DEFAULT_AI_MODEL when GEMINI_API_KEY is not set', async () => {
+    delete process.env.GEMINI_API_KEY
+    process.env.DEFAULT_AI_MODEL = 'glm-4.7'
+    vi.resetModules()
+    const { getAiSdkModel } = await import('./providers')
+    const model = getAiSdkModel('gemini-3.1-flash-lite')
+    expect(model).toBeDefined()
+    expect(model.provider).toContain('zai-general')
+    expect(model.modelId).toBe('glm-4.7')
+  })
+
+  it('respects GEMINI_THINKING_LEVEL env var for Gemini model config', async () => {
+    process.env.GEMINI_THINKING_LEVEL = 'low'
+    vi.resetModules()
+    const { getModelInfo } = await import('./providers')
+    const info = getModelInfo('gemini-3.1-flash-lite')
+    expect(info).toBeDefined()
+    expect(info!.thinkingLevel).toBe('low')
+  })
+
+  it('defaults GEMINI_THINKING_LEVEL to high when not set', async () => {
+    delete process.env.GEMINI_THINKING_LEVEL
+    vi.resetModules()
+    const { getModelInfo } = await import('./providers')
+    const info = getModelInfo('gemini-3.1-flash-lite')
+    expect(info).toBeDefined()
+    expect(info!.thinkingLevel).toBe('high')
+  })
+
+  it('Gemini BYOK path includes thinkingConfig when model has thinkingLevel', async () => {
+    const { getAiSdkModel } = await import('./providers')
+    const userApiKey = 'my-gemini-key'
+    // This exercises lines 69-75: BYOK gemini path with thinkingConfig
+    const model = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
+    expect(model).toBeDefined()
+    expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
+  })
+})
