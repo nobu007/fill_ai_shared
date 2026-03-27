@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { encrypt, decrypt, isEncrypted } from '@/shared/lib/crypto'
+import { encrypt, decrypt, isEncrypted } from './crypto'
 
 const TEST_KEY = 'a'.repeat(64) // 32 bytes hex
 

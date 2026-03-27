@@ -5,8 +5,8 @@
  * これにより ENCRYPTION_KEY 設定前後のデータを共存させられる。
  */
 
-import { encrypt, decrypt, isEncrypted, getEncryptionKey } from '@/shared/lib/crypto'
-import { logger } from '@/shared/lib/logger'
+import { encrypt, decrypt, isEncrypted, getEncryptionKey } from './crypto'
+import { logger } from './logger'
 
 /**
  * 値を復号化する（暗号化されていなければそのまま返す）

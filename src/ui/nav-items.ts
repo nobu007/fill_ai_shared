@@ -9,7 +9,7 @@ import {
   Settings,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { APP_VARIANT } from '@/shared/config'
+import { APP_VARIANT } from '../config'
 
 export interface NavItem {
   href: string

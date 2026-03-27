@@ -5,7 +5,7 @@
  * 暗号化して保存するためのモジュール。
  *
  * 使い方:
- *   import { encrypt, decrypt, getEncryptionKey } from '@/shared/lib/crypto'
+ *   import { encrypt, decrypt, getEncryptionKey } from './crypto'
  *   const key = getEncryptionKey()
  *   const encrypted = encrypt(plaintext, key)
  *   const decrypted = decrypt(encrypted, key)
@@ -16,7 +16,7 @@
  */
 
 import { createCipheriv, createDecipheriv, randomBytes } from 'crypto'
-import { ENCRYPTION_KEY } from '@/shared/config'
+import { ENCRYPTION_KEY } from '../config'
 
 const ALGORITHM = 'aes-256-gcm'
 const IV_LENGTH = 12

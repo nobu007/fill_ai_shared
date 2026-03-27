@@ -1,4 +1,4 @@
-import { APP_NAME, APP_DESCRIPTION, APP_ICON } from '@/shared/config'
+import { APP_NAME, APP_DESCRIPTION, APP_ICON } from '../config'
 import { SidebarUser } from './sidebar-user'
 import { DesktopNav } from './desktop-nav'
 import { SidebarWrapper } from './sidebar-wrapper'

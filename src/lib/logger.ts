@@ -14,7 +14,7 @@
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
-import { LOG_LEVEL as CONFIG_LOG_LEVEL } from '@/shared/config'
+import { LOG_LEVEL as CONFIG_LOG_LEVEL } from '../config'
 
 const LOG_LEVEL: LogLevel = CONFIG_LOG_LEVEL as LogLevel
 

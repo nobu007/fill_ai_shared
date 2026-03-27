@@ -1,6 +1,6 @@
 import fs from 'fs'
 import path from 'path'
-import { logger } from '@/shared/lib/logger'
+import { logger } from '../lib/logger'
 
 export interface PromptEntry {
   key: string

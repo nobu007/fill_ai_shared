@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { loadPromptCatalog, fillTemplate, buildAxesSection } from '@/shared/llm/prompt-catalog'
+import { loadPromptCatalog, fillTemplate, buildAxesSection } from './prompt-catalog'
 
 describe('loadPromptCatalog', () => {
   it('loads catalog from default path', () => {

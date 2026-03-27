@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sanitizeProofreadHtml } from '@/shared/lib/sanitize'
+import { sanitizeProofreadHtml } from './sanitize'
 
 describe('sanitize', () => {
   describe('sanitizeProofreadHtml', () => {

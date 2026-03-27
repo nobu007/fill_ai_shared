@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { APP_VARIANT, AUTH_PUBLIC_PATHS } from '@/shared/config'
-import { logger } from '@/shared/lib/logger'
+import { APP_VARIANT, AUTH_PUBLIC_PATHS } from '../config'
+import { logger } from '../lib/logger'
 
 function getSupabaseUrl() {
   return process.env.NEXT_PUBLIC_SUPABASE_URL || ''

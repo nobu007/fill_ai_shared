@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateTotalScore, calculateAxisScores } from '@/shared/lib/score'
+import { calculateTotalScore, calculateAxisScores } from './score'
 
 describe('score', () => {
   describe('calculateTotalScore', () => {

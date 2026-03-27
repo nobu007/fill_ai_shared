@@ -1,11 +1,11 @@
 'use client'
 
-import { APP_NAME, APP_ICON } from '@/shared/config'
+import { APP_NAME, APP_ICON } from '../config'
 
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/shared/auth/client'
+import { createClient } from '../auth/client'
 import { LogOut, Menu, X } from 'lucide-react'
 import { navItems, isActive } from './nav-items'
 
