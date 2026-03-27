@@ -45,7 +45,7 @@ export const ERROR_MESSAGES = {
   pdfTooManyPages: (maxPages: number, actual: number) => `PDFは${maxPages}ページ以内にしてください (${actual}ページ)`,
   emptyUserData: 'ユーザーデータが空です。少なくとも1つのデータを入力してください。',
   invalidMappings: 'マッピングの形式が不正です',
-  promptRequired: 'プロンプトが必要です',
+  extractionDataRequired: '抽出データが必要です',
 
   // User data / invitations / keys
   labelRequired: 'ラベルが必要です',
