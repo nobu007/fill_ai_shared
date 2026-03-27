@@ -1,18 +1,13 @@
 /**
  * Shared error response type used across all API routes.
- *
- * Every API route handler should return errors in this format.
- * Dead proof_ai/WordPress error codes were removed in Phase 3 cleanup (2026-03-26).
  */
 
-/** Standard error response body */
 export interface ApiErrorResponse {
   error: string
   code?: string
   debug?: string
 }
 
-/** Helper to create a typed error response for Next.js route handlers */
 export function errorResponse(
   message: string,
   status: number,
@@ -25,13 +20,30 @@ export function errorResponse(
   }
 }
 
-/** Common error messages */
 export const ERROR_MESSAGES = {
   unauthorized: '認証されていません',
   forbidden: 'アクセス権限がありません',
   notFound: 'リソースが見つかりません',
-  insufficientCredits: 'クレジットが不足しています',
   internalError: '内部エラーが発生しました',
+  insufficientCredits: 'クレジットが不足しています',
+
+  // Proofread / WordPress
+  contentRequired: 'Content is required',
+  contentTooLong: (max: number) => `本文は${max.toLocaleString()}文字以内にしてください`,
+  contentTooShort: (min: number) => `本文は${min}文字以上で入力してください`,
+  tokenExpired: 'トークンの有効期限が切れました。接続情報を再設定してください。',
+  wpAuthFailed: 'WordPress認証に失敗しました。認証情報を確認してください。',
+  wpApiError: (status: number) => `WordPress API エラー (${status})`,
+  wpFetchFailed: (msg: string) => `記事の取得に失敗しました: ${msg}`,
+  sessionSaveFailed: 'セッションの保存に失敗しました',
+  wpUpdateFailed: (status: number) => `WordPressの更新に失敗しました (${status})`,
+  wpPostSaveFailed: '記事の保存に失敗しました',
+  siteNotFound: 'サイトが見つかりません',
+  postNotFound: '記事が見つかりません',
+  batchLimit: (max: number) => `一度に${max}件までです`,
+  siteInfoNotFound: 'サイト情報が見つかりません',
+
+  // Generic validation / forms
   validation: '入力内容が正しくありません',
   invalidEmail: '無効なメールアドレス形式です',
   invalidCategory: '無効なカテゴリです',
@@ -41,7 +53,7 @@ export const ERROR_MESSAGES = {
   webhookNotConfigured: 'Webhook設定が見つかりません',
   webhookSignatureFailed: '署名の検証に失敗しました',
 
-  // Fill / PDF routes (Constitution §2.4 centralization)
+  // Fill / PDF
   invalidModel: '無効なモデル名です',
   pdfRequired: 'PDFファイルが必要です',
   pdfOnly: 'PDFファイルのみ対応しています',
@@ -52,14 +64,12 @@ export const ERROR_MESSAGES = {
   promptRequired: 'プロンプトが必要です',
   invalidModelName: '無効なモデル名です',
 
-  // User data routes
+  // User data / invitations / keys
   labelRequired: 'ラベルが必要です',
   valueRequired: '値が必要です',
   idRequired: 'IDが必要です',
   updateFailed: '更新に失敗しました',
   deleteFailed: '削除に失敗しました',
-
-  // Invitation routes
   invitationsFetchFailed: '招待コードの取得に失敗しました',
   invitationsCreateFailed: '招待コードの作成に失敗しました',
   invitationsDeleteFailed: '招待コードの削除に失敗しました',
@@ -69,8 +79,6 @@ export const ERROR_MESSAGES = {
   invitationEmailMismatch: 'この招待コードは指定されたメールアドレスのみ使用できます',
   invalidMaxUses: 'max_usesは1〜1000の整数で指定してください',
   invitationCodeRequired: '招待コードが必要です',
-
-  // API keys routes
   providerAndKeyRequired: 'プロバイダーとAPIキーは必須です',
   byokProOnly: 'BYOKはプロ契約のお客様のみ利用可能です',
   apiKeyVerificationFailed: 'APIキーの検証に失敗しました。正しいキーを入力してください。',

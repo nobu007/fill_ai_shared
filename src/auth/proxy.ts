@@ -1,5 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { APP_VARIANT, DEBUG_AUTH_TOKEN, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL } from '@/shared/config'
+import { logger } from '@/shared/lib/logger'
 
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -7,8 +9,8 @@ export async function proxy(request: NextRequest) {
   })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    SUPABASE_URL!,
+    SUPABASE_ANON_KEY!,
     {
       cookies: {
         getAll() {
@@ -27,10 +29,9 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  // デバッグモード: X-Debug-Token ヘッダーがある場合は認証をスキップ（開発環境のみ）
   const isDev = process.env.NODE_ENV !== 'production'
-  const debugToken = isDev ? process.env.DEBUG_AUTH_TOKEN : null
-  if (isDev && debugToken && request.headers.get('x-debug-token') === debugToken) {
+  if (isDev && DEBUG_AUTH_TOKEN && request.headers.get('x-debug-token') === DEBUG_AUTH_TOKEN && !!SUPABASE_SERVICE_ROLE_KEY) {
+    logger.info('shared/auth/proxy', 'DEBUG_AUTH bypass activated', { path: request.nextUrl.pathname })
     return supabaseResponse
   }
 
@@ -38,18 +39,21 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // 未認証ユーザーはLP（/）とauth・apiは通す、それ以外はauthへ
   if (!user) {
     const publicPaths = ['/', '/auth', '/api', '/terms', '/privacy', '/commercial-law', '/contact', '/invite']
     const isPublic = publicPaths.some(p => request.nextUrl.pathname === p || request.nextUrl.pathname.startsWith(p + '/'))
     if (!isPublic) {
       const url = request.nextUrl.clone()
-      url.pathname = '/'
+      if (APP_VARIANT === 'proof') {
+        url.pathname = '/auth'
+        url.searchParams.set('redirect', request.nextUrl.pathname)
+      } else {
+        url.pathname = '/'
+      }
       return NextResponse.redirect(url)
     }
   }
 
-  // 認証済みユーザーがauthページにいる場合はダッシュボードへ
   if (user && request.nextUrl.pathname === '/auth') {
     const url = request.nextUrl.clone()
     url.pathname = '/'
