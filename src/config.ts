@@ -35,6 +35,7 @@ export const LLM_RETRY_DELAY_MS = Number(process.env.LLM_RETRY_DELAY_MS || 5000)
 // ─── OpenAI/Gemini/Anthropic Key Validation ────────────────
 export const OPENAI_MODELS_ENDPOINT = process.env.OPENAI_MODELS_ENDPOINT || 'https://api.openai.com/v1/models'
 export const GEMINI_MODELS_ENDPOINT = process.env.GEMINI_MODELS_ENDPOINT || 'https://generativelanguage.googleapis.com/v1beta/models'
+export const API_KEY_VALIDATION_TIMEOUT_MS = Number(process.env.API_KEY_VALIDATION_TIMEOUT_MS || 10_000)
 
 
 // ─── Branding / App Variant ────────────────────────────────
@@ -145,6 +146,7 @@ export const OPENROUTER_CHAT_COMPLETIONS_URL = `${OPENROUTER_API_URL}/chat/compl
 export const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'google/gemini-2.0-flash-001'
 export const OPENROUTER_TEMPERATURE = Number(process.env.OPENROUTER_TEMPERATURE || 0.3)
 export const OPENROUTER_MAX_TOKENS = Number(process.env.OPENROUTER_MAX_TOKENS || 1000)
+export const OPENROUTER_TIMEOUT_MS = Number(process.env.OPENROUTER_TIMEOUT_MS || 15_000)
 
 // ─── Contact / Validation ──────────────────────────────────
 export const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
