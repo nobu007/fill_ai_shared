@@ -113,4 +113,29 @@ export const ERROR_MESSAGES = {
   apiKeyVerificationFailed: 'APIキーの検証に失敗しました。正しいキーを入力してください。',
   saveFailed: '保存に失敗しました',
   invalidProvider: '無効なプロバイダーです',
+
+  // --- Settings route messages ---
+  settingsFetchFailed: '設定の取得に失敗しました',
+
+  // --- Config route messages ---
+  configLoadFailed: '設定の読み込みに失敗しました',
+
+  // --- Contact route messages ---
+  allFieldsRequired: 'すべての項目は必須です',
+  contactSaveFailed: 'お問い合わせの保存に失敗しました',
+
+  // --- Prompts route messages ---
+  promptsFetchFailed: 'プロンプトの取得に失敗しました',
+  promptSaveFailed: 'プロンプトの保存に失敗しました',
+  promptUpdateFailed: 'プロンプトの更新に失敗しました',
+  promptDeleteFailed: 'プロンプトの削除に失敗しました',
+  axisIdAndPromptRequired: 'axis_idとsystem_promptは必須です',
+  systemPromptRequired: 'system_promptは必須です',
+
+  // --- WP route messages ---
+  wpPostsDeleteFailed: '関連記事の削除に失敗しました',
+  wpSettingsDeleteFailed: 'サイト設定の削除に失敗しました',
+  wpSiteDeleteFailed: 'サイトの削除に失敗しました',
+  siteAccessDenied: 'サイトが見つからないか、アクセス権限がありません',
+  invalidPageParameter: '無効なページパラメータです',
 } as const
