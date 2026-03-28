@@ -195,6 +195,19 @@ export const OPENROUTER_TEMPERATURE = Number(process.env.OPENROUTER_TEMPERATURE 
 export const OPENROUTER_MAX_TOKENS = Number(process.env.OPENROUTER_MAX_TOKENS || 1000)
 export const OPENROUTER_TIMEOUT_MS = Number(process.env.OPENROUTER_TIMEOUT_MS || 15_000)
 
+// ─── Blog Auto AI Sync Settings ───────────────────────────
+export const BLOG_AUTO_AI_SYNC_PER_PAGE = Number(process.env.BLOG_AUTO_AI_SYNC_PER_PAGE || 100)
+export const BLOG_AUTO_AI_MAX_OFFSET = Number(process.env.BLOG_AUTO_AI_MAX_OFFSET || 10_000)
+export const BLOG_AUTO_AI_FETCH_CONCURRENCY = Number(process.env.BLOG_AUTO_AI_FETCH_CONCURRENCY || 5)
+export const BLOG_AUTO_AI_DETAIL_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_DETAIL_TIMEOUT_MS || 30_000)
+export const BLOG_AUTO_AI_LIST_LIMIT = Number(process.env.BLOG_AUTO_AI_LIST_LIMIT || 50)
+
+// ─── Contact Enhance Rate Limits ───────────────────────────
+export const CONTACT_ENHANCE_RATE_LIMIT_MAX = Number(process.env.CONTACT_ENHANCE_RATE_LIMIT_MAX || 2)
+export const CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS = Number(process.env.CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS || 300_000)
+export const CONTACT_ENHANCE_CLEANUP_INTERVAL_MS = Number(process.env.CONTACT_ENHANCE_CLEANUP_INTERVAL_MS || 300_000)
+export const CONTACT_ENHANCE_DAILY_CAP_MAX = Number(process.env.CONTACT_ENHANCE_DAILY_CAP_MAX || 100)
+
 // ─── Contact / Validation ──────────────────────────────────
 export const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
 export const CONTACT_EMAIL_TO = process.env.CONTACT_EMAIL_TO || 'klvx01@gmail.com'
