@@ -1,6 +1,5 @@
-// Supabase generated types — fill_ai schema only.
-// Proof_ai tables (wp_sites, wp_posts, site_settings, proofreading_sessions, proofreading_issues)
-// were removed in Phase 3 structural separation (2026-03-25).
+// Supabase generated types mock
+// Replace with `npx supabase gen types` output after running migration
 
 export type Json =
   | string
@@ -41,6 +40,140 @@ export interface Database {
           updated_at?: string
         }
       }
+      wp_sites: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          url: string
+          site_type: 'wordpress' | 'blog_auto_ai'
+          wp_username: string
+          wp_app_password_encrypted: string
+          auth_type: 'app_password' | 'jwt'
+          jwt_token: string | null
+          api_key: string | null
+          last_synced_at: string | null
+          post_count: number
+          is_active: boolean
+          repair_backup: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          url: string
+          site_type?: 'wordpress' | 'blog_auto_ai'
+          wp_username: string
+          wp_app_password_encrypted: string
+          auth_type?: 'app_password' | 'jwt'
+          jwt_token?: string | null
+          api_key?: string | null
+          last_synced_at?: string | null
+          post_count?: number
+          is_active?: boolean
+          repair_backup?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string
+          url?: string
+          site_type?: 'wordpress' | 'blog_auto_ai'
+          wp_username?: string
+          wp_app_password_encrypted?: string
+          auth_type?: 'app_password' | 'jwt'
+          jwt_token?: string | null
+          api_key?: string | null
+          last_synced_at?: string | null
+          post_count?: number
+          is_active?: boolean
+          repair_backup?: Json | null
+          updated_at?: string
+        }
+      }
+      wp_posts: {
+        Row: {
+          id: string
+          site_id: string
+          wp_post_id: number
+          title: string
+          content: string
+          content_text: string
+          status: string
+          post_date: string | null
+          post_modified: string | null
+          wp_url: string | null
+          categories: string[]
+          last_fetched_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          site_id: string
+          wp_post_id: number
+          title: string
+          content: string
+          content_text: string
+          status?: string
+          post_date?: string | null
+          post_modified?: string | null
+          wp_url?: string | null
+          categories?: string[]
+          last_fetched_at?: string
+          created_at?: string
+        }
+        Update: {
+          title?: string
+          content?: string
+          content_text?: string
+          status?: string
+          post_date?: string | null
+          post_modified?: string | null
+          wp_url?: string | null
+          categories?: string[]
+          last_fetched_at?: string
+        }
+      }
+      site_settings: {
+        Row: {
+          id: string
+          user_id: string
+          site_name: string
+          target_keywords: string[]
+          categories: Json
+          tone_setting: 'desu_masu' | 'da_dearu'
+          strictness: 'normal' | 'strict' | 'ultra'
+          custom_rules: Json
+          ai_phrases: string[]
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          site_name: string
+          target_keywords?: string[]
+          categories?: Json
+          tone_setting?: 'desu_masu' | 'da_dearu'
+          strictness?: 'normal' | 'strict' | 'ultra'
+          custom_rules?: Json
+          ai_phrases?: string[]
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          site_name?: string
+          target_keywords?: string[]
+          categories?: Json
+          tone_setting?: 'desu_masu' | 'da_dearu'
+          strictness?: 'normal' | 'strict' | 'ultra'
+          custom_rules?: Json
+          ai_phrases?: string[]
+          updated_at?: string
+        }
+      }
       user_api_keys: {
         Row: {
           id: string
@@ -76,6 +209,120 @@ export interface Database {
           updated_at?: string
         }
       }
+      proofreading_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          post_id: string | null
+          pasted_title: string | null
+          pasted_content: string | null
+          axes: string[]
+          strictness: 'normal' | 'strict' | 'ultra'
+          total_score: number | null
+          readability_score: number | null
+          ai_tone_score: number | null
+          tone_score: number | null
+          seo_score: number | null
+          fact_score: number | null
+          structure_score: number | null
+          issue_count: number
+          fixed_count: number
+          input_tokens: number
+          output_tokens: number
+          model_used: string
+          status: 'in_progress' | 'completed' | 'failed'
+          review_status: 'pending' | 'approved' | 'rejected' | 'applied'
+          partial_results: Json | null
+          proofread_result: Json | null
+          created_at: string
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          post_id?: string | null
+          pasted_title?: string | null
+          pasted_content?: string | null
+          axes?: string[]
+          strictness?: 'normal' | 'strict' | 'ultra'
+          total_score?: number | null
+          readability_score?: number | null
+          ai_tone_score?: number | null
+          tone_score?: number | null
+          seo_score?: number | null
+          fact_score?: number | null
+          structure_score?: number | null
+          issue_count?: number
+          fixed_count?: number
+          input_tokens?: number
+          output_tokens?: number
+          model_used?: string
+          status?: 'in_progress' | 'completed' | 'failed'
+          review_status?: 'pending' | 'approved' | 'rejected' | 'applied'
+          partial_results?: Json | null
+          proofread_result?: Json | null
+          created_at?: string
+          completed_at?: string | null
+        }
+        Update: {
+          axes?: string[]
+          strictness?: 'normal' | 'strict' | 'ultra'
+          total_score?: number | null
+          readability_score?: number | null
+          ai_tone_score?: number | null
+          tone_score?: number | null
+          seo_score?: number | null
+          fact_score?: number | null
+          structure_score?: number | null
+          issue_count?: number
+          fixed_count?: number
+          input_tokens?: number
+          output_tokens?: number
+          model_used?: string
+          status?: 'in_progress' | 'completed' | 'failed'
+          review_status?: 'pending' | 'approved' | 'rejected' | 'applied'
+          partial_results?: Json | null
+          proofread_result?: Json | null
+          completed_at?: string | null
+        }
+      }
+      proofreading_issues: {
+        Row: {
+          id: string
+          session_id: string
+          axis: 'readability' | 'ai_tone' | 'tone' | 'seo' | 'fact' | 'structure'
+          issue_type: string
+          severity: 'info' | 'warning' | 'error'
+          line_number: number | null
+          char_start: number | null
+          char_end: number | null
+          original_text: string
+          suggested_text: string | null
+          reason: string
+          status: 'pending' | 'accepted' | 'rejected' | 'auto_fixed'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          axis: 'readability' | 'ai_tone' | 'tone' | 'seo' | 'fact' | 'structure'
+          issue_type: string
+          severity?: 'info' | 'warning' | 'error'
+          line_number?: number | null
+          char_start?: number | null
+          char_end?: number | null
+          original_text: string
+          suggested_text?: string | null
+          reason: string
+          status?: 'pending' | 'accepted' | 'rejected' | 'auto_fixed'
+          created_at?: string
+        }
+        Update: {
+          severity?: 'info' | 'warning' | 'error'
+          suggested_text?: string | null
+          status?: 'pending' | 'accepted' | 'rejected' | 'auto_fixed'
+        }
+      }
       credit_transactions: {
         Row: {
           id: string
@@ -100,141 +347,6 @@ export interface Database {
           action?: string
           reference_id?: string | null
           description?: string | null
-        }
-      }
-      user_data: {
-        Row: {
-          id: string
-          user_id: string
-          category: 'name' | 'name_kana' | 'birthday' | 'age' | 'gender' | 'phone' | 'email' | 'postal_code' | 'address' | 'address_kana' | 'company' | 'department' | 'job_title' | 'id_number' | 'date' | 'amount' | 'custom'
-          label: string
-          value: string
-          sort_order: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          category?: 'name' | 'name_kana' | 'birthday' | 'age' | 'gender' | 'phone' | 'email' | 'postal_code' | 'address' | 'address_kana' | 'company' | 'department' | 'job_title' | 'id_number' | 'date' | 'amount' | 'custom'
-          label: string
-          value: string
-          sort_order?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          category?: 'name' | 'name_kana' | 'birthday' | 'age' | 'gender' | 'phone' | 'email' | 'postal_code' | 'address' | 'address_kana' | 'company' | 'department' | 'job_title' | 'id_number' | 'date' | 'amount' | 'custom'
-          label?: string
-          value?: string
-          sort_order?: number
-          updated_at?: string
-        }
-      }
-      fill_sessions: {
-        Row: {
-          id: string
-          user_id: string
-          pdf_name: string
-          pdf_size_bytes: number
-          page_count: number
-          field_count: number
-          status: 'in_progress' | 'completed' | 'failed'
-          fields_filled: number
-          fields_unmapped: number
-          mappings: Json | null
-          model_used: string | null
-          error_message: string | null
-          created_at: string
-          completed_at: string | null
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          pdf_name: string
-          pdf_size_bytes?: number
-          page_count?: number
-          field_count?: number
-          status?: 'in_progress' | 'completed' | 'failed'
-          fields_filled?: number
-          fields_unmapped?: number
-          mappings?: Json | null
-          model_used?: string | null
-          error_message?: string | null
-          created_at?: string
-          completed_at?: string | null
-        }
-        Update: {
-          status?: 'in_progress' | 'completed' | 'failed'
-          fields_filled?: number
-          fields_unmapped?: number
-          mappings?: Json | null
-          model_used?: string | null
-          error_message?: string | null
-          completed_at?: string | null
-        }
-      }
-      contact_submissions: {
-        Row: {
-          id: string
-          name: string
-          email: string
-          category: string
-          message: string
-          user_id: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          email: string
-          category: string
-          message: string
-          user_id?: string | null
-          created_at?: string
-        }
-        Update: {
-          name?: string
-          email?: string
-          category?: string
-          message?: string
-        }
-      }
-      beta_invitations: {
-        Row: {
-          id: string
-          code: string
-          email: string | null
-          max_uses: number
-          used_count: number
-          is_active: boolean
-          note: string | null
-          created_by: string | null
-          used_by: string | null
-          used_at: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          code: string
-          email?: string | null
-          max_uses?: number
-          used_count?: number
-          is_active?: boolean
-          note?: string | null
-          created_by?: string | null
-          used_by?: string | null
-          used_at?: string | null
-          created_at?: string
-        }
-        Update: {
-          email?: string | null
-          max_uses?: number
-          used_count?: number
-          is_active?: boolean
-          note?: string | null
-          used_by?: string | null
-          used_at?: string | null
         }
       }
     }
