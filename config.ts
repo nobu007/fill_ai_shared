@@ -267,11 +267,20 @@ export const AUTO_APPLY_THRESHOLD = Number(process.env.AUTO_APPLY_THRESHOLD || 0
 
 // ─── Proof AI — JWT / WP settings ─────────────────────────
 export const JWT_TOKEN_MARGIN_SECONDS = Number(process.env.JWT_TOKEN_MARGIN_SECONDS || 60)
+export const JWT_SYNC_OVERLAP_MS = Number(process.env.JWT_SYNC_OVERLAP_MS || 60000)
 export const WP_API_TIMEOUT_MS = Number(process.env.WP_API_TIMEOUT_MS || 15_000)
 export const WP_JWT_VALIDATE_ENDPOINT = process.env.WP_JWT_VALIDATE_ENDPOINT || '/wp-json/jwt-auth/v1/token/validate'
+export const WP_JWT_ENDPOINT = process.env.WP_JWT_ENDPOINT || '/wp-json/jwt-auth/v2/token'
 export const WP_MAX_PER_PAGE = Number(process.env.WP_MAX_PER_PAGE || 100)
 export const WP_POSTS_LIST_LIMIT = Number(process.env.WP_POSTS_LIST_LIMIT || 50)
 export const WP_SYNC_PER_PAGE = Number(process.env.WP_SYNC_PER_PAGE || 100)
+export const WP_USERS_ME_ENDPOINT = process.env.WP_USERS_ME_ENDPOINT || '/wp-json/wp/v2/users/me'
+export const WP_SITES_ENDPOINT = process.env.WP_SITES_ENDPOINT || '/wp-json/wp/v2/sites'
+export const WP_DEFAULT_PER_PAGE = Number(process.env.WP_DEFAULT_PER_PAGE || 10)
+export const WP_DEFAULT_ORDERBY = process.env.WP_DEFAULT_ORDERBY || 'date'
+export const WP_DEFAULT_ORDER = process.env.WP_DEFAULT_ORDER || 'desc'
+export const WP_DEFAULT_FIELDS = process.env.WP_DEFAULT_FIELDS || 'id,title,content,status,date,link,categories'
+export const WP_DEFAULT_STATUS = process.env.WP_DEFAULT_STATUS || 'publish'
 
 // ─── Proof AI — LLM Fallback ──────────────────────────────
 export const LLM_FALLBACK_STABLE_MODELS: string[] = (() => {
