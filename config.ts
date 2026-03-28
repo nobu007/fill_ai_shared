@@ -23,6 +23,10 @@ export const ANTHROPIC_API_URL = process.env.ANTHROPIC_API_URL || 'https://api.a
 // ─── Default AI Model ───────────────────────────────────────
 export const DEFAULT_AI_MODEL = process.env.DEFAULT_AI_MODEL || 'glm-5-turbo'
 
+// ─── Content Limits ─────────────────────────────────────────
+export const MAX_CONTENT_LENGTH = Number(process.env.MAX_CONTENT_LENGTH || 100000)
+export const MIN_CONTENT_LENGTH = Number(process.env.MIN_CONTENT_LENGTH || 50)
+
 
 
 // ─── LLM / Engine Settings ──────────────────────────────────
@@ -59,6 +63,32 @@ export const FILL_AUTO_APPLY_THRESHOLD = Number(process.env.FILL_AUTO_APPLY_THRE
 /** Maximum prompt size for LLM mapping requests (Constitution §1.2 Stability — prevent resource exhaustion) */
 export const MAX_MAPPING_PROMPT_LENGTH = Number(process.env.MAX_MAPPING_PROMPT_LENGTH || 100_000)
 export const FILL_FALLBACK_MODELS = (process.env.FILL_FALLBACK_MODELS || 'glm-5-turbo,glm-4.7-coding,glm-4.7-flash').split(',').filter(Boolean)
+
+// ─── Proof AI / Phase Engine Fallback Settings ────────────
+export const LLM_FALLBACK_STABLE_MODELS = (process.env.LLM_FALLBACK_STABLE_MODELS || 'glm-5-turbo').split(',').filter(Boolean)
+export const LLM_FALLBACK_DEFAULT_MODELS = (process.env.LLM_FALLBACK_DEFAULT_MODELS || 'glm-5-turbo,glm-4.7-flash').split(',').filter(Boolean)
+export const LLM_FALLBACK_CHAIN: Record<string, string[]> = (() => {
+  try {
+    const raw = process.env.LLM_FALLBACK_CHAIN || '{}'
+    return JSON.parse(raw)
+  } catch {
+    return {}
+  }
+})()
+
+// ─── WordPress API Settings ───────────────────────────────
+export const WP_API_TIMEOUT_MS = Number(process.env.WP_API_TIMEOUT_MS || 15_000)
+export const WP_SYNC_PER_PAGE = Number(process.env.WP_SYNC_PER_PAGE || 100)
+export const WP_MAX_PER_PAGE = Number(process.env.WP_MAX_PER_PAGE || 100)
+export const WP_POSTS_LIST_LIMIT = Number(process.env.WP_POSTS_LIST_LIMIT || 5000)
+export const JWT_SYNC_OVERLAP_MS = Number(process.env.JWT_SYNC_OVERLAP_MS || 60_000)
+export const WP_JWT_VALIDATE_ENDPOINT = process.env.WP_JWT_VALIDATE_ENDPOINT || '/wp-json/jwt-auth/v1/token/validate'
+export const DIAGNOSE_OVERALL_TIMEOUT_MS = Number(process.env.DIAGNOSE_OVERALL_TIMEOUT_MS || 60_000)
+
+// ─── OpenAI/Gemini/Anthropic Key Validation ────────────────
+// (already declared above)
+
+// ─── PDF / Form Fill Settings ──────────────────────────────
 export const FILL_MAPPING_SYSTEM_PROMPT = process.env.FILL_MAPPING_SYSTEM_PROMPT
   || 'あなたはPDFフォームのフィールドマッピングを行うAIアシスタントです。JSON配列のみを出力してください。'
 export const FILL_MAPPING_TEMPERATURE = Number(process.env.FILL_MAPPING_TEMPERATURE || 0.1)
