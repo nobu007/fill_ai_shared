@@ -40,12 +40,12 @@ describe('llm/providers', () => {
       const model = getAiSdkModel('glm-5-turbo')
       expect(model).toBeDefined()
       expect(model.modelId).toBe('glm-5-turbo')
-      // Default ZAI provider
-      expect(model.config.provider).toBe('zai-general.chat')
+      // Default ZAI provider (name is 'zai-general', provider becomes 'zai-general.chat')
+      expect(model.provider).toBe('zai-general.chat')
     })
 
     it('uses Portkey when PORTKEY_API_KEY and PORTKEY_GATEWAY_URL are set', async () => {
-      process.env.PORTKEY_API_KEY = 'pk-test-key'
+      process.env.PORTKEY_API_KEY = 'pk-test-123'
       process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
       process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-test-123'
 
@@ -53,23 +53,23 @@ describe('llm/providers', () => {
       const model = getAiSdkModel('glm-5-turbo')
       expect(model).toBeDefined()
       expect(model.modelId).toBe('glm-5-turbo')
-      // Portkey gateway provider
-      expect(model.config.provider).toBe('portkey-gateway.chat')
+      // Portkey gateway provider (name is 'portkey-gateway')
+      expect(model.provider).toBe('portkey-gateway.chat')
     })
 
     it('falls back to ZAI when Portkey virtual key is not configured for provider', async () => {
-      process.env.PORTKEY_API_KEY = 'pk-test-key'
+      process.env.PORTKEY_API_KEY = 'pk-test-123'
       process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
       // No PORTKEY_VIRTUAL_KEY_ZAI_CODING set
 
       const { getAiSdkModel } = await import('./providers')
       const model = getAiSdkModel('glm-5-turbo')
       expect(model).toBeDefined()
-      expect(model.config.provider).toBe('zai-general.chat')
+      expect(model.provider).toBe('zai-general.chat')
     })
 
     it('includes x-portkey-config header when PORTKEY_CONFIG_SLUG is set', async () => {
-      process.env.PORTKEY_API_KEY = 'pk-test-key'
+      process.env.PORTKEY_API_KEY = 'pk-test-123'
       process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
       process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-test-123'
       process.env.PORTKEY_CONFIG_SLUG = 'my-config-slug'
@@ -77,11 +77,11 @@ describe('llm/providers', () => {
       const { getAiSdkModel } = await import('./providers')
       const model = getAiSdkModel('glm-5-turbo')
       expect(model).toBeDefined()
-      expect(model.config.provider).toBe('portkey-gateway.chat')
+      expect(model.provider).toBe('portkey-gateway.chat')
     })
 
     it('resolves Portkey provider name from env var override', async () => {
-      process.env.PORTKEY_API_KEY = 'pk-test-key'
+      process.env.PORTKEY_API_KEY = 'pk-test-123'
       process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
       process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-test-123'
       process.env.PORTKEY_PROVIDER_NAME_ZAI_CODING = 'custom-zai'
@@ -89,7 +89,7 @@ describe('llm/providers', () => {
       const { getAiSdkModel } = await import('./providers')
       const model = getAiSdkModel('glm-5-turbo')
       expect(model).toBeDefined()
-      expect(model.config.provider).toBe('portkey-gateway.chat')
+      expect(model.provider).toBe('portkey-gateway.chat')
     })
   })
 
@@ -116,10 +116,10 @@ describe('llm/providers', () => {
   describe('BYOK (Bring Your Own Key)', () => {
     it('uses user API key for ZAI models', async () => {
       const { getAiSdkModel } = await import('./providers')
-      const model = getAiSdkModel('glm-5-turbo', 'sk-user-provided-key-1234567890')
+      const model = getAiSdkModel('glm-5-turbo', 'sk-use...7890')
       expect(model).toBeDefined()
       expect(model.modelId).toBe('glm-5-turbo')
-      expect(model.config.provider).toBe('byok-glm-5-turbo.chat')
+      expect(model.provider).toBe('byok-glm-5-turbo.chat')
     })
 
     it('rejects too-short user API keys (falls back to default)', async () => {
@@ -127,13 +127,13 @@ describe('llm/providers', () => {
       const model = getAiSdkModel('glm-5-turbo', 'short')
       expect(model).toBeDefined()
       // Should fall back to zai-general, not byok
-      expect(model.config.provider).toBe('zai-general.chat')
+      expect(model.provider).toBe('zai-general.chat')
     })
 
     it('uses user API key for Gemini models', async () => {
-      process.env.GEMINI_API_KEY = 'server-gemini-key'
+      process.env.GEMINI_API_KEY = 'gemini-test-key'
       const { getAiSdkModel } = await import('./providers')
-      const model = getAiSdkModel('gemini-3.1-flash-lite', 'sk-user-gemini-key-1234567890')
+      const model = getAiSdkModel('gemini-3.1-flash-lite', 'sk-use...7890')
       expect(model).toBeDefined()
       expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
     })
@@ -145,18 +145,18 @@ describe('llm/providers', () => {
       const model = getAiSdkModel('gemini-3.1-flash-lite')
       expect(model).toBeDefined()
       // Should fall back to default ZAI model
-      expect(model.config.provider).toBe('zai-general.chat')
+      expect(model.provider).toBe('zai-general.chat')
       expect(model.modelId).toBe('glm-5-turbo')
     })
 
     it('uses Gemini when GEMINI_API_KEY is set', async () => {
-      process.env.GEMINI_API_KEY = 'test-gemini-key'
+      process.env.GEMINI_API_KEY = 'gemini-test-key'
       const { getAiSdkModel } = await import('./providers')
       const model = getAiSdkModel('gemini-3.1-flash-lite')
       expect(model).toBeDefined()
       expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
       // Gemini provider
-      expect(model.config.provider).toContain('google')
+      expect(model.provider).toContain('google')
     })
   })
 
@@ -177,7 +177,7 @@ describe('llm/providers', () => {
       const zaiModels = Object.entries(MODELS).filter(([, info]) => info.provider === 'zai_general')
       expect(zaiModels.length).toBeGreaterThan(0)
       for (const [id, info] of zaiModels) {
-        expect(info.portkeyProvider).toBe('zai_coding', `Model ${id} missing portkeyProvider`)
+        expect(info.portkeyProvider, `Model ${id} missing portkeyProvider`).toBe('zai_coding')
       }
     })
 
