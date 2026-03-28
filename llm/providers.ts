@@ -6,7 +6,7 @@ import { logger } from '../lib/logger'
 export type ModelTier = 'low' | 'mid' | 'high'
 
 /** Whether Portkey AI Gateway is enabled via env vars */
-const PORTKEY_ENABLED = !!process.env.PORTKEY_API_KEY && !!process.env.PORTKEY_GATEWAY_URL
+export const PORTKEY_ENABLED = !!process.env.PORTKEY_API_KEY && !!process.env.PORTKEY_GATEWAY_URL
 const PORTKEY_API_KEY = process.env.PORTKEY_API_KEY || ''
 const PORTKEY_GATEWAY_URL = process.env.PORTKEY_GATEWAY_URL || 'https://api.portkey.ai/v1'
 const PORTKEY_CONFIG_SLUG = process.env.PORTKEY_CONFIG_SLUG || ''
