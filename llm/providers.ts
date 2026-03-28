@@ -5,14 +5,18 @@ import { logger } from '../lib/logger'
 
 export type ModelTier = 'low' | 'mid' | 'high'
 
-/** Whether Portkey AI Gateway is enabled via env vars */
-export const PORTKEY_ENABLED = !!process.env.PORTKEY_API_KEY && !!process.env.PORTKEY_GATEWAY_URL
+/** Whether Portkey AI Gateway is enabled via env vars (lazy for dotenv compatibility) */
+export function isPortkeyEnabled(): boolean {
+  return !!process.env.PORTKEY_API_KEY && !!process.env.PORTKEY_GATEWAY_URL
+}
+/** @deprecated Use isPortkeyEnabled() for lazy evaluation */
+export const PORTKEY_ENABLED = false // Always use isPortkeyEnabled() in runtime code
 const PORTKEY_API_KEY = process.env.PORTKEY_API_KEY || ''
 const PORTKEY_GATEWAY_URL = process.env.PORTKEY_GATEWAY_URL || 'https://api.portkey.ai/v1'
 const PORTKEY_CONFIG_SLUG = process.env.PORTKEY_CONFIG_SLUG || ''
 
 function getZaiProvider(portkeyConfig?: { provider: string; virtualKey: string }) {
-  if (PORTKEY_ENABLED && portkeyConfig) {
+  if (isPortkeyEnabled() && portkeyConfig) {
     logger.info('providers', 'Using Portkey AI Gateway', { baseURL: PORTKEY_GATEWAY_URL, ...portkeyConfig })
     return createOpenAICompatible({
       name: 'portkey-gateway',
@@ -49,7 +53,7 @@ function getPortkeyHeaders(provider: string, virtualKey: string): Record<string,
  * Reads PORTKEY_VIRTUAL_KEY_<PROVIDER> and PORTKEY_PROVIDER_NAME_<PROVIDER> env vars.
  */
 function resolvePortkeyConfig(providerHint?: string): { provider: string; virtualKey: string } | undefined {
-  if (!PORTKEY_ENABLED || !providerHint) return undefined
+  if (!isPortkeyEnabled() || !providerHint) return undefined
   const envBase = providerHint.toUpperCase().replace(/-/g, '_')
   const virtualKey = process.env[`PORTKEY_VIRTUAL_KEY_${envBase}`]
   const providerName = process.env[`PORTKEY_PROVIDER_NAME_${envBase}`]
