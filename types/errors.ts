@@ -22,6 +22,10 @@ export type ErrorCode =
   | 'INTERNAL_ERROR'
   | 'CONFIG_ERROR'
   | 'SIGNATURE_ERROR'
+  | 'WP_API_ERROR'
+  | 'WP_AUTH_ERROR'
+  | 'TOKEN_EXPIRED'
+  | 'SESSION_SAVE_ERROR'
 
 /** Helper to create a typed error response for Next.js route handlers */
 export function errorResponse(
@@ -96,6 +100,12 @@ export const ERROR_MESSAGES = {
   contentTooLong: (max: number) => `コンテンツは${max}文字以内で入力してください`,
   wpUpdateFailed: (status: number) => `WordPressの更新に失敗しました (HTTP ${status})`,
   blogAutoAiError: (status: number) => `Blog Auto AI API エラー (HTTP ${status})`,
+  siteNotFound: 'サイトが見つかりません',
+  wpPostSaveFailed: '記事の保存に失敗しました',
+  postNotFound: '記事が見つかりません',
+  wpFetchFailed: (msg?: string) => msg ? `記事の取得に失敗しました: ${msg}` : '記事の取得に失敗しました',
+  sessionSaveFailed: 'セッションの保存に失敗しました',
+  tokenExpired: 'トークンの有効期限が切れています',
 
   // --- API keys route messages ---
   providerAndKeyRequired: 'プロバイダーとAPIキーは必須です',
