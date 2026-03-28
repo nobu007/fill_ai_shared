@@ -28,8 +28,14 @@ export const DEFAULT_AI_MODEL = process.env.DEFAULT_AI_MODEL || 'glm-5-turbo'
 // ─── LLM / Engine Settings ──────────────────────────────────
 export const LLM_REQUEST_TIMEOUT_MS = Number(process.env.LLM_REQUEST_TIMEOUT_MS || 120_000)
 export const LLM_MAX_RETRIES = Number(process.env.LLM_MAX_RETRIES || 4)
+
+/** When Portkey Config handles retry+fallback at gateway level, disable ai-sdk retries to avoid duplication */
+export const PORTKEY_CONFIG_SLUG = process.env.PORTKEY_CONFIG_SLUG || ""
+
 export const LLM_DEFAULT_MAX_TOKENS = Number(process.env.LLM_DEFAULT_MAX_TOKENS || 4096)
 export const LLM_RETRY_DELAY_MS = Number(process.env.LLM_RETRY_DELAY_MS || 5000)
+export const MAX_RETRY_DELAY_MS = Number(process.env.MAX_RETRY_DELAY_MS || 60_000)
+export const RATE_LIMIT_BASE_DELAY_MS = Number(process.env.RATE_LIMIT_BASE_DELAY_MS || 30_000)
 
 
 
@@ -245,3 +251,49 @@ export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLI
 
 // ─── Middleware / Auth ─────────────────────────────────────
 export const AUTH_PUBLIC_PATHS = ['/', '/auth', '/api', '/terms', '/privacy', '/commercial-law', '/contact', '/invite'] as const
+
+// ─── Proof AI — Content limits ────────────────────────────
+export const MAX_CONTENT_LENGTH = Number(process.env.MAX_CONTENT_LENGTH || 100_000)
+export const MIN_CONTENT_LENGTH = Number(process.env.MIN_CONTENT_LENGTH || 50)
+export const MAX_INPUT_CHARS = Number(process.env.MAX_INPUT_CHARS || 15_000)
+export const CHUNK_BATCH_SIZE = Number(process.env.CHUNK_BATCH_SIZE || 3)
+export const BATCH_MAX_POSTS = Number(process.env.BATCH_MAX_POSTS || 20)
+
+// ─── Proof AI — Score thresholds ──────────────────────────
+export const SCORE_AUTO_FIXED_PENALTY = Number(process.env.SCORE_AUTO_FIXED_PENALTY || 3)
+export const SCORE_NEEDS_REVIEW_PENALTY = Number(process.env.SCORE_NEEDS_REVIEW_PENALTY || 5)
+export const SCORE_AXIS_PATCH_PENALTY = Number(process.env.SCORE_AXIS_PATCH_PENALTY || 1)
+export const AUTO_APPLY_THRESHOLD = Number(process.env.AUTO_APPLY_THRESHOLD || 0.7)
+
+// ─── Proof AI — JWT / WP settings ─────────────────────────
+export const JWT_TOKEN_MARGIN_SECONDS = Number(process.env.JWT_TOKEN_MARGIN_SECONDS || 60)
+export const WP_API_TIMEOUT_MS = Number(process.env.WP_API_TIMEOUT_MS || 15_000)
+export const WP_JWT_VALIDATE_ENDPOINT = process.env.WP_JWT_VALIDATE_ENDPOINT || '/wp-json/jwt-auth/v1/token/validate'
+export const WP_MAX_PER_PAGE = Number(process.env.WP_MAX_PER_PAGE || 100)
+export const WP_POSTS_LIST_LIMIT = Number(process.env.WP_POSTS_LIST_LIMIT || 50)
+export const WP_SYNC_PER_PAGE = Number(process.env.WP_SYNC_PER_PAGE || 100)
+
+// ─── Proof AI — LLM Fallback ──────────────────────────────
+export const LLM_FALLBACK_STABLE_MODELS: string[] = (() => {
+  try { return JSON.parse(process.env.LLM_FALLBACK_STABLE_MODELS || '["glm-5-turbo","glm-4.7"]') }
+  catch { return ['glm-5-turbo', 'glm-4.7'] }
+})()
+
+export const LLM_FALLBACK_CHAIN: Record<string, string[]> = (() => {
+  const raw = process.env.LLM_FALLBACK_CHAIN || ''
+  if (!raw) return { 'glm-5-turbo': ['glm-4.7', 'gemini-3.1-flash-lite'], 'glm-4.7': ['glm-5-turbo', 'gemini-3.1-flash-lite'] }
+  const result: Record<string, string[]> = {}
+  for (const entry of raw.split(';')) {
+    const [primary, fallbacks] = entry.split(':')
+    if (primary && fallbacks) result[primary.trim()] = fallbacks.split(',').map(s => s.trim())
+  }
+  return result
+})()
+
+export const LLM_FALLBACK_DEFAULT_MODELS: string[] = (() => {
+  try { return JSON.parse(process.env.LLM_FALLBACK_DEFAULT_MODELS || '["glm-5-turbo","glm-4.7","gemini-3.1-flash-lite"]') }
+  catch { return ['glm-5-turbo', 'glm-4.7', 'gemini-3.1-flash-lite'] }
+})()
+
+// ─── Proof AI — Diagnostics ───────────────────────────────
+export const DIAGNOSE_OVERALL_TIMEOUT_MS = Number(process.env.DIAGNOSE_OVERALL_TIMEOUT_MS || 60_000)
