@@ -82,7 +82,22 @@ export const WP_SYNC_PER_PAGE = Number(process.env.WP_SYNC_PER_PAGE || 100)
 export const WP_MAX_PER_PAGE = Number(process.env.WP_MAX_PER_PAGE || 100)
 export const WP_POSTS_LIST_LIMIT = Number(process.env.WP_POSTS_LIST_LIMIT || 5000)
 export const JWT_SYNC_OVERLAP_MS = Number(process.env.JWT_SYNC_OVERLAP_MS || 60_000)
+export const JWT_TOKEN_MARGIN_SECONDS = Number(process.env.JWT_TOKEN_MARGIN_SECONDS || 60)
 export const WP_JWT_VALIDATE_ENDPOINT = process.env.WP_JWT_VALIDATE_ENDPOINT || '/wp-json/jwt-auth/v1/token/validate'
+export const WP_JWT_ENDPOINT = '/wp-json/jwt-auth/v1/token'
+export const WP_POSTS_ENDPOINT = '/wp-json/wp/v2/posts'
+export const WP_USERS_ME_ENDPOINT = '/wp-json/wp/v2/users/me'
+export const WP_SITES_ENDPOINT = '/wp-json/wp/v2/sites'
+export const WP_DEFAULT_PER_PAGE = 10
+export const WP_DEFAULT_ORDERBY = 'date'
+export const WP_DEFAULT_ORDER = 'desc'
+export const WP_DEFAULT_FIELDS = 'id,title,content,status,date,modified,link,categories'
+export const WP_DEFAULT_STATUS = 'publish,draft'
+
+// ─── Score Calculation Settings ──────────────────────────
+export const SCORE_AUTO_FIXED_PENALTY = Number(process.env.SCORE_AUTO_FIXED_PENALTY || 2)
+export const SCORE_NEEDS_REVIEW_PENALTY = Number(process.env.SCORE_NEEDS_REVIEW_PENALTY || 5)
+export const SCORE_AXIS_PATCH_PENALTY = Number(process.env.SCORE_AXIS_PATCH_PENALTY || 3)
 export const DIAGNOSE_OVERALL_TIMEOUT_MS = Number(process.env.DIAGNOSE_OVERALL_TIMEOUT_MS || 60_000)
 
 // ─── OpenAI/Gemini/Anthropic Key Validation ────────────────
