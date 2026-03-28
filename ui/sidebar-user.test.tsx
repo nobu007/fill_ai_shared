@@ -45,7 +45,7 @@ const mockEq = vi.fn(() => ({ single: mockSingle }))
 const mockSelect = vi.fn(() => ({ eq: mockEq }))
 const mockFrom = vi.fn(() => ({ select: mockSelect }))
 
-vi.mock('@/shared/auth/client', () => ({
+vi.mock('../auth/client', () => ({
   createClient: vi.fn(() => ({
     auth: { getUser: mockGetUser },
     from: mockFrom,

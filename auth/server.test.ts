@@ -5,7 +5,7 @@ const { mockLoggerWarn } = vi.hoisted(() => ({
   mockLoggerWarn: vi.fn(),
 }))
 
-vi.mock('@/shared/lib/logger', () => ({
+vi.mock('../lib/logger', () => ({
   logger: { info: vi.fn(), warn: mockLoggerWarn, error: vi.fn() },
 }))
 

@@ -2,7 +2,7 @@
  * Score calculation utilities for proofreading
  * Shared between v2/route.ts and v2/stream/route.ts
  */
-import { SCORE_AUTO_FIXED_PENALTY, SCORE_NEEDS_REVIEW_PENALTY, SCORE_AXIS_PATCH_PENALTY } from '@/shared/config'
+import { SCORE_AUTO_FIXED_PENALTY, SCORE_NEEDS_REVIEW_PENALTY, SCORE_AXIS_PATCH_PENALTY } from '../config'
 
 /**
  * Calculate overall proofreading score based on auto-fixed and needs-review counts

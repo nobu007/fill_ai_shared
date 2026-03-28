@@ -16,7 +16,7 @@ vi.mock('./sidebar-wrapper', () => ({
 }))
 
 // Mock shared config
-vi.mock('@/shared/config', () => ({
+vi.mock('../config', () => ({
   APP_NAME: 'Fill AI',
   APP_DESCRIPTION: 'PDFフォーム自動入力サービス',
   APP_ICON: '📄',

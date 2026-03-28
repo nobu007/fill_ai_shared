@@ -1,7 +1,7 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { ZAI_API_URL, ZAI_API_KEY, DEFAULT_AI_MODEL } from '@/shared/config'
-import { logger } from '@/shared/lib/logger'
+import { ZAI_API_URL, ZAI_API_KEY, DEFAULT_AI_MODEL } from '../config'
+import { logger } from '../lib/logger'
 
 export type ModelTier = 'low' | 'mid' | 'high'
 
