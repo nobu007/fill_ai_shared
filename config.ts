@@ -162,6 +162,8 @@ export const OPENROUTER_TIMEOUT_MS = Number(process.env.OPENROUTER_TIMEOUT_MS ||
 export const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
 export const CONTACT_EMAIL_TO = process.env.CONTACT_EMAIL_TO || 'klvx01@gmail.com'
 export const CONTACT_EMAIL_FROM = process.env.CONTACT_EMAIL_FROM || 'Fill AI <noreply@fillai-pi.vercel.app>'
+/** Timeout for Resend email send API call (Constitution §1.2 Stability) */
+export const RESEND_TIMEOUT_MS = Number(process.env.RESEND_TIMEOUT_MS || 10_000)
 export const MAX_NAME_LENGTH = Number(process.env.MAX_NAME_LENGTH || 200)
 export const VALID_API_PROVIDERS = ['openai', 'gemini', 'claude'] as const
 export const MAX_EMAIL_LENGTH = Number(process.env.MAX_EMAIL_LENGTH || 254)
