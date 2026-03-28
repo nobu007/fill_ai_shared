@@ -187,4 +187,154 @@ describe('llm/providers', () => {
       expect(gemini?.portkeyProvider).toBe('google')
     })
   })
+
+  describe('isPortkeyEnabled', () => {
+    it('returns false when PORTKEY_API_KEY is not set', async () => {
+      const { isPortkeyEnabled } = await import('./providers')
+      expect(isPortkeyEnabled()).toBe(false)
+    })
+
+    it('returns false when PORTKEY_GATEWAY_URL is not set', async () => {
+      process.env.PORTKEY_API_KEY = 'pk-test-123'
+      delete process.env.PORTKEY_GATEWAY_URL
+      
+      const { isPortkeyEnabled } = await import('./providers')
+      expect(isPortkeyEnabled()).toBe(false)
+    })
+
+    it('returns true when both PORTKEY_API_KEY and PORTKEY_GATEWAY_URL are set', async () => {
+      process.env.PORTKEY_API_KEY = 'pk-test-123'
+      process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
+      
+      const { isPortkeyEnabled } = await import('./providers')
+      expect(isPortkeyEnabled()).toBe(true)
+    })
+  })
+
+  describe('getPortkeyHeaders', () => {
+    beforeEach(() => {
+      process.env.PORTKEY_API_KEY = 'pk-test-123'
+      process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
+    })
+
+    it('returns correct headers for provider and virtual key', async () => {
+      const { getPortkeyHeaders } = await import('./providers')
+      const headers = getPortkeyHeaders('zai_coding', 'vk-test-123')
+      
+      expect(headers).toEqual({
+        'x-portkey-provider': 'zai_coding',
+        'x-portkey-virtual-key': 'vk-test-123',
+      })
+    })
+
+    it('includes config slug when PORTKEY_CONFIG_SLUG is set', async () => {
+      process.env.PORTKEY_CONFIG_SLUG = 'my-config'
+      const { getPortkeyHeaders } = await import('./providers')
+      const headers = getPortkeyHeaders('zai_coding', 'vk-test-123')
+      
+      expect(headers).toEqual({
+        'x-portkey-provider': 'zai_coding',
+        'x-portkey-virtual-key': 'vk-test-123',
+        'x-portkey-config': 'my-config',
+      })
+    })
+  })
+
+  describe('resolvePortkeyConfig', () => {
+    beforeEach(() => {
+      process.env.PORTKEY_API_KEY = 'pk-test-123'
+      process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
+    })
+
+    it('returns undefined when Portkey is not enabled', async () => {
+      const { resolvePortkeyConfig } = await import('./providers')
+      const config = resolvePortkeyConfig('zai_coding')
+      expect(config).toBeUndefined()
+    })
+
+    it('returns undefined when providerHint is not provided', async () => {
+      process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-test-123'
+      const { resolvePortkeyConfig } = await import('./providers')
+      const config = resolvePortkeyConfig(undefined)
+      expect(config).toBeUndefined()
+    })
+
+    it('returns config when virtual key is set', async () => {
+      process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-test-123'
+      const { resolvePortkeyConfig } = await import('./providers')
+      const config = resolvePortkeyConfig('zai_coding')
+      
+      expect(config).toEqual({
+        provider: 'zai_coding',
+        virtualKey: 'vk-test-123',
+      })
+    })
+
+    it('uses provider name override from env var', async () => {
+      process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-test-123'
+      process.env.PORTKEY_PROVIDER_NAME_ZAI_CODING = 'custom-provider'
+      const { resolvePortkeyConfig } = await import('./providers')
+      const config = resolvePortkeyConfig('zai_coding')
+      
+      expect(config).toEqual({
+        provider: 'custom-provider',
+        virtualKey: 'vk-test-123',
+      })
+    })
+
+    it('returns undefined when virtual key is not set', async () => {
+      process.env.PORTKEY_PROVIDER_NAME_ZAI_CODING = 'custom-provider'
+      // No PORTKEY_VIRTUAL_KEY_ZAI_CODING set
+      const { resolvePortkeyConfig } = await import('./providers')
+      const config = resolvePortkeyConfig('zai_coding')
+      expect(config).toBeUndefined()
+    })
+  })
+
+  describe('Gemini provider with thinking levels', () => {
+    beforeEach(() => {
+      process.env.GEMINI_API_KEY = 'gemini-test-key'
+    })
+
+    it('uses thinking config when thinkingLevel is set for Gemini', async () => {
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('gemini-3.1-flash-lite', undefined, 'medium')
+      expect(model).toBeDefined()
+      expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
+    })
+
+    it('uses default thinking level from env var', async () => {
+      process.env.GEMINI_THINKING_LEVEL = 'high'
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('gemini-3.1-flash-lite')
+      expect(model).toBeDefined()
+      expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
+    })
+
+    it('falls back to high thinking level when env var is not set', async () => {
+      delete process.env.GEMINI_THINKING_LEVEL
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('gemini-3.1-flash-lite')
+      expect(model).toBeDefined()
+      expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
+    })
+  })
+
+  describe('Edge cases and error handling', () => {
+    it('handles unknown model ID by falling back to default', async () => {
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('unknown-model-id')
+      expect(model).toBeDefined()
+      expect(model.modelId).toBe('glm-5-turbo') // Default model
+    })
+
+    it('handles missing GEMINI_API_KEY gracefully for Gemini requests', async () => {
+      delete process.env.GEMINI_API_KEY
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('gemini-3.1-flash-lite')
+      expect(model).toBeDefined()
+      // Should fall back to ZAI provider
+      expect(model.provider).toBe('zai-general.chat')
+    })
+  })
 })
