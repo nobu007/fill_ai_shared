@@ -46,18 +46,10 @@ export const GEMINI_MODELS_ENDPOINT = process.env.GEMINI_MODELS_ENDPOINT || 'htt
 export const API_KEY_VALIDATION_TIMEOUT_MS = Number(process.env.API_KEY_VALIDATION_TIMEOUT_MS || 10_000)
 
 
-// ─── Branding / App Variant ────────────────────────────────
-const envAppName = process.env.NEXT_PUBLIC_APP_NAME || ''
-export const APP_VARIANT =
-  process.env.NEXT_PUBLIC_APP_VARIANT === 'proof' || process.env.NEXT_PUBLIC_APP_VARIANT === 'fill'
-    ? process.env.NEXT_PUBLIC_APP_VARIANT
-    : envAppName.toLowerCase().includes('proof')
-      ? 'proof'
-      : 'fill'
-
-export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || (APP_VARIANT === 'proof' ? 'Proof AI' : 'Fill AI')
-export const APP_DESCRIPTION = process.env.NEXT_PUBLIC_APP_DESCRIPTION || (APP_VARIANT === 'proof' ? 'ブログ記事の校正ツール' : 'PDFフォーム自動入力ツール')
-export const APP_ICON = process.env.NEXT_PUBLIC_APP_ICON || (APP_VARIANT === 'proof' ? '✓' : '📝')
+// ─── Branding ──────────────────────────────────────────────
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Fill AI'
+export const APP_DESCRIPTION = process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'PDFフォーム自動入力ツール'
+export const APP_ICON = process.env.NEXT_PUBLIC_APP_ICON || '📝'
 
 // ─── PDF / Form Fill Settings ──────────────────────────────
 export const MAX_PDF_SIZE_BYTES = Number(process.env.MAX_PDF_SIZE_BYTES || 10_000_000)
@@ -253,74 +245,3 @@ export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLI
 
 // ─── Middleware / Auth ─────────────────────────────────────
 export const AUTH_PUBLIC_PATHS = ['/', '/auth', '/api', '/terms', '/privacy', '/commercial-law', '/contact', '/invite'] as const
-
-// ─── Proof AI — Content limits ────────────────────────────
-export const MAX_CONTENT_LENGTH = Number(process.env.MAX_CONTENT_LENGTH || 100_000)
-export const MIN_CONTENT_LENGTH = Number(process.env.MIN_CONTENT_LENGTH || 50)
-export const MAX_INPUT_CHARS = Number(process.env.MAX_INPUT_CHARS || 15_000)
-export const CHUNK_BATCH_SIZE = Number(process.env.CHUNK_BATCH_SIZE || 3)
-export const BATCH_MAX_POSTS = Number(process.env.BATCH_MAX_POSTS || 20)
-
-// ─── Proof AI — Score thresholds ──────────────────────────
-export const SCORE_AUTO_FIXED_PENALTY = Number(process.env.SCORE_AUTO_FIXED_PENALTY || 3)
-export const SCORE_NEEDS_REVIEW_PENALTY = Number(process.env.SCORE_NEEDS_REVIEW_PENALTY || 5)
-export const SCORE_AXIS_PATCH_PENALTY = Number(process.env.SCORE_AXIS_PATCH_PENALTY || 1)
-export const AUTO_APPLY_THRESHOLD = Number(process.env.AUTO_APPLY_THRESHOLD || 0.7)
-
-// ─── Proof AI — JWT / WP settings ─────────────────────────
-export const JWT_TOKEN_MARGIN_SECONDS = Number(process.env.JWT_TOKEN_MARGIN_SECONDS || 60)
-export const JWT_SYNC_OVERLAP_MS = Number(process.env.JWT_SYNC_OVERLAP_MS || 60000)
-export const WP_API_TIMEOUT_MS = Number(process.env.WP_API_TIMEOUT_MS || 15_000)
-export const WP_JWT_VALIDATE_ENDPOINT = process.env.WP_JWT_VALIDATE_ENDPOINT || '/wp-json/jwt-auth/v1/token/validate'
-export const WP_JWT_ENDPOINT = process.env.WP_JWT_ENDPOINT || '/wp-json/jwt-auth/v2/token'
-export const WP_MAX_PER_PAGE = Number(process.env.WP_MAX_PER_PAGE || 100)
-export const WP_POSTS_LIST_LIMIT = Number(process.env.WP_POSTS_LIST_LIMIT || 50)
-export const WP_SYNC_PER_PAGE = Number(process.env.WP_SYNC_PER_PAGE || 100)
-export const WP_USERS_ME_ENDPOINT = process.env.WP_USERS_ME_ENDPOINT || '/wp-json/wp/v2/users/me'
-export const WP_SITES_ENDPOINT = process.env.WP_SITES_ENDPOINT || '/wp-json/wp/v2/sites'
-export const WP_DEFAULT_PER_PAGE = Number(process.env.WP_DEFAULT_PER_PAGE || 10)
-export const WP_DEFAULT_ORDERBY = process.env.WP_DEFAULT_ORDERBY || 'date'
-export const WP_DEFAULT_ORDER = process.env.WP_DEFAULT_ORDER || 'desc'
-export const WP_DEFAULT_FIELDS = process.env.WP_DEFAULT_FIELDS || 'id,title,content,status,date,link,categories'
-export const WP_DEFAULT_STATUS = process.env.WP_DEFAULT_STATUS || 'publish'
-
-// ─── Proof AI — LLM Fallback ──────────────────────────────
-export const LLM_FALLBACK_STABLE_MODELS: string[] = (() => {
-  try { return JSON.parse(process.env.LLM_FALLBACK_STABLE_MODELS || '["glm-5-turbo","glm-4.7"]') }
-  catch { return ['glm-5-turbo', 'glm-4.7'] }
-})()
-
-export const LLM_FALLBACK_CHAIN: Record<string, string[]> = (() => {
-  const raw = process.env.LLM_FALLBACK_CHAIN || ''
-  if (!raw) return { 'glm-5-turbo': ['glm-4.7', 'gemini-3.1-flash-lite'], 'glm-4.7': ['glm-5-turbo', 'gemini-3.1-flash-lite'] }
-  const result: Record<string, string[]> = {}
-  for (const entry of raw.split(';')) {
-    const [primary, fallbacks] = entry.split(':')
-    if (primary && fallbacks) result[primary.trim()] = fallbacks.split(',').map(s => s.trim())
-  }
-  return result
-})()
-
-export const LLM_FALLBACK_DEFAULT_MODELS: string[] = (() => {
-  try { return JSON.parse(process.env.LLM_FALLBACK_DEFAULT_MODELS || '["glm-5-turbo","glm-4.7","gemini-3.1-flash-lite"]') }
-  catch { return ['glm-5-turbo', 'glm-4.7', 'gemini-3.1-flash-lite'] }
-})()
-
-// ─── Proof AI — Diagnostics ───────────────────────────────
-export const DIAGNOSE_OVERALL_TIMEOUT_MS = Number(process.env.DIAGNOSE_OVERALL_TIMEOUT_MS || 60_000)
-
-// ─── Blog Auto AI ────────────────────────────────────────
-export const BLOG_AUTO_AI_SYNC_PER_PAGE = Number(process.env.BLOG_AUTO_AI_SYNC_PER_PAGE || 50)
-export const BLOG_AUTO_AI_MAX_OFFSET = Number(process.env.BLOG_AUTO_AI_MAX_OFFSET || 5000)
-export const BLOG_AUTO_AI_FETCH_CONCURRENCY = Number(process.env.BLOG_AUTO_AI_FETCH_CONCURRENCY || 5)
-export const BLOG_AUTO_AI_DETAIL_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_DETAIL_TIMEOUT_MS || 15_000)
-export const BLOG_AUTO_AI_LIST_LIMIT = Number(process.env.BLOG_AUTO_AI_LIST_LIMIT || 100)
-
-// ─── Phase Engine timing ─────────────────────────────────
-export const CHUNK_PROCESS_DELAY_MS = Number(process.env.CHUNK_PROCESS_DELAY_MS || 2000)
-export const PHASE_START_DELAY_MS = Number(process.env.PHASE_START_DELAY_MS || 2000)
-export const INTER_AXIS_DELAY_MS = Number(process.env.INTER_AXIS_DELAY_MS || 3_000)
-export const SUMMARY_MAX_TOKENS = Number(process.env.SUMMARY_MAX_TOKENS || 1024)
-export const DEFAULT_CONFIDENCE_THRESHOLD = Number(process.env.DEFAULT_CONFIDENCE_THRESHOLD || 0.7)
-export const WP_POSTS_ENDPOINT = process.env.WP_POSTS_ENDPOINT || '/wp-json/wp/v2/posts'
-export const WP_PLUGINS_PER_PAGE = Number(process.env.WP_PLUGINS_PER_PAGE || 100)

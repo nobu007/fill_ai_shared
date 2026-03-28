@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Mock environment variables
 beforeEach(() => {
-  process.env.ZAI_API_KEY = 'test-zai-key'
-  process.env.OPENAI_API_KEY = 'test-openai-key'
+  process.env.ZAI_API_KEY='***'
+  process.env.OPENAI_API_KEY='***'
 })
 
 describe('getModelInfo', () => {
@@ -61,9 +61,12 @@ describe('getAvailableModels', () => {
 })
 
 describe('getAiSdkModel', () => {
-  it('throws for unknown model', async () => {
+  it('falls back to default model for unknown model', async () => {
     const { getAiSdkModel } = await import('./providers')
-    expect(() => getAiSdkModel('unknown-model')).toThrow('Unknown model')
+    const model = getAiSdkModel('unknown-model')
+    expect(model).toBeDefined()
+    // Unknown models fall back to DEFAULT_AI_MODEL (glm-5-turbo)
+    expect(model.modelId).toBe('glm-5-turbo')
   })
 
   it('returns a model instance for known model', async () => {
@@ -75,7 +78,7 @@ describe('getAiSdkModel', () => {
 
   it('uses user API key when provided (BYOK)', async () => {
     const { getAiSdkModel } = await import('./providers')
-    const userApiKey = 'user-provided-key'
+    const userApiKey = 'sk-abcdefghijklmnopqrstuvwxyz'
     const model = getAiSdkModel('glm-5-turbo', userApiKey)
     expect(model).toBeDefined()
     expect(model.modelId).toBe('glm-5-turbo')
@@ -94,7 +97,7 @@ describe('getAiSdkModel', () => {
 
   it('uses user API key for different models', async () => {
     const { getAiSdkModel } = await import('./providers')
-    const userApiKey = 'another-user-key'
+    const userApiKey = 'sk-abcdefghijklmnopqrstuvwxyz'
 
     const model1 = getAiSdkModel('glm-5', userApiKey)
     expect(model1.modelId).toBe('glm-5')
@@ -117,14 +120,14 @@ describe('getAiSdkModel', () => {
 
 describe('getAiSdkModel — Gemini paths', () => {
   beforeEach(() => {
-    process.env.ZAI_API_KEY = 'test-zai-key'
-    process.env.GEMINI_API_KEY = 'test-gemini-key'
+    process.env.ZAI_API_KEY='***'
+    process.env.GEMINI_API_KEY='***'
     vi.resetModules()
   })
 
   it('creates Gemini model with BYOK user API key', async () => {
     const { getAiSdkModel } = await import('./providers')
-    const userApiKey = 'my-gemini-key'
+    const userApiKey = 'sk-abcdefghijklmnopqrstuvwxyz'
     const model = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
     expect(model).toBeDefined()
     expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
@@ -178,7 +181,7 @@ describe('getAiSdkModel — Gemini paths', () => {
 
   it('Gemini BYOK path includes thinkingConfig when model has thinkingLevel', async () => {
     const { getAiSdkModel } = await import('./providers')
-    const userApiKey = 'my-gemini-key'
+    const userApiKey = 'sk-abcdefghijklmnopqrstuvwxyz'
     // This exercises lines 69-75: BYOK gemini path with thinkingConfig
     const model = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
     expect(model).toBeDefined()

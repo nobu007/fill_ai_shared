@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { APP_VARIANT, AUTH_PUBLIC_PATHS } from '../config'
+import { AUTH_PUBLIC_PATHS } from '../config'
 import { logger } from '../lib/logger'
 
 function getSupabaseUrl() {
@@ -13,14 +13,6 @@ function getSupabaseAnonKey() {
 
 function getDebugAuthToken() {
   return process.env.DEBUG_AUTH_TOKEN || ''
-}
-
-function getAppVariant() {
-  const envVariant = process.env.NEXT_PUBLIC_APP_VARIANT
-  if (envVariant === 'proof' || envVariant === 'fill') {
-    return envVariant
-  }
-  return APP_VARIANT
 }
 
 export async function proxy(request: NextRequest) {
@@ -66,12 +58,7 @@ export async function proxy(request: NextRequest) {
     )
     if (!isPublic) {
       const url = request.nextUrl.clone()
-      if (getAppVariant() === 'proof') {
-        url.pathname = '/auth'
-        url.searchParams.set('redirect', request.nextUrl.pathname)
-      } else {
-        url.pathname = '/'
-      }
+      url.pathname = '/'
       return NextResponse.redirect(url)
     }
   }

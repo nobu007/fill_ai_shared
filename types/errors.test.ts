@@ -7,6 +7,7 @@ import {
   errorResponse,
   ERROR_MESSAGES,
   type ApiErrorResponse,
+  type ErrorCode,
 } from './errors'
 
 describe('errorResponse', () => {
@@ -57,7 +58,7 @@ describe('errorResponse', () => {
     ]
 
     validCodes.forEach((code) => {
-      const result = errorResponse('Test', 400, code)
+      const result = errorResponse('Test', 400, code as ErrorCode)
       expect(result.body.code).toBe(code)
     })
   })
