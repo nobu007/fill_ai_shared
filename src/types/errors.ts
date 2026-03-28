@@ -46,6 +46,8 @@ export const ERROR_MESSAGES = {
   emptyUserData: 'ユーザーデータが空です。少なくとも1つのデータを入力してください。',
   invalidMappings: 'マッピングの形式が不正です',
   extractionDataRequired: '抽出データが必要です',
+  promptTooLarge: (maxChars: number, actualChars: number) =>
+    `マッピングプロンプトが長すぎます (${actualChars}文字)。${maxChars}文字以内にしてください。`,
 
   // User data / invitations / keys
   labelRequired: 'ラベルが必要です',
