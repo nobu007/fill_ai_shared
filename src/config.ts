@@ -16,6 +16,8 @@ export const ZAI_API_KEY = process.env.ZAI_API_KEY || ''
 export const ZAI_CODING_API_URL = process.env.ZAI_CODING_API_URL || 'https://api.z.ai/api/coding/paas/v4'
 export const OPENAI_API_URL = process.env.OPENAI_API_URL || 'https://api.openai.com/v1'
 export const GEMINI_API_URL = process.env.GEMINI_API_URL || 'https://generativelanguage.googleapis.com/v1'
+export const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
+export const GEMINI_THINKING_LEVEL = (process.env.GEMINI_THINKING_LEVEL as 'minimal' | 'low' | 'medium' | 'high') || 'high'
 export const ANTHROPIC_API_URL = process.env.ANTHROPIC_API_URL || 'https://api.anthropic.com/v1/messages'
 
 // ─── Default AI Model ───────────────────────────────────────

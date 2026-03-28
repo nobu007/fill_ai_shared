@@ -1,6 +1,6 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { DEFAULT_AI_MODEL, ZAI_API_KEY, ZAI_API_URL } from '../config'
+import { DEFAULT_AI_MODEL, ZAI_API_KEY, ZAI_API_URL, GEMINI_API_KEY, GEMINI_THINKING_LEVEL } from '../config'
 import { logger } from '../lib/logger'
 
 export type ModelTier = 'low' | 'mid' | 'high'
@@ -8,14 +8,13 @@ export type ModelTier = 'low' | 'mid' | 'high'
 function getZaiProvider() {
   return createOpenAICompatible({
     name: 'zai-general',
-    baseURL: process.env.ZAI_API_URL || ZAI_API_URL,
-    apiKey: process.env.ZAI_API_KEY || ZAI_API_KEY,
+    baseURL: ZAI_API_URL,
+    apiKey: ZAI_API_KEY,
   })
 }
 
 function getGeminiProvider(thinkingLevel?: string) {
-  const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) {
+  if (!GEMINI_API_KEY) {
     logger.warn('providers', 'GEMINI_API_KEY not set, Gemini fallback unavailable')
     return null
   }
@@ -25,7 +24,7 @@ function getGeminiProvider(thinkingLevel?: string) {
     options.thinkingConfig = { thinkingLevel, includeThoughts: false }
   }
 
-  return createGoogleGenerativeAI({ apiKey, ...options })
+  return createGoogleGenerativeAI({ apiKey: GEMINI_API_KEY, ...options })
 }
 
 export interface ModelInfo {
@@ -49,7 +48,7 @@ export const MODELS: Record<string, ModelInfo> = {
     modelId: 'gemini-3.1-flash-lite-preview',
     tier: 'high',
     supportsThinking: true,
-    thinkingLevel: (process.env.GEMINI_THINKING_LEVEL as 'minimal' | 'low' | 'medium' | 'high') || 'high',
+    thinkingLevel: GEMINI_THINKING_LEVEL,
   },
 }
 
