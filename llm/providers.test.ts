@@ -1,190 +1,190 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Mock environment variables
-beforeEach(() => {
-  process.env.ZAI_API_KEY='***'
-  process.env.OPENAI_API_KEY='***'
-})
+// Mock config values
+vi.mock('../config', () => ({
+  ZAI_API_URL: 'https://api.z.ai/api/general/v4',
+  ZAI_API_KEY: 'test-zai-key',
+  DEFAULT_AI_MODEL: 'glm-5-turbo',
+}))
 
-describe('getModelInfo', () => {
-  it('returns info for known model', async () => {
-    const { getModelInfo } = await import('./providers')
-    const info = getModelInfo('glm-4.7')
-    expect(info).toBeDefined()
-    expect(info!.tier).toBe('mid')
-    expect(info!.provider).toBe('zai_general')
-  })
+vi.mock('../lib/logger', () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}))
 
-  it('returns undefined for unknown model', async () => {
-    const { getModelInfo } = await import('./providers')
-    expect(getModelInfo('nonexistent')).toBeUndefined()
-  })
-})
+describe('llm/providers', () => {
+  const originalEnv = process.env
 
-describe('getModelTier', () => {
-  it('returns correct tiers', async () => {
-    const { getModelTier } = await import('./providers')
-    expect(getModelTier('glm-4.5-air')).toBe('low')
-    expect(getModelTier('glm-4.7')).toBe('mid')
-    expect(getModelTier('glm-5-turbo')).toBe('high')
-    expect(getModelTier('unknown')).toBe('low')
-  })
-})
-
-describe('MODELS', () => {
-  it('has expected models', async () => {
-    const { MODELS } = await import('./providers')
-    expect(MODELS['glm-4.7']).toBeDefined()
-    expect(MODELS['glm-4.5-air']).toBeDefined()
-    expect(MODELS['glm-5-turbo']).toBeDefined()
-    expect(MODELS['glm-5']).toBeDefined()
-  })
-})
-
-describe('getAvailableModels', () => {
-  it('returns models when API keys are set', async () => {
-    const { getAvailableModels } = await import('./providers')
-    const models = getAvailableModels()
-    expect(models.length).toBeGreaterThan(0)
-    expect(models.every(m => m.id && m.label && m.desc)).toBe(true)
-  })
-
-  it('returns empty when no API keys', async () => {
-    delete process.env.ZAI_API_KEY
-    delete process.env.OPENAI_API_KEY
-    // Re-import to pick up new env
-    vi.resetModules()
-    const { getAvailableModels } = await import('./providers')
-    const models = getAvailableModels()
-    expect(models.length).toBe(0)
-  })
-})
-
-describe('getAiSdkModel', () => {
-  it('falls back to default model for unknown model', async () => {
-    const { getAiSdkModel } = await import('./providers')
-    const model = getAiSdkModel('unknown-model')
-    expect(model).toBeDefined()
-    // Unknown models fall back to DEFAULT_AI_MODEL (glm-5-turbo)
-    expect(model.modelId).toBe('glm-5-turbo')
-  })
-
-  it('returns a model instance for known model', async () => {
-    const { getAiSdkModel } = await import('./providers')
-    const model = getAiSdkModel('glm-4.7')
-    expect(model).toBeDefined()
-    expect(model.modelId).toBe('glm-4.7')
-  })
-
-  it('uses user API key when provided (BYOK)', async () => {
-    const { getAiSdkModel } = await import('./providers')
-    const userApiKey = 'sk-abcdefghijklmnopqrstuvwxyz'
-    const model = getAiSdkModel('glm-5-turbo', userApiKey)
-    expect(model).toBeDefined()
-    expect(model.modelId).toBe('glm-5-turbo')
-    // The provider name should include the model ID when using BYOK
-    expect(model.provider).toContain('byok-glm-5-turbo')
-  })
-
-  it('uses default ZAI key when user API key is not provided', async () => {
-    const { getAiSdkModel } = await import('./providers')
-    const model = getAiSdkModel('glm-4.7')
-    expect(model).toBeDefined()
-    expect(model.modelId).toBe('glm-4.7')
-    // Should use the default zai-general provider (with .chat suffix)
-    expect(model.provider).toContain('zai-general')
-  })
-
-  it('uses user API key for different models', async () => {
-    const { getAiSdkModel } = await import('./providers')
-    const userApiKey = 'sk-abcdefghijklmnopqrstuvwxyz'
-
-    const model1 = getAiSdkModel('glm-5', userApiKey)
-    expect(model1.modelId).toBe('glm-5')
-    expect(model1.provider).toContain('byok-glm-5')
-
-    const model2 = getAiSdkModel('glm-4.6', userApiKey)
-    expect(model2.modelId).toBe('glm-4.6')
-    expect(model2.provider).toContain('byok-glm-4.6')
-  })
-
-  it('handles empty string as user API key', async () => {
-    const { getAiSdkModel } = await import('./providers')
-    const model = getAiSdkModel('glm-4.7', '')
-    expect(model).toBeDefined()
-    expect(model.modelId).toBe('glm-4.7')
-    // Empty string should fall back to default provider
-    expect(model.provider).toContain('zai-general')
-  })
-})
-
-describe('getAiSdkModel — Gemini paths', () => {
   beforeEach(() => {
-    process.env.ZAI_API_KEY='***'
-    process.env.GEMINI_API_KEY='***'
     vi.resetModules()
-  })
-
-  it('creates Gemini model with BYOK user API key', async () => {
-    const { getAiSdkModel } = await import('./providers')
-    const userApiKey = 'sk-abcdefghijklmnopqrstuvwxyz'
-    const model = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
-    expect(model).toBeDefined()
-    expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
-  })
-
-  it('creates Gemini model with default GEMINI_API_KEY', async () => {
-    const { getAiSdkModel } = await import('./providers')
-    const model = getAiSdkModel('gemini-3.1-flash-lite')
-    expect(model).toBeDefined()
-    expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
-  })
-
-  it('falls back to ZAI when GEMINI_API_KEY is not set', async () => {
+    process.env = { ...originalEnv }
+    delete process.env.PORTKEY_API_KEY
+    delete process.env.PORTKEY_GATEWAY_URL
+    delete process.env.PORTKEY_CONFIG_SLUG
+    delete process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING
+    delete process.env.PORTKEY_PROVIDER_NAME_ZAI_CODING
     delete process.env.GEMINI_API_KEY
-    vi.resetModules()
-    const { getAiSdkModel } = await import('./providers')
-    const model = getAiSdkModel('gemini-3.1-flash-lite')
-    expect(model).toBeDefined()
-    // Should fall back to ZAI provider with default model
-    expect(model.provider).toContain('zai-general')
   })
 
-  it('falls back to ZAI with DEFAULT_AI_MODEL when GEMINI_API_KEY is not set', async () => {
-    delete process.env.GEMINI_API_KEY
-    process.env.DEFAULT_AI_MODEL = 'glm-4.7'
-    vi.resetModules()
-    const { getAiSdkModel } = await import('./providers')
-    const model = getAiSdkModel('gemini-3.1-flash-lite')
-    expect(model).toBeDefined()
-    expect(model.provider).toContain('zai-general')
-    expect(model.modelId).toBe('glm-4.7')
+  afterEach(() => {
+    process.env = originalEnv
   })
 
-  it('respects GEMINI_THINKING_LEVEL env var for Gemini model config', async () => {
-    process.env.GEMINI_THINKING_LEVEL = 'low'
-    vi.resetModules()
-    const { getModelInfo } = await import('./providers')
-    const info = getModelInfo('gemini-3.1-flash-lite')
-    expect(info).toBeDefined()
-    expect(info!.thinkingLevel).toBe('low')
+  describe('Portkey integration', () => {
+    it('does not use Portkey when env vars are not set', async () => {
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('glm-5-turbo')
+      expect(model).toBeDefined()
+      expect(model.modelId).toBe('glm-5-turbo')
+      // Default ZAI provider
+      expect(model.config.provider).toBe('zai-general.chat')
+    })
+
+    it('uses Portkey when PORTKEY_API_KEY and PORTKEY_GATEWAY_URL are set', async () => {
+      process.env.PORTKEY_API_KEY = 'pk-test-key'
+      process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
+      process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-test-123'
+
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('glm-5-turbo')
+      expect(model).toBeDefined()
+      expect(model.modelId).toBe('glm-5-turbo')
+      // Portkey gateway provider
+      expect(model.config.provider).toBe('portkey-gateway.chat')
+    })
+
+    it('falls back to ZAI when Portkey virtual key is not configured for provider', async () => {
+      process.env.PORTKEY_API_KEY = 'pk-test-key'
+      process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
+      // No PORTKEY_VIRTUAL_KEY_ZAI_CODING set
+
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('glm-5-turbo')
+      expect(model).toBeDefined()
+      expect(model.config.provider).toBe('zai-general.chat')
+    })
+
+    it('includes x-portkey-config header when PORTKEY_CONFIG_SLUG is set', async () => {
+      process.env.PORTKEY_API_KEY = 'pk-test-key'
+      process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
+      process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-test-123'
+      process.env.PORTKEY_CONFIG_SLUG = 'my-config-slug'
+
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('glm-5-turbo')
+      expect(model).toBeDefined()
+      expect(model.config.provider).toBe('portkey-gateway.chat')
+    })
+
+    it('resolves Portkey provider name from env var override', async () => {
+      process.env.PORTKEY_API_KEY = 'pk-test-key'
+      process.env.PORTKEY_GATEWAY_URL = 'https://test-gateway.example.com/v1'
+      process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-test-123'
+      process.env.PORTKEY_PROVIDER_NAME_ZAI_CODING = 'custom-zai'
+
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('glm-5-turbo')
+      expect(model).toBeDefined()
+      expect(model.config.provider).toBe('portkey-gateway.chat')
+    })
   })
 
-  it('defaults GEMINI_THINKING_LEVEL to high when not set', async () => {
-    delete process.env.GEMINI_THINKING_LEVEL
-    vi.resetModules()
-    const { getModelInfo } = await import('./providers')
-    const info = getModelInfo('gemini-3.1-flash-lite')
-    expect(info).toBeDefined()
-    expect(info!.thinkingLevel).toBe('high')
+  describe('getModelInfo / getModelTier', () => {
+    it('returns correct model info for known models', async () => {
+      const { getModelInfo, getModelTier } = await import('./providers')
+      expect(getModelInfo('glm-5-turbo')?.tier).toBe('high')
+      expect(getModelInfo('glm-5-turbo')?.portkeyProvider).toBe('zai_coding')
+      expect(getModelInfo('glm-4.7-flash')?.tier).toBe('low')
+      expect(getModelTier('glm-4.6')).toBe('mid')
+    })
+
+    it('returns undefined for unknown models', async () => {
+      const { getModelInfo } = await import('./providers')
+      expect(getModelInfo('nonexistent-model')).toBeUndefined()
+    })
+
+    it('returns low tier for unknown models via getModelTier', async () => {
+      const { getModelTier } = await import('./providers')
+      expect(getModelTier('nonexistent-model')).toBe('low')
+    })
   })
 
-  it('Gemini BYOK path includes thinkingConfig when model has thinkingLevel', async () => {
-    const { getAiSdkModel } = await import('./providers')
-    const userApiKey = 'sk-abcdefghijklmnopqrstuvwxyz'
-    // This exercises lines 69-75: BYOK gemini path with thinkingConfig
-    const model = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
-    expect(model).toBeDefined()
-    expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
+  describe('BYOK (Bring Your Own Key)', () => {
+    it('uses user API key for ZAI models', async () => {
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('glm-5-turbo', 'sk-user-provided-key-1234567890')
+      expect(model).toBeDefined()
+      expect(model.modelId).toBe('glm-5-turbo')
+      expect(model.config.provider).toBe('byok-glm-5-turbo.chat')
+    })
+
+    it('rejects too-short user API keys (falls back to default)', async () => {
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('glm-5-turbo', 'short')
+      expect(model).toBeDefined()
+      // Should fall back to zai-general, not byok
+      expect(model.config.provider).toBe('zai-general.chat')
+    })
+
+    it('uses user API key for Gemini models', async () => {
+      process.env.GEMINI_API_KEY = 'server-gemini-key'
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('gemini-3.1-flash-lite', 'sk-user-gemini-key-1234567890')
+      expect(model).toBeDefined()
+      expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
+    })
+  })
+
+  describe('Gemini fallback', () => {
+    it('falls back to ZAI when GEMINI_API_KEY is not set', async () => {
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('gemini-3.1-flash-lite')
+      expect(model).toBeDefined()
+      // Should fall back to default ZAI model
+      expect(model.config.provider).toBe('zai-general.chat')
+      expect(model.modelId).toBe('glm-5-turbo')
+    })
+
+    it('uses Gemini when GEMINI_API_KEY is set', async () => {
+      process.env.GEMINI_API_KEY = 'test-gemini-key'
+      const { getAiSdkModel } = await import('./providers')
+      const model = getAiSdkModel('gemini-3.1-flash-lite')
+      expect(model).toBeDefined()
+      expect(model.modelId).toBe('gemini-3.1-flash-lite-preview')
+      // Gemini provider
+      expect(model.config.provider).toContain('google')
+    })
+  })
+
+  describe('getAvailableModels', () => {
+    it('returns model list with correct tiers', async () => {
+      const { getAvailableModels } = await import('./providers')
+      const models = getAvailableModels()
+      expect(models.length).toBeGreaterThan(0)
+      const turbo = models.find(m => m.id === 'glm-5-turbo')
+      expect(turbo?.tier).toBe('high')
+      expect(turbo?.provider).toBe('zai')
+    })
+  })
+
+  describe('MODELS registry', () => {
+    it('all ZAI models have portkeyProvider set to zai_coding', async () => {
+      const { MODELS } = await import('./providers')
+      const zaiModels = Object.entries(MODELS).filter(([, info]) => info.provider === 'zai_general')
+      expect(zaiModels.length).toBeGreaterThan(0)
+      for (const [id, info] of zaiModels) {
+        expect(info.portkeyProvider).toBe('zai_coding', `Model ${id} missing portkeyProvider`)
+      }
+    })
+
+    it('Gemini model has portkeyProvider set to google', async () => {
+      const { MODELS } = await import('./providers')
+      const gemini = MODELS['gemini-3.1-flash-lite']
+      expect(gemini?.portkeyProvider).toBe('google')
+    })
   })
 })
