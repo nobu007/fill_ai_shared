@@ -90,6 +90,13 @@ export const ERROR_MESSAGES = {
   invalidMaxUses: 'max_usesは1〜1000の整数で指定してください',
   invitationCodeRequired: '招待コードが必要です',
 
+  // --- Content validation (proof_ai proofread) ---
+  contentRequired: 'コンテンツが必要です',
+  contentTooShort: (min: number) => `コンテンツは${min}文字以上で入力してください`,
+  contentTooLong: (max: number) => `コンテンツは${max}文字以内で入力してください`,
+  wpUpdateFailed: (status: number) => `WordPressの更新に失敗しました (HTTP ${status})`,
+  blogAutoAiError: (status: number) => `Blog Auto AI API エラー (HTTP ${status})`,
+
   // --- API keys route messages ---
   providerAndKeyRequired: 'プロバイダーとAPIキーは必須です',
   byokProOnly: 'BYOKはプロ契約のお客様のみ利用可能です',
