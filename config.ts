@@ -308,3 +308,19 @@ export const LLM_FALLBACK_DEFAULT_MODELS: string[] = (() => {
 
 // ─── Proof AI — Diagnostics ───────────────────────────────
 export const DIAGNOSE_OVERALL_TIMEOUT_MS = Number(process.env.DIAGNOSE_OVERALL_TIMEOUT_MS || 60_000)
+
+// ─── Blog Auto AI ────────────────────────────────────────
+export const BLOG_AUTO_AI_SYNC_PER_PAGE = Number(process.env.BLOG_AUTO_AI_SYNC_PER_PAGE || 50)
+export const BLOG_AUTO_AI_MAX_OFFSET = Number(process.env.BLOG_AUTO_AI_MAX_OFFSET || 5000)
+export const BLOG_AUTO_AI_FETCH_CONCURRENCY = Number(process.env.BLOG_AUTO_AI_FETCH_CONCURRENCY || 5)
+export const BLOG_AUTO_AI_DETAIL_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_DETAIL_TIMEOUT_MS || 15_000)
+export const BLOG_AUTO_AI_LIST_LIMIT = Number(process.env.BLOG_AUTO_AI_LIST_LIMIT || 100)
+
+// ─── Phase Engine timing ─────────────────────────────────
+export const CHUNK_PROCESS_DELAY_MS = Number(process.env.CHUNK_PROCESS_DELAY_MS || 2000)
+export const PHASE_START_DELAY_MS = Number(process.env.PHASE_START_DELAY_MS || 2000)
+export const INTER_AXIS_DELAY_MS = Number(process.env.INTER_AXIS_DELAY_MS || 3_000)
+export const SUMMARY_MAX_TOKENS = Number(process.env.SUMMARY_MAX_TOKENS || 1024)
+export const DEFAULT_CONFIDENCE_THRESHOLD = Number(process.env.DEFAULT_CONFIDENCE_THRESHOLD || 0.7)
+export const WP_POSTS_ENDPOINT = process.env.WP_POSTS_ENDPOINT || '/wp-json/wp/v2/posts'
+export const WP_PLUGINS_PER_PAGE = Number(process.env.WP_PLUGINS_PER_PAGE || 100)
