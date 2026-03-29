@@ -1,7 +1,7 @@
 import DOMPurify from 'isomorphic-dompurify'
 
 /**
- * DOMPurifyの共通設定 — 校正結果HTMLのサニタイズに使用
+ * DOMPurifyの共通設定 — 結果HTMLのサニタイズに使用
  */
 const DOMPURIFY_CONFIG = {
   ALLOWED_TAGS: [
@@ -18,8 +18,8 @@ const DOMPURIFY_CONFIG = {
 }
 
 /**
- * 校正結果HTMLをサニタイズして返す
+ * 結果HTMLをサニタイズして返す
  */
-export function sanitizeProofreadHtml(html: string): string {
+export function sanitizeHtml(html: string): string {
   return DOMPurify.sanitize(html, DOMPURIFY_CONFIG)
 }

@@ -27,6 +27,11 @@ export const DEFAULT_AI_MODEL = process.env.DEFAULT_AI_MODEL || 'glm-5-turbo'
 export const MAX_CONTENT_LENGTH = Number(process.env.MAX_CONTENT_LENGTH || 100000)
 export const MIN_CONTENT_LENGTH = Number(process.env.MIN_CONTENT_LENGTH || 50)
 
+// ─── Free Plan Limits (P3.1) ───────────────────────────────
+export const FREE_MAX_REQUESTS_PER_MONTH = Number(process.env.FREE_MAX_REQUESTS_PER_MONTH || 10)
+export const FREE_MAX_CHARACTERS_PER_REQUEST = Number(process.env.FREE_MAX_CHARACTERS_PER_REQUEST || 5000)
+export const FREE_ENABLED_AXES = (process.env.FREE_ENABLED_AXES || 'structure,readability,ai_tone').split(',').filter(Boolean)
+
 
 
 // ─── LLM / Engine Settings ──────────────────────────────────
@@ -65,7 +70,7 @@ export const FILL_AUTO_APPLY_THRESHOLD = Number(process.env.FILL_AUTO_APPLY_THRE
 export const MAX_MAPPING_PROMPT_LENGTH = Number(process.env.MAX_MAPPING_PROMPT_LENGTH || 100_000)
 export const FILL_FALLBACK_MODELS = (process.env.FILL_FALLBACK_MODELS || 'glm-4.7-flash,glm-5-turbo').split(',').filter(Boolean)
 
-// ─── Proof AI / Phase Engine Fallback Settings ────────────
+// ─── LLM Fallback Settings ────────────────────────────────
 export const LLM_FALLBACK_STABLE_MODELS = (process.env.LLM_FALLBACK_STABLE_MODELS || 'glm-5-turbo').split(',').filter(Boolean)
 export const LLM_FALLBACK_DEFAULT_MODELS = (process.env.LLM_FALLBACK_DEFAULT_MODELS || 'glm-5-turbo,glm-4.7-flash').split(',').filter(Boolean)
 export const LLM_FALLBACK_CHAIN: Record<string, string[]> = (() => {
@@ -84,7 +89,7 @@ export const COST_OPTIMIZED_FALLBACK_CHAIN: Record<string, string[]> = {
   // 安定モデル：glm-5-turbo のフォールバックチェーン（便宜順）
   'glm-5-turbo': [
     'glm-4.7-flash',      // 最安価 (low-tier)
-    'glm-4.7-coding',     // 中価値 (mid-tier) 
+    'glm-4.7-coding',     // 中価値 (mid-tier)
     'glm-4.7',           // 高品質 (mid-tier)
     'glm-4.6',           // 代替 (mid-tier)
     'gemini-3.1-flash-lite', // 高価値 (high-tier) - 最後の手段

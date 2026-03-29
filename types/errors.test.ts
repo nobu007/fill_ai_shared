@@ -96,8 +96,8 @@ describe('ERROR_MESSAGES', () => {
     })
   })
 
-  it('should include fill_ai specific error messages (no proof_ai remnants)', () => {
-    // Phase 3 構造分離完了: proof_ai由来看削除済み
+  it('should not include removed error messages', () => {
+    // 不要なプロジェクト固有エラーメッセージが残っていないことを確認
     const removedKeys = [
       'wpAuthFailed', 'wpApiError',
       'batchLimit', 'siteInfoNotFound',

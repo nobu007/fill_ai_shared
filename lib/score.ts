@@ -1,11 +1,11 @@
 /**
- * Score calculation utilities for proofreading
+ * Score calculation utilities
  * Shared between v2/route.ts and v2/stream/route.ts
  */
 import { SCORE_AUTO_FIXED_PENALTY, SCORE_NEEDS_REVIEW_PENALTY, SCORE_AXIS_PATCH_PENALTY } from '../config'
 
 /**
- * Calculate overall proofreading score based on auto-fixed and needs-review counts
+ * Calculate overall score based on auto-fixed and needs-review counts
  */
 export function calculateTotalScore(auto_fixed: number, needs_review: number): number {
   return Math.max(0, 100 - auto_fixed * SCORE_AUTO_FIXED_PENALTY - needs_review * SCORE_NEEDS_REVIEW_PENALTY)

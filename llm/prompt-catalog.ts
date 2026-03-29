@@ -58,7 +58,7 @@ export function fillTemplate(template: string, vars: Record<string, string>): st
 }
 
 /**
- * 軸IDの配列から、catalogのプロンプトを組み立てて校正軸セクションを生成
+ * 軸IDの配列から、catalogのプロンプトを組み立ててセクションを生成
  */
 export function buildAxesSection(
   axes: string[],

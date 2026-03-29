@@ -26,6 +26,9 @@ export type ErrorCode =
   | 'WP_AUTH_ERROR'
   | 'TOKEN_EXPIRED'
   | 'SESSION_SAVE_ERROR'
+  | 'MONTHLY_LIMIT_EXCEEDED'
+  | 'CONTENT_LENGTH_EXCEEDED'
+  | 'AXIS_NOT_AVAILABLE'
 
 /** Helper to create a typed error response for Next.js route handlers */
 export function errorResponse(
@@ -100,7 +103,7 @@ export const ERROR_MESSAGES = {
   invalidMaxUses: 'max_usesは1〜1000の整数で指定してください',
   invitationCodeRequired: '招待コードが必要です',
 
-  // --- Content validation (proof_ai proofread) ---
+  // --- Content validation ---
   contentRequired: 'コンテンツが必要です',
   contentTooShort: (min: number) => `コンテンツは${min}文字以上で入力してください`,
   contentTooLong: (max: number) => `コンテンツは${max}文字以内で入力してください`,
@@ -112,6 +115,11 @@ export const ERROR_MESSAGES = {
   wpFetchFailed: (msg?: string) => msg ? `記事の取得に失敗しました: ${msg}` : '記事の取得に失敗しました',
   sessionSaveFailed: 'セッションの保存に失敗しました',
   tokenExpired: 'トークンの有効期限が切れています',
+
+  // --- Usage limit messages (P3.1) ---
+  monthlyLimitExceeded: (max: number) => `今月の利用回数が上限（${max}回）に達しています。来月までお待ちいただくか、プランをアップグレードしてください。`,
+  contentLengthExceeded: (max: number, actual: number) => `フリープランの文字数制限は${max.toLocaleString()}文字です。${actual.toLocaleString()}文字のテキストはプランをアップグレードしてご利用ください。`,
+  axisNotAvailable: (axes: string[], allowed: string[]) => `フリープランでは${allowed.join('、')}のみ利用可能です。「${axes.join('、')}」はプランをアップグレードしてご利用ください。`,
 
   // --- API keys route messages ---
   providerAndKeyRequired: 'プロバイダーとAPIキーは必須です',
