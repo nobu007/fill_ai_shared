@@ -59,10 +59,11 @@ export const APP_ICON = process.env.NEXT_PUBLIC_APP_ICON || '📝'
 export const MAX_PDF_SIZE_BYTES = Number(process.env.MAX_PDF_SIZE_BYTES || 10_000_000)
 export const MAX_PDF_PAGES = Number(process.env.MAX_PDF_PAGES || 50)
 export const FILL_MAPPING_TIMEOUT_MS = Number(process.env.FILL_MAPPING_TIMEOUT_MS || 30_000)
+export const FILL_VISION_LLM_TIMEOUT_MS = Number(process.env.FILL_VISION_LLM_TIMEOUT_MS || 90_000)
 export const FILL_AUTO_APPLY_THRESHOLD = Number(process.env.FILL_AUTO_APPLY_THRESHOLD || 0.8)
 /** Maximum prompt size for LLM mapping requests (Constitution §1.2 Stability — prevent resource exhaustion) */
 export const MAX_MAPPING_PROMPT_LENGTH = Number(process.env.MAX_MAPPING_PROMPT_LENGTH || 100_000)
-export const FILL_FALLBACK_MODELS = (process.env.FILL_FALLBACK_MODELS || 'glm-5-turbo,glm-4.7-coding,glm-4.7-flash').split(',').filter(Boolean)
+export const FILL_FALLBACK_MODELS = (process.env.FILL_FALLBACK_MODELS || 'glm-4.7-flash,glm-5-turbo').split(',').filter(Boolean)
 
 // ─── Proof AI / Phase Engine Fallback Settings ────────────
 export const LLM_FALLBACK_STABLE_MODELS = (process.env.LLM_FALLBACK_STABLE_MODELS || 'glm-5-turbo').split(',').filter(Boolean)
