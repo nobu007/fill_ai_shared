@@ -263,6 +263,12 @@ export const CONTACT_ENHANCE_RATE_LIMIT_MAX = Number(process.env.CONTACT_ENHANCE
 export const CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS = Number(process.env.CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS || 300_000)
 export const CONTACT_ENHANCE_CLEANUP_INTERVAL_MS = Number(process.env.CONTACT_ENHANCE_CLEANUP_INTERVAL_MS || 300_000)
 export const CONTACT_ENHANCE_DAILY_CAP_MAX = Number(process.env.CONTACT_ENHANCE_DAILY_CAP_MAX || 100)
+/** Maximum message length for contact enhance API (Constitution §2.4) */
+export const CONTACT_ENHANCE_MESSAGE_MAX_LENGTH = Number(process.env.CONTACT_ENHANCE_MESSAGE_MAX_LENGTH || 5000)
+/** Maximum category length for contact enhance API (Constitution §2.4) */
+export const CONTACT_ENHANCE_CATEGORY_MAX_LENGTH = Number(process.env.CONTACT_ENHANCE_CATEGORY_MAX_LENGTH || 50)
+/** Minimum User-Agent string length to reject bots with obviously fake UA (Constitution §2.4) */
+export const MIN_USER_AGENT_LENGTH = Number(process.env.MIN_USER_AGENT_LENGTH || 10)
 
 // ─── Contact / Validation ──────────────────────────────────
 export const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
