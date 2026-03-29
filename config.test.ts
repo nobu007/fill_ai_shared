@@ -15,6 +15,7 @@ import {
   HISTORY_EXPORT_LIMIT,
   DASHBOARD_RECENT_LIMIT,
   MAX_ERROR_MESSAGE_LENGTH,
+  INVITATION_MAX_INSERT_ATTEMPTS,
   FREE_CREDIT_PACKS,
   PRO_CREDIT_PACKS,
   PACK_CREDITS,
@@ -117,6 +118,11 @@ describe('Error Handling', () => {
     expect(MAX_ERROR_MESSAGE_LENGTH).toBe(500)
     expect(typeof MAX_ERROR_MESSAGE_LENGTH).toBe('number')
   })
+
+  it('INVITATION_MAX_INSERT_ATTEMPTS defaults to 3', () => {
+    expect(INVITATION_MAX_INSERT_ATTEMPTS).toBe(3)
+    expect(typeof INVITATION_MAX_INSERT_ATTEMPTS).toBe('number')
+  })
 })
 
 describe('Environment variable override', () => {
@@ -130,6 +136,7 @@ describe('Environment variable override', () => {
       HISTORY_EXPORT_LIMIT,
       DASHBOARD_RECENT_LIMIT,
       MAX_ERROR_MESSAGE_LENGTH,
+      INVITATION_MAX_INSERT_ATTEMPTS,
     ]
     for (const val of numericConstants) {
       expect(val).toBeGreaterThan(0)
