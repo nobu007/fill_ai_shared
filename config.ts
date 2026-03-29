@@ -77,6 +77,54 @@ export const LLM_FALLBACK_CHAIN: Record<string, string[]> = (() => {
   }
 })()
 
+// ─── Cost-Optimized BYOK Fallback Chain (便宜順) ─────────────
+// BYOKユーザー向けのコスト最適化フォールバックチェーン
+// 安定モデルでもここに明示的に定義されたチェーンを使用
+export const COST_OPTIMIZED_FALLBACK_CHAIN: Record<string, string[]> = {
+  // 安定モデル：glm-5-turbo のフォールバックチェーン（便宜順）
+  'glm-5-turbo': [
+    'glm-4.7-flash',      // 最安価 (low-tier)
+    'glm-4.7-coding',     // 中価値 (mid-tier) 
+    'glm-4.7',           // 高品質 (mid-tier)
+    'glm-4.6',           // 代替 (mid-tier)
+    'gemini-3.1-flash-lite', // 高価値 (high-tier) - 最後の手段
+  ],
+  // glm-5 系列のフォールバックチェーン
+  'glm-5': [
+    'glm-4.7-flash',      // 最安価
+    'glm-4.7-coding',     // 中価値
+    'glm-4.7',           // 高品質
+    'glm-4.6',           // 代替
+    'glm-5-turbo',       // 同系列の安定モデル
+  ],
+  // glm-4.7 系列のフォールバックチェーン
+  'glm-4.7': [
+    'glm-4.7-flash',     // 安価な代替
+    'glm-4.7-coding',    // コーディング向け
+    'glm-4.6',           // 安定した代替
+    'glm-4.5-air',       // 最も安価
+  ],
+  // 軽量モデルのフォールバックチェーン
+  'glm-4.7-flash': [
+    'glm-4.5-air',       // 最も安価
+    'glm-4.7-coding',    // より高価だが信頼性の高い代替
+  ],
+  // ジェミニモデルのフォールバックチェーン
+  'gemini-3.1-flash-lite': [
+    'glm-5-turbo',       // 安定した代替（ZAI API経由）
+    'glm-4.7-flash',     // 安価な代替
+  ],
+  // デフォルトのBYOKフォールバックチェーン（コスト順）
+  'default-byok': [
+    'glm-4.7-flash',     // 最安価
+    'glm-4.7-coding',    // 中価値
+    'glm-4.7',          // 高品質
+    'glm-4.6',          // 代替
+    'glm-5-turbo',      // 安定モデル
+    'glm-4.5-air',      // 最も安価
+  ]
+}
+
 // ─── WordPress API Settings ───────────────────────────────
 export const WP_API_TIMEOUT_MS = Number(process.env.WP_API_TIMEOUT_MS || 15_000)
 export const WP_SYNC_PER_PAGE = Number(process.env.WP_SYNC_PER_PAGE || 100)
