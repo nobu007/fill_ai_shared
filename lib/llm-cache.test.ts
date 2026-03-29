@@ -15,6 +15,7 @@ import {
 let cacheDir: string
 
 beforeEach(async () => {
+  process.env.LLM_CACHE_PROVIDER = 'local'
   cacheDir = await mkdtemp(join(tmpdir(), 'llm-cache-test-'))
   configureLlmCache({ enabled: true, cacheDir, ttlMs: 24 * 60 * 60 * 1000, maxEntries: 500 })
 })

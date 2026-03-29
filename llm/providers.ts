@@ -6,6 +6,7 @@ import {
   GEMINI_API_KEY, GEMINI_THINKING_LEVEL,
 } from '../config'
 import { logger } from '../lib/logger'
+import { getCacheProvider } from '../lib/llm-cache-stats'
 
 export type ModelTier = 'low' | 'mid' | 'high'
 
@@ -35,7 +36,7 @@ function getZaiProvider(portkeyConfig?: { provider: string; virtualKey: string }
  * Build Portkey request headers.
  * Uses x-portkey-provider and x-portkey-virtual-key to route correctly.
  */
-function getPortkeyHeaders(provider: string, virtualKey: string): Record<string, string> {
+function getPortkeyHeaders(provider: string, virtualKey: string, cacheNamespace?: string): Record<string, string> {
   const headers: Record<string, string> = {
     'x-portkey-provider': provider,
     'x-portkey-virtual-key': virtualKey,
@@ -43,6 +44,13 @@ function getPortkeyHeaders(provider: string, virtualKey: string): Record<string,
   // Attach Portkey config for automatic retry + fallback (handled at gateway level)
   if (PORTKEY_CONFIG_SLUG) {
     headers['x-portkey-config'] = PORTKEY_CONFIG_SLUG
+  }
+  // Portkey semantic cache (active when LLM_CACHE_PROVIDER=portkey, which is default)
+  if (getCacheProvider() === 'portkey') {
+    headers['x-portkey-cache'] = JSON.stringify({ mode: 'simple', max_age: 86400 })
+    if (cacheNamespace) {
+      headers['x-portkey-cache-namespace'] = cacheNamespace
+    }
   }
   return headers
 }

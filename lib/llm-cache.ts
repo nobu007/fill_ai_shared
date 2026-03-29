@@ -1,10 +1,16 @@
 /**
  * File-based LLM response cache using JSONL format.
  * Stores responses keyed by (model, systemPrompt, userPrompt) hash.
+ *
+ * Active when LLM_CACHE_PROVIDER=local. When LLM_CACHE_PROVIDER=portkey (default),
+ * caching is handled at the Portkey gateway level via x-portkey-cache headers.
+ *
+ * Both modes feed into unified stats via llm-cache-stats.ts.
  */
 import { createHash } from 'node:crypto'
 import { readFile, writeFile, rm, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
+import { recordCacheHit, recordCacheMiss, getCacheProvider } from './llm-cache-stats'
 
 // ─── Configuration ────────────────────────────────────────
 
@@ -37,7 +43,7 @@ export function configureLlmCache(opts: CacheConfig): void {
 }
 
 export function isLlmCacheEnabled(): boolean {
-  return config.enabled
+  return getCacheProvider() === 'local' && config.enabled
 }
 
 // ─── Key Generation ───────────────────────────────────────
@@ -82,6 +88,7 @@ export async function getCachedLlmResponse(
   userPrompt: string,
 ): Promise<string | null> {
   if (!config.enabled) return null
+  if (getCacheProvider() !== 'local') return null
 
   const key = buildCacheKey(model, systemPrompt, userPrompt)
   const entries = await readEntries()
@@ -92,9 +99,11 @@ export async function getCachedLlmResponse(
     const entry = entries[i]
     if (entry.key === key) {
       if (now - entry.ts > config.ttlMs) return null
+      recordCacheHit()
       return entry.response
     }
   }
+  recordCacheMiss()
   return null
 }
 
@@ -106,6 +115,7 @@ export async function setCachedLlmResponse(
   opts?: { force?: boolean },
 ): Promise<void> {
   if (!config.enabled) return
+  if (getCacheProvider() !== 'local') return
   if (response === '' && !opts?.force) return
 
   const key = buildCacheKey(model, systemPrompt, userPrompt)
