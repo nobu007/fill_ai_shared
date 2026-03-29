@@ -4,6 +4,7 @@ import {
   History,
   LayoutDashboard,
   Settings,
+  Users,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -16,6 +17,7 @@ export interface NavItem {
 export const navItems: NavItem[] = [
   { href: '/', label: 'ダッシュボード', icon: LayoutDashboard },
   { href: '/fill', label: 'フォーム入力', icon: FileUp },
+  { href: '/family', label: '家族情報', icon: Users },
   { href: '/history', label: '履歴', icon: History },
   { href: '/credits', label: 'クレジット', icon: CreditCard },
   { href: '/settings', label: '設定', icon: Settings },
