@@ -12,6 +12,7 @@ vi.mock('lucide-react', () => ({
   FileText: () => <div data-testid="filetext-icon" />,
   FileUp: () => <div data-testid="fileup-icon" />,
   Globe: () => <div data-testid="globe-icon" />,
+  Users: () => <div data-testid="users-icon" />,
   History: () => <div data-testid="history-icon" />,
   MessageSquare: () => <div data-testid="messagesquare-icon" />,
   CreditCard: () => <div data-testid="creditcard-icon" />,

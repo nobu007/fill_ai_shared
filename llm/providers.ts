@@ -36,7 +36,7 @@ function getZaiProvider(portkeyConfig?: { provider: string; virtualKey: string }
  * Build Portkey request headers.
  * Uses x-portkey-provider and x-portkey-virtual-key to route correctly.
  */
-function getPortkeyHeaders(provider: string, virtualKey: string, cacheNamespace?: string): Record<string, string> {
+export function getPortkeyHeaders(provider: string, virtualKey: string, cacheNamespace?: string): Record<string, string> {
   const headers: Record<string, string> = {
     'x-portkey-provider': provider,
     'x-portkey-virtual-key': virtualKey,
@@ -59,7 +59,7 @@ function getPortkeyHeaders(provider: string, virtualKey: string, cacheNamespace?
  * Resolve Portkey config for a provider.
  * Reads PORTKEY_VIRTUAL_KEY_<PROVIDER> and PORTKEY_PROVIDER_NAME_<PROVIDER> env vars.
  */
-function resolvePortkeyConfig(providerHint?: string): { provider: string; virtualKey: string } | undefined {
+export function resolvePortkeyConfig(providerHint?: string): { provider: string; virtualKey: string } | undefined {
   if (!isPortkeyEnabled() || !providerHint) return undefined
   const envBase = providerHint.toUpperCase().replace(/-/g, '_')
   const virtualKey = process.env[`PORTKEY_VIRTUAL_KEY_${envBase}`]
