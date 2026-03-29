@@ -241,6 +241,10 @@ export const PRO_CREDIT_PACKS: CreditPackDisplay[] = [
   { id: 'pro-1000', credits: 1000, price: 4980, unitPrice: 5.0 },
 ]
 
+// ─── PDF / PII Masking Settings ───────────────────────────
+/** Proximity threshold in PDF points (~2cm) for PII label-to-value spatial detection */
+export const PII_PROXIMITY_THRESHOLD = Number(process.env.PII_PROXIMITY_THRESHOLD || 60)
+
 // ─── PDF Enhancement Settings ──────────────────────────────
 export const ENHANCE_RENDER_SCALE = Number(process.env.ENHANCE_RENDER_SCALE || 2)
 export const ENHANCE_SHARPEN_AMOUNT = Number(process.env.ENHANCE_SHARPEN_AMOUNT || 0.5)
@@ -330,6 +334,10 @@ if (!ENCRYPTION_KEY && typeof window === 'undefined') {
 // ─── Environment / Logging ─────────────────────────────────
 export const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 export const LOG_LEVEL = process.env.LOG_LEVEL || (process.env.NODE_ENV === 'test' ? 'error' : 'info')
+export const LLM_CACHE_PROVIDER = ((): 'portkey' | 'local' => {
+  const env = process.env.LLM_CACHE_PROVIDER || 'portkey'
+  return env === 'local' ? 'local' : 'portkey'
+})()
 
 // ─── BYOK Model Configuration ──────────────────────────────
 export interface ProviderModelOption {
