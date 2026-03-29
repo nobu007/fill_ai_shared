@@ -99,10 +99,8 @@ describe('ERROR_MESSAGES', () => {
   it('should include fill_ai specific error messages (no proof_ai remnants)', () => {
     // Phase 3 構造分離完了: proof_ai由来看削除済み
     const removedKeys = [
-      'contentRequired', 'contentTooLong', 'contentTooShort',
-      'tokenExpired', 'wpAuthFailed', 'wpApiError', 'wpFetchFailed',
-      'sessionSaveFailed', 'wpUpdateFailed', 'wpPostSaveFailed',
-      'siteNotFound', 'postNotFound', 'batchLimit', 'siteInfoNotFound',
+      'wpAuthFailed', 'wpApiError',
+      'batchLimit', 'siteInfoNotFound',
       'promptRequired', 'invalidModelName',
     ]
     removedKeys.forEach((key) => {

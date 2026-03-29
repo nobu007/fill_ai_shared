@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calculateTotalScore, calculateAxisScores } from '@/shared/lib/score'
+import { calculateTotalScore, calculateAxisScores } from './score'
 
 describe('score', () => {
   describe('calculateTotalScore', () => {
@@ -8,8 +8,8 @@ describe('score', () => {
     })
 
     it('deducts points for auto-fixed items', () => {
-      // SCORE_AUTO_FIXED_PENALTY is 3
-      expect(calculateTotalScore(5, 0)).toBe(85)
+      // SCORE_AUTO_FIXED_PENALTY is 2
+      expect(calculateTotalScore(5, 0)).toBe(90)
     })
 
     it('deducts points for needs-review items', () => {
@@ -18,7 +18,7 @@ describe('score', () => {
     })
 
     it('combines both penalties', () => {
-      expect(calculateTotalScore(5, 4)).toBe(65)
+      expect(calculateTotalScore(5, 4)).toBe(70)
     })
 
     it('never goes below 0', () => {
@@ -43,9 +43,9 @@ describe('score', () => {
         { axis: 'readability' },
         { axis: 'readability' },
       ]
-      // SCORE_AXIS_PATCH_PENALTY is 5
+      // SCORE_AXIS_PATCH_PENALTY is 3
       const result = calculateAxisScores(['readability', 'tone'], patches)
-      expect(result.readability).toBe(85)
+      expect(result.readability).toBe(91)
       expect(result.tone).toBe(100)
     })
 
@@ -55,7 +55,7 @@ describe('score', () => {
         { axis: 'seo' }, // not in axes_run
       ]
       const result = calculateAxisScores(['readability'], patches)
-      expect(result.readability).toBe(95)
+      expect(result.readability).toBe(97)
       expect(result.seo).toBeUndefined()
     })
 
@@ -65,7 +65,7 @@ describe('score', () => {
     })
 
     it('never goes below 0 per axis', () => {
-      const patches = Array(20).fill({ axis: 'readability' })
+      const patches = Array(50).fill({ axis: 'readability' })
       const result = calculateAxisScores(['readability'], patches)
       expect(result.readability).toBe(0)
     })
