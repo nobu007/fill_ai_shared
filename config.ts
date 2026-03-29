@@ -40,6 +40,8 @@ export const LLM_MAX_RETRIES = Number(process.env.LLM_MAX_RETRIES || 4)
 
 /** When Portkey Config handles retry+fallback at gateway level, disable ai-sdk retries to avoid duplication */
 export const PORTKEY_CONFIG_SLUG = process.env.PORTKEY_CONFIG_SLUG || ""
+export const PORTKEY_API_KEY = process.env.PORTKEY_API_KEY || ''
+export const PORTKEY_GATEWAY_URL = process.env.PORTKEY_GATEWAY_URL || 'https://api.portkey.ai/v1'
 
 export const LLM_DEFAULT_MAX_TOKENS = Number(process.env.LLM_DEFAULT_MAX_TOKENS || 4096)
 export const LLM_RETRY_DELAY_MS = Number(process.env.LLM_RETRY_DELAY_MS || 5000)

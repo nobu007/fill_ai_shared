@@ -1,17 +1,18 @@
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
-import { ZAI_API_URL, ZAI_API_KEY, DEFAULT_AI_MODEL } from '../config'
+import {
+  ZAI_API_URL, ZAI_API_KEY, DEFAULT_AI_MODEL,
+  PORTKEY_API_KEY, PORTKEY_GATEWAY_URL, PORTKEY_CONFIG_SLUG,
+  GEMINI_API_KEY, GEMINI_THINKING_LEVEL,
+} from '../config'
 import { logger } from '../lib/logger'
 
 export type ModelTier = 'low' | 'mid' | 'high'
 
-/** Whether Portkey AI Gateway is enabled via env vars (lazy for dotenv compatibility) */
+/** Whether Portkey AI Gateway is enabled via config values (§2.4) */
 export function isPortkeyEnabled(): boolean {
-  return !!process.env.PORTKEY_API_KEY && !!process.env.PORTKEY_GATEWAY_URL
+  return !!PORTKEY_API_KEY && !!PORTKEY_GATEWAY_URL
 }
-const PORTKEY_API_KEY = process.env.PORTKEY_API_KEY || ''
-const PORTKEY_GATEWAY_URL = process.env.PORTKEY_GATEWAY_URL || 'https://api.portkey.ai/v1'
-const PORTKEY_CONFIG_SLUG = process.env.PORTKEY_CONFIG_SLUG || ''
 
 function getZaiProvider(portkeyConfig?: { provider: string; virtualKey: string }) {
   if (isPortkeyEnabled() && portkeyConfig) {
@@ -25,8 +26,8 @@ function getZaiProvider(portkeyConfig?: { provider: string; virtualKey: string }
   }
   return createOpenAICompatible({
     name: 'zai-general',
-    baseURL: process.env.ZAI_API_URL || ZAI_API_URL,
-    apiKey: process.env.ZAI_API_KEY || ZAI_API_KEY,
+    baseURL: ZAI_API_URL,
+    apiKey: ZAI_API_KEY,
   })
 }
 
@@ -60,7 +61,7 @@ function resolvePortkeyConfig(providerHint?: string): { provider: string; virtua
 }
 
 function getGeminiProvider(thinkingLevel?: string) {
-  const apiKey = process.env.GEMINI_API_KEY
+  const apiKey = GEMINI_API_KEY
   if (!apiKey) {
     logger.warn('providers', 'GEMINI_API_KEY not set, Gemini fallback unavailable')
     return null
@@ -92,7 +93,7 @@ export const MODELS: Record<string, ModelInfo> = {
   'glm-4.7-coding': { provider: 'zai_general', modelId: 'glm-4.7-coding', tier: 'mid', supportsThinking: true, portkeyProvider: 'zai_coding' },
   'glm-4.7-flash': { provider: 'zai_general', modelId: 'glm-4.7-flash', tier: 'low', supportsThinking: true, portkeyProvider: 'zai_coding' },
   // Google Gemini（fallback用）
-  'gemini-3.1-flash-lite': { provider: 'gemini', modelId: 'gemini-3.1-flash-lite-preview', tier: 'high', supportsThinking: true, thinkingLevel: (process.env.GEMINI_THINKING_LEVEL as 'minimal' | 'low' | 'medium' | 'high') || 'high', portkeyProvider: 'google' },
+  'gemini-3.1-flash-lite': { provider: 'gemini', modelId: 'gemini-3.1-flash-lite-preview', tier: 'high', supportsThinking: true, thinkingLevel: GEMINI_THINKING_LEVEL, portkeyProvider: 'google' },
 }
 
 export function getModelInfo(modelId: string): ModelInfo | undefined {
