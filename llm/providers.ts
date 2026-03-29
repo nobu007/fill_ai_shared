@@ -9,8 +9,6 @@ export type ModelTier = 'low' | 'mid' | 'high'
 export function isPortkeyEnabled(): boolean {
   return !!process.env.PORTKEY_API_KEY && !!process.env.PORTKEY_GATEWAY_URL
 }
-/** @deprecated Use isPortkeyEnabled() for lazy evaluation */
-export const PORTKEY_ENABLED = false // Always use isPortkeyEnabled() in runtime code
 const PORTKEY_API_KEY = process.env.PORTKEY_API_KEY || ''
 const PORTKEY_GATEWAY_URL = process.env.PORTKEY_GATEWAY_URL || 'https://api.portkey.ai/v1'
 const PORTKEY_CONFIG_SLUG = process.env.PORTKEY_CONFIG_SLUG || ''
