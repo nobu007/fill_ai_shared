@@ -83,6 +83,12 @@ export const ERROR_MESSAGES = {
   updateFailed: '更新に失敗しました',
   deleteFailed: '削除に失敗しました',
 
+  // --- family-members route messages ---
+  nameRequired: '名前が必要です',
+  invalidRelationship: '無効な続柄です',
+  memberNotFound: 'メンバーが見つかりません',
+  memberLimitReached: (max: number) => `メンバー数は${max}人以内にしてください`,
+
   // --- Invitation route messages ---
   invitationsFetchFailed: '招待コードの取得に失敗しました',
   invitationsCreateFailed: '招待コードの作成に失敗しました',

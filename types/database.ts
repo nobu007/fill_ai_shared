@@ -349,6 +349,32 @@ export interface Database {
           description?: string | null
         }
       }
+      family_members: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          relationship: '本人' | '配偶者' | '父' | '母' | '子' | '兄弟姉妹' | '祖父母' | 'その他'
+          sort_order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          relationship?: '本人' | '配偶者' | '父' | '母' | '子' | '兄弟姉妹' | '祖父母' | 'その他'
+          sort_order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string
+          relationship?: '本人' | '配偶者' | '父' | '母' | '子' | '兄弟姉妹' | '祖父母' | 'その他'
+          sort_order?: number
+          updated_at?: string
+        }
+      }
     }
   }
 }

@@ -228,6 +228,12 @@ export const VALID_USER_DATA_CATEGORIES = [
   'date', 'amount', 'custom',
 ] as const
 
+export const VALID_FAMILY_RELATIONSHIPS = [
+  '本人', '配偶者', '父', '母', '子', '兄弟姉妹', '祖父母', 'その他',
+] as const
+
+export const MAX_FAMILY_MEMBERS = 20
+
 // ─── Pagination / Error Handling ───────────────────────────
 export const DEFAULT_PAGE_LIMIT = Number(process.env.DEFAULT_PAGE_LIMIT || 50)
 export const HISTORY_EXPORT_LIMIT = Number(process.env.HISTORY_EXPORT_LIMIT || 200)
