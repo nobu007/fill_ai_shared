@@ -3,7 +3,7 @@
  * Stores responses keyed by (model, systemPrompt, userPrompt) hash.
  */
 import { createHash } from 'node:crypto'
-import { readFile, writeFile, readdir, rm, mkdir } from 'node:fs/promises'
+import { readFile, writeFile, rm, mkdir } from 'node:fs/promises'
 import { join } from 'node:path'
 
 // ─── Configuration ────────────────────────────────────────
