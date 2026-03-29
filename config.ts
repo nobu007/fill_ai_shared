@@ -67,6 +67,14 @@ export const MAX_PDF_SIZE_BYTES = Number(process.env.MAX_PDF_SIZE_BYTES || 10_00
 export const MAX_PDF_PAGES = Number(process.env.MAX_PDF_PAGES || 50)
 export const FILL_MAPPING_TIMEOUT_MS = Number(process.env.FILL_MAPPING_TIMEOUT_MS || 30_000)
 export const FILL_VISION_LLM_TIMEOUT_MS = Number(process.env.FILL_VISION_LLM_TIMEOUT_MS || 90_000)
+/** VLM model for vision-based PDF field extraction */
+export const FILL_VISION_MODEL = process.env.FILL_VISION_MODEL || 'glm-4.6v-flash'
+/** Temperature for VLM field detection (low = deterministic) */
+export const FILL_VISION_TEMPERATURE = Number(process.env.FILL_VISION_TEMPERATURE || 0.1)
+/** Max tokens for VLM field detection response */
+export const FILL_VISION_MAX_TOKENS = Number(process.env.FILL_VISION_MAX_TOKENS || 8192)
+/** OCR model for layout_parsing API */
+export const FILL_OCR_MODEL = process.env.FILL_OCR_MODEL || 'glm-ocr'
 export const FILL_AUTO_APPLY_THRESHOLD = Number(process.env.FILL_AUTO_APPLY_THRESHOLD || 0.8)
 /** Maximum prompt size for LLM mapping requests (Constitution §1.2 Stability — prevent resource exhaustion) */
 export const MAX_MAPPING_PROMPT_LENGTH = Number(process.env.MAX_MAPPING_PROMPT_LENGTH || 100_000)

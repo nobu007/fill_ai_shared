@@ -23,6 +23,10 @@ import {
   FILL_MAPPING_TEMPERATURE,
   FILL_MAPPING_MAX_TOKENS,
   FILL_MAPPING_PROMPT_TEMPLATE,
+  FILL_VISION_MODEL,
+  FILL_VISION_TEMPERATURE,
+  FILL_VISION_MAX_TOKENS,
+  FILL_OCR_MODEL,
   PROVIDER_MODELS,
   DEFAULT_PROVIDER_MODEL,
   PROVIDER_LABELS,
@@ -266,6 +270,46 @@ describe('LLM Mapping Config (Constitution §2.4)', () => {
     expect(FILL_MAPPING_PROMPT_TEMPLATE).not.toContain('太郎')
     expect(FILL_MAPPING_PROMPT_TEMPLATE).not.toContain('03-')
     expect(FILL_MAPPING_PROMPT_TEMPLATE).not.toContain('1990')
+  })
+
+  // ─── Vision & OCR Config ────────────────────────────────
+
+  it('FILL_VISION_MODEL is a non-empty string', () => {
+    expect(typeof FILL_VISION_MODEL).toBe('string')
+    expect(FILL_VISION_MODEL.length).toBeGreaterThan(0)
+  })
+
+  it('FILL_VISION_MODEL defaults to glm-4.6v-flash', () => {
+    expect(FILL_VISION_MODEL).toBe('glm-4.6v-flash')
+  })
+
+  it('FILL_VISION_TEMPERATURE is a number between 0 and 1', () => {
+    expect(typeof FILL_VISION_TEMPERATURE).toBe('number')
+    expect(FILL_VISION_TEMPERATURE).toBeGreaterThanOrEqual(0)
+    expect(FILL_VISION_TEMPERATURE).toBeLessThanOrEqual(1)
+  })
+
+  it('FILL_VISION_TEMPERATURE defaults to 0.1 (deterministic)', () => {
+    expect(FILL_VISION_TEMPERATURE).toBe(0.1)
+  })
+
+  it('FILL_VISION_MAX_TOKENS is a positive integer', () => {
+    expect(typeof FILL_VISION_MAX_TOKENS).toBe('number')
+    expect(FILL_VISION_MAX_TOKENS).toBeGreaterThan(0)
+    expect(Number.isInteger(FILL_VISION_MAX_TOKENS)).toBe(true)
+  })
+
+  it('FILL_VISION_MAX_TOKENS defaults to 8192', () => {
+    expect(FILL_VISION_MAX_TOKENS).toBe(8192)
+  })
+
+  it('FILL_OCR_MODEL is a non-empty string', () => {
+    expect(typeof FILL_OCR_MODEL).toBe('string')
+    expect(FILL_OCR_MODEL.length).toBeGreaterThan(0)
+  })
+
+  it('FILL_OCR_MODEL defaults to glm-ocr', () => {
+    expect(FILL_OCR_MODEL).toBe('glm-ocr')
   })
 
   it('FILL_MAPPING_PROMPT_TEMPLATE placeholders can be replaced', () => {
