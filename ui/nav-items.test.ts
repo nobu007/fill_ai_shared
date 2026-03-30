@@ -3,7 +3,7 @@ import { navItems, isActive } from './nav-items'
 
 describe('navItems', () => {
   it('has expected number of items', () => {
-    expect(navItems).toHaveLength(6)
+    expect(navItems).toHaveLength(7)
   })
 
   it('has unique hrefs', () => {

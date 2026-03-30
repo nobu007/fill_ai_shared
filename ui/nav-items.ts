@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   CreditCard,
   FileUp,
   History,
@@ -19,6 +20,7 @@ export const navItems: NavItem[] = [
   { href: '/fill', label: 'フォーム入力', icon: FileUp },
   { href: '/family', label: '家族情報', icon: Users },
   { href: '/history', label: '履歴', icon: History },
+  { href: '/usage', label: '用量', icon: BarChart3 },
   { href: '/credits', label: 'クレジット', icon: CreditCard },
   { href: '/settings', label: '設定', icon: Settings },
 ]

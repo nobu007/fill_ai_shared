@@ -13,6 +13,7 @@ vi.mock('lucide-react', () => ({
   MessageSquare: () => <div data-testid="messagesquare-icon" />,
   CreditCard: () => <div data-testid="creditcard-icon" />,
   Settings: () => <div data-testid="settings-icon" />,
+  BarChart3: () => <div data-testid="barchart3-icon" />,
 }))
 
 // Mock Next.js navigation
