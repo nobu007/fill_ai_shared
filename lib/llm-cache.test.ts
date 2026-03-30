@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { configureLlmCache, isLlmCacheEnabled, buildCacheKey } from './llm-cache'
-import { getCacheProvider } from './llm-cache-stats'
 
 describe('llm-cache', () => {
   const mockCacheDir = '/tmp/test-cache'

@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import { calculateTotalScore, calculateAxisScores } from './score'
-import { SCORE_AUTO_FIXED_PENALTY, SCORE_NEEDS_REVIEW_PENALTY, SCORE_AXIS_PATCH_PENALTY } from '../config'
 
 describe('score', () => {
   describe('calculateTotalScore', () => {

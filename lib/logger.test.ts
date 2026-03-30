@@ -48,7 +48,7 @@ describe('logger', () => {
 
   it('should include ISO timestamp in output', () => {
     logger.info('mod', 'msg')
-    const call = (console.log as any).mock.calls[0][0]
+    const call = vi.mocked(console.log).mock.calls[0][0]
     expect(call).toMatch(/^\[\d{4}-\d{2}-\d{2}T/)
   })
 

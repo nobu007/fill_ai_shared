@@ -1,18 +1,13 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { 
   isPortkeyEnabled, 
-  getZaiProvider, 
   getPortkeyHeaders, 
   resolvePortkeyConfig, 
   getModelInfo, 
   getModelTier, 
-  getAiSdkModel,
   getAvailableModels,
-  MODELS,
-  ModelInfo,
-  ModelTier 
+  MODELS
 } from './providers'
-import { getCacheProvider } from '../lib/llm-cache-stats'
 
 // Mock external dependencies
 vi.mock('@ai-sdk/openai-compatible', () => ({
@@ -35,9 +30,6 @@ vi.mock('../lib/llm-cache-stats', () => ({
 }))
 
 // Import after mocking
-const { createOpenAICompatible } = await import('@ai-sdk/openai-compatible')
-const { createGoogleGenerativeAI } = await import('@ai-sdk/google')
-const { logger } = await import('../lib/logger')
 const { getCacheProvider: mockGetCacheProvider } = await import('../lib/llm-cache-stats')
 
 describe('providers', () => {
@@ -191,7 +183,7 @@ describe('providers', () => {
     it('should return models with correct shape when ZAI_API_KEY is set', () => {
       // ZAI_API_KEY is a module-level constant; in test env it defaults to ''
       // so models array will be empty. This test verifies the shape when models exist.
-      const models = getAvailableModels()
+      const _models = getAvailableModels()
       // When key is available, each model should have these properties
       const sampleModel = {
         id: 'glm-5-turbo', provider: 'zai', label: 'GLM-5 Turbo',

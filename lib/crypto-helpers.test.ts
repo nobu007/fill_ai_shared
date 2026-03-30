@@ -7,11 +7,11 @@ vi.mock('./crypto')
 vi.mock('./logger')
 
 describe('crypto-helpers', () => {
-  const mockEncrypt = encrypt as any
-  const mockDecrypt = decrypt as any
-  const mockIsEncrypted = isEncrypted as any
-  const mockLogger = logger as any
-  const mockGetEncryptionKey = getEncryptionKey as any
+  const mockEncrypt = vi.mocked(encrypt)
+  const mockDecrypt = vi.mocked(decrypt)
+  const mockIsEncrypted = vi.mocked(isEncrypted)
+  const mockLogger = vi.mocked(logger)
+  const mockGetEncryptionKey = vi.mocked(getEncryptionKey)
 
   beforeEach(() => {
     vi.clearAllMocks()
