@@ -201,9 +201,13 @@ export const FILL_MAPPING_PROMPT_TEMPLATE = process.env.FILL_MAPPING_PROMPT_TEMP
 - reason は日本語で簡潔に（例: "氏名欄のため"）`
 
 // ─── Stripe ────────────────────────────────────────────────
-export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || ''
-export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || ''
+export const STRIPE_SECRET_KEY=proces..._KEY || ''
+export const STRIPE_WEBHOOK_SECRET=proces...CRET || ''
 export const STRIPE_API_VERSION = process.env.STRIPE_API_VERSION || '2026-02-25.clover'
+/** Timeout for Stripe API key validation connectivity check (ms) */
+export const STRIPE_API_TIMEOUT_MS = Number(process.env.STRIPE_API_TIMEOUT_MS || 5_000)
+/** Timeout for Stripe Price ID bulk validation (ms) — higher than API check since it makes multiple requests */
+export const STRIPE_PRICE_VALIDATION_TIMEOUT_MS = Number(process.env.STRIPE_PRICE_VALIDATION_TIMEOUT_MS || 10_000)
 export const STRIPE_PRICE_FREE_10 = process.env.STRIPE_PRICE_FREE_10 || ''
 export const STRIPE_PRICE_FREE_30 = process.env.STRIPE_PRICE_FREE_30 || ''
 export const STRIPE_PRICE_FREE_100 = process.env.STRIPE_PRICE_FREE_100 || ''
