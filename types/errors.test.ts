@@ -99,7 +99,7 @@ describe('ERROR_MESSAGES', () => {
   it('should not include removed error messages', () => {
     // 不要なプロジェクト固有エラーメッセージが残っていないことを確認
     const removedKeys = [
-      'wpAuthFailed', 'wpApiError',
+      'wpApiError',
       'batchLimit', 'siteInfoNotFound',
       'promptRequired', 'invalidModelName',
     ]
@@ -178,6 +178,37 @@ describe('ERROR_MESSAGES', () => {
     expect(ERROR_MESSAGES.apiKeyVerificationFailed).toBe('APIキーの検証に失敗しました。正しいキーを入力してください。')
     expect(ERROR_MESSAGES.saveFailed).toBe('保存に失敗しました')
     expect(ERROR_MESSAGES.invalidProvider).toBe('無効なプロバイダーです')
+    expect(ERROR_MESSAGES.providerRequired).toBe('プロバイダーは必須です')
+  })
+
+  it('should have centralized Blog Auto AI route messages', () => {
+    expect(ERROR_MESSAGES.urlAndApiKeyRequired).toBe('URLとAPIキーは必須です')
+    expect(ERROR_MESSAGES.urlMustBeHttpOrHttps).toBe('URLはhttp://またはhttps://で始めてください')
+    expect(ERROR_MESSAGES.invalidUrlFormat).toBe('URLの形式が正しくありません')
+    expect(ERROR_MESSAGES.urlAccessDenied).toBe('指定されたURLにアクセスできません（セキュリティチェックで拒否されました）')
+    expect(ERROR_MESSAGES.invalidApiKey).toBe('APIキーが正しくありません')
+    expect(ERROR_MESSAGES.blogAutoAiConnectFailed).toBe('Blog Auto AI APIに接続できません。URLとAPIキーを確認してください。')
+    expect(ERROR_MESSAGES.invalidApiResponse).toBe('APIレスポンスが不正です')
+    expect(ERROR_MESSAGES.siteUpdateFailed).toBe('サイト情報の更新に失敗しました')
+    expect(ERROR_MESSAGES.siteRegisterFailed).toBe('サイトの登録に失敗しました')
+    expect(ERROR_MESSAGES.siteIdRequired).toBe('サイトIDは必須です')
+    expect(ERROR_MESSAGES.blogAutoAiOnly).toBe('このエンドポイントはBlog Auto AIサイト専用です')
+    expect(ERROR_MESSAGES.siteApiKeyNotSet).toBe('このサイトのAPIキーが設定されていません')
+  })
+
+  it('should have centralized WP refresh-token route messages', () => {
+    expect(ERROR_MESSAGES.siteIdAndPasswordRequired).toBe('siteIdとpasswordが必要です')
+    expect(ERROR_MESSAGES.siteNotJwtAuth).toBe('このサイトはJWT認証ではありません')
+    expect(ERROR_MESSAGES.internalNetworkDenied).toBe('内部ネットワークへの接続は許可されていません')
+    expect(ERROR_MESSAGES.wpAuthFailed).toBe('認証に失敗しました。ユーザー名とパスワードを確認してください。')
+    expect(ERROR_MESSAGES.tokenRefreshSuccess).toBe('トークンを更新しました')
+    expect(ERROR_MESSAGES.tokenRefreshFailed).toBe('トークンの更新に失敗しました')
+  })
+
+  it('should have centralized Prompts route messages', () => {
+    expect(ERROR_MESSAGES.globalPromptModifyAdminOnly).toBe('グローバルプロンプトの変更は管理者のみ可能です')
+    expect(ERROR_MESSAGES.globalPromptDeleteAdminOnly).toBe('グローバルプロンプトの削除は管理者のみ可能です')
+    expect(ERROR_MESSAGES.globalPromptCreateAdminOnly).toBe('グローバルプロンプトの作成は管理者のみ可能です')
   })
 })
 

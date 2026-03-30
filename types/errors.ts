@@ -128,6 +128,11 @@ export const ERROR_MESSAGES = {
   saveFailed: '保存に失敗しました',
   invalidProvider: '無効なプロバイダーです',
 
+  // --- Fill service messages (§2.4) ---
+  fillSessionCreateFailed: 'セッション作成に失敗しました',
+  creditConsumeFailed: 'クレジット消費に失敗しました',
+  invalidMatcherId: '無効なマッチャーIDです',
+
   // --- Settings route messages ---
   settingsFetchFailed: '設定の取得に失敗しました',
 
@@ -152,4 +157,37 @@ export const ERROR_MESSAGES = {
   wpSiteDeleteFailed: 'サイトの削除に失敗しました',
   siteAccessDenied: 'サイトが見つからないか、アクセス権限がありません',
   invalidPageParameter: '無効なページパラメータです',
+
+  // --- Proofread route messages ---
+  invalidRequest: '無効なリクエストです',
+
+  // --- Blog Auto AI route messages ---
+  urlAndApiKeyRequired: 'URLとAPIキーは必須です',
+  urlMustBeHttpOrHttps: 'URLはhttp://またはhttps://で始めてください',
+  invalidUrlFormat: 'URLの形式が正しくありません',
+  urlAccessDenied: '指定されたURLにアクセスできません（セキュリティチェックで拒否されました）',
+  invalidApiKey: 'APIキーが正しくありません',
+  blogAutoAiConnectFailed: 'Blog Auto AI APIに接続できません。URLとAPIキーを確認してください。',
+  invalidApiResponse: 'APIレスポンスが不正です',
+  siteUpdateFailed: 'サイト情報の更新に失敗しました',
+  siteRegisterFailed: 'サイトの登録に失敗しました',
+  siteIdRequired: 'サイトIDは必須です',
+  blogAutoAiOnly: 'このエンドポイントはBlog Auto AIサイト専用です',
+  siteApiKeyNotSet: 'このサイトのAPIキーが設定されていません',
+
+  // --- Keys route messages ---
+  providerRequired: 'プロバイダーは必須です',
+
+  // --- WP refresh-token route messages ---
+  siteIdAndPasswordRequired: 'siteIdとpasswordが必要です',
+  siteNotJwtAuth: 'このサイトはJWT認証ではありません',
+  internalNetworkDenied: '内部ネットワークへの接続は許可されていません',
+  wpAuthFailed: '認証に失敗しました。ユーザー名とパスワードを確認してください。',
+  tokenRefreshSuccess: 'トークンを更新しました',
+  tokenRefreshFailed: 'トークンの更新に失敗しました',
+
+  // --- Prompts route messages ---
+  globalPromptModifyAdminOnly: 'グローバルプロンプトの変更は管理者のみ可能です',
+  globalPromptDeleteAdminOnly: 'グローバルプロンプトの削除は管理者のみ可能です',
+  globalPromptCreateAdminOnly: 'グローバルプロンプトの作成は管理者のみ可能です',
 } as const
