@@ -318,6 +318,8 @@ export const HISTORY_EXPORT_LIMIT = Number(process.env.HISTORY_EXPORT_LIMIT || 2
 export const DASHBOARD_RECENT_LIMIT = Number(process.env.DASHBOARD_RECENT_LIMIT || 5)
 export const MAX_ERROR_MESSAGE_LENGTH = Number(process.env.MAX_ERROR_MESSAGE_LENGTH || 500)
 export const INVITATION_MAX_INSERT_ATTEMPTS = Number(process.env.INVITATION_MAX_INSERT_ATTEMPTS || 3)
+export const INVITATION_MAX_USES = Number(process.env.INVITATION_MAX_USES || 100)
+export const INVITATION_CODE_MAX_LENGTH = Number(process.env.INVITATION_CODE_MAX_LENGTH || 20)
 
 // ─── Security / Debug / Admin ──────────────────────────────
 export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || ''
