@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { AUTH_PUBLIC_PATHS } from '../config'
+import { AUTH_PUBLIC_PATHS, DEBUG_AUTH_TOKEN, IS_PRODUCTION } from '../config'
 import { logger } from '../lib/logger'
 
 function getSupabaseUrl() {
@@ -9,10 +9,6 @@ function getSupabaseUrl() {
 
 function getSupabaseAnonKey() {
   return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-}
-
-function getDebugAuthToken() {
-  return process.env.DEBUG_AUTH_TOKEN || ''
 }
 
 export async function proxy(request: NextRequest) {
@@ -41,8 +37,8 @@ export async function proxy(request: NextRequest) {
     }
   )
 
-  const isDev = process.env.NODE_ENV !== 'production'
-  const debugToken = getDebugAuthToken()
+  const isDev = !IS_PRODUCTION
+  const debugToken = DEBUG_AUTH_TOKEN
   if (isDev && debugToken && request.headers.get('x-debug-token') === debugToken) {
     logger.info('shared/auth/proxy', 'DEBUG_AUTH bypass activated', { path: request.nextUrl.pathname })
     return supabaseResponse
