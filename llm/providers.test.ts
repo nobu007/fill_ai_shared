@@ -30,7 +30,8 @@ vi.mock('../lib/llm-cache-stats', () => ({
 }))
 
 // Import after mocking
-const { getCacheProvider: mockGetCacheProvider } = await import('../lib/llm-cache-stats')
+import { getCacheProvider } from '../lib/llm-cache-stats'
+const mockGetCacheProvider = vi.mocked(getCacheProvider)
 
 describe('providers', () => {
   beforeEach(() => {
