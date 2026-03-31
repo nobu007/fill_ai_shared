@@ -156,11 +156,30 @@ export const ERROR_MESSAGES = {
   systemPromptRequired: 'system_promptは必須です',
 
   // --- WP route messages ---
+  wpDiagnoseError: '診断中にエラーが発生しました',
+  wpRepairError: '修復処理中にエラーが発生しました',
+  wpFetchNoPosts: 'WordPressから記事を取得できませんでした。接続情報を見直してください。',
+  wpTokenExpiredReauth: 'トークンの有効期限が切れました。パスワードを再入力してください。',
   wpPostsDeleteFailed: '関連記事の削除に失敗しました',
   wpSettingsDeleteFailed: 'サイト設定の削除に失敗しました',
   wpSiteDeleteFailed: 'サイトの削除に失敗しました',
+  wpSyncError: 'WordPress同期中にエラーが発生しました。時間をおいて再試行してください。',
   siteAccessDenied: 'サイトが見つからないか、アクセス権限がありません',
   invalidPageParameter: '無効なページパラメータです',
+  urlRequired: 'URLは必須です',
+  urlUsernamePasswordRequired: 'URL、ユーザー名、パスワードは必須です',
+  connectionTestFailed: '接続テストに失敗しました',
+  siteAlreadyRegistered: 'このサイトは既に登録されています',
+  connectionError: '接続エラーが発生しました',
+  postIdRequired: '記事IDは必須です',
+  noIssuesToApply: '適用する修正がありません',
+  encryptionFailed: 'APIキーの保存に失敗しました。暗号化設定を確認してください。',
+  invalidProviderName: (provider: string) => `無効なプロバイダー: ${provider}`,
+
+  // --- Proofread stream route messages ---
+  proofreadStreamError: '校正中にエラーが発生しました。時間をおいて再試行してください。',
+  proofreadEmptyResponse: (detail: string) => `AIモデルが応答を返しませんでした（${detail}）。モデルを変更するか、時間をおいて再試行してください。`,
+  proofreadRateLimited: 'APIのリクエスト制限に達しました。1分ほど待ってから再試行してください。',
 
   // --- Proofread route messages ---
   invalidRequest: '無効なリクエストです',
