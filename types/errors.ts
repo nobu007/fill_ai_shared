@@ -106,6 +106,7 @@ export const ERROR_MESSAGES = {
   invalidMaxUses: 'max_usesは1〜1000の整数で指定してください',
   invitationCodeRequired: '招待コードが必要です',
   invitationRedeemFailed: '招待コードの処理に失敗しました',
+  alreadyBetaAccess: '既にベータアクセスがあります',
 
   // --- Content validation ---
   contentRequired: 'コンテンツが必要です',
@@ -146,6 +147,10 @@ export const ERROR_MESSAGES = {
   // --- Contact route messages ---
   allFieldsRequired: 'すべての項目は必須です',
   contactSaveFailed: 'お問い合わせの保存に失敗しました',
+  contactRateLimited: 'リクエストが多すぎます。しばらく待ってからお試しください。',
+  contactDailyCapExceeded: '本日のリクエスト上限に達しました。明日再度お試しください。',
+  contactAiFailed: 'AIの処理に失敗しました。そのまま送信してください。',
+  contactHoneypotEmpty: '',
 
   // --- Prompts route messages ---
   promptsFetchFailed: 'プロンプトの取得に失敗しました',
