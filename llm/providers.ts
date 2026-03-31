@@ -12,7 +12,7 @@ export type ModelTier = 'low' | 'mid' | 'high'
 
 /** Whether Portkey AI Gateway is enabled via config values (§2.4) */
 export function isPortkeyEnabled(): boolean {
-  return !!(process.env.PORTKEY_API_KEY || PORTKEY_API_KEY) && !!(process.env.PORTKEY_GATEWAY_URL || PORTKEY_GATEWAY_URL)
+  return !!PORTKEY_API_KEY && !!PORTKEY_GATEWAY_URL
 }
 
 function getZaiProvider(portkeyConfig?: { provider: string; virtualKey: string }) {
