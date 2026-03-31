@@ -66,7 +66,9 @@ describe('SidebarUser Component', () => {
 
   describe('Initial Render', () => {
     it('renders loading state initially', () => {
-      render(<SidebarUser />)
+      act(() => {
+        render(<SidebarUser />)
+      })
       expect(screen.getByText('読み込み中...')).toBeInTheDocument()
     })
 
@@ -283,7 +285,9 @@ describe('MobileSidebar Component', () => {
   })
 
   it('renders all navigation items', () => {
-    render(<MobileSidebar isOpen={true} onClose={() => {}} />)
+    act(() => {
+      render(<MobileSidebar isOpen={true} onClose={() => {}} />)
+    })
 
     expect(screen.getByText('ダッシュボード')).toBeInTheDocument()
     expect(screen.getByText('フォーム入力')).toBeInTheDocument()
@@ -293,7 +297,9 @@ describe('MobileSidebar Component', () => {
   })
 
   it('renders close button', () => {
-    render(<MobileSidebar isOpen={true} onClose={() => {}} />)
+    act(() => {
+      render(<MobileSidebar isOpen={true} onClose={() => {}} />)
+    })
     expect(screen.getByTestId('x-icon')).toBeInTheDocument()
   })
 
