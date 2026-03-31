@@ -218,6 +218,12 @@ describe('ERROR_MESSAGES', () => {
     expect(ERROR_MESSAGES.sessionNotFound).toBe('前回のセッションが見つかりません。新しい校正を行ってください。')
     expect(ERROR_MESSAGES.sessionAlreadyCompleted).toBe('このセッションは既に完了しています。')
   })
+
+  it('should have centralized user_data validation messages', () => {
+    expect(ERROR_MESSAGES.userDataInvalidJson).toBe('user_data の形式が不正です。有効なJSON配列を指定してください。')
+    expect(ERROR_MESSAGES.userDataNotArray).toBe('user_data は配列形式で指定してください。')
+    expect(ERROR_MESSAGES.userDataItemInvalid).toBe('user_data の各項目には label, category, value (文字列) が必要です。')
+  })
 })
 
 describe('ApiErrorResponse type', () => {
