@@ -9,7 +9,9 @@
  *   getCacheStats() → { hits, misses, total, hitRate, provider }
  */
 
-export type CacheProvider = 'portkey' | 'local'
+import { getLLMCacheProvider, type CacheProvider } from '../config'
+
+export type { CacheProvider }
 
 export interface CacheStats {
   hits: number
@@ -46,10 +48,9 @@ export function resetCacheStats(): void {
   resetCounters()
 }
 
-/** Get the active cache provider — lazy eval for test env mock compatibility (§2.4) */
+/** Get the active cache provider — delegated to centralized config (§2.4) */
 export function getCacheProvider(): CacheProvider {
-  const env = process.env.LLM_CACHE_PROVIDER || 'portkey'
-  return env === 'local' ? 'local' : 'portkey'
+  return getLLMCacheProvider()
 }
 
 /** Get unified cache stats report */

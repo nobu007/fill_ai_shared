@@ -365,10 +365,13 @@ if (!ENCRYPTION_KEY && typeof window === 'undefined') {
 // ─── Environment / Logging ─────────────────────────────────
 export const IS_PRODUCTION = process.env.NODE_ENV === 'production'
 export const LOG_LEVEL = process.env.LOG_LEVEL || (process.env.NODE_ENV === 'test' ? 'error' : 'info')
-export const LLM_CACHE_PROVIDER = ((): 'portkey' | 'local' => {
+
+export type CacheProvider = 'portkey' | 'local'
+/** Get the active LLM cache provider — lazy eval for test env mock compatibility (§2.4) */
+export function getLLMCacheProvider(): CacheProvider {
   const env = process.env.LLM_CACHE_PROVIDER || 'portkey'
   return env === 'local' ? 'local' : 'portkey'
-})()
+}
 
 // ─── BYOK Model Configuration ──────────────────────────────
 export interface ProviderModelOption {
