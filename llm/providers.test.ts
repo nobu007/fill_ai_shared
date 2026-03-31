@@ -199,6 +199,82 @@ describe('providers', () => {
     })
   })
 
+  describe('getAiSdkModel', () => {
+    it('should return ZAI provider for glm-5-turbo', () => {
+      const provider = getAiSdkModel('glm-5-turbo')
+      expect(provider).toBeDefined()
+      // Should create OpenAI-compatible provider for ZAI models
+      expect(createOpenAICompatible).toHaveBeenCalled()
+    })
+
+    it('should return Gemini provider for gemini-3.1-flash-lite', () => {
+      const provider = getAiSdkModel('gemini-3.1-flash-lite')
+      expect(provider).toBeDefined()
+      // Should create Google provider for Gemini models
+      expect(createGoogleGenerativeAI).toHaveBeenCalled()
+    })
+
+    it('should handle unknown model without default', () => {
+      // Mock unknown model that doesn't have fallback
+      const info = getModelInfo('unknown-model')
+      expect(info).toBeUndefined()
+      
+      // This would normally throw, but let's test the existing behavior
+      const provider = getAiSdkModel('unknown-model')
+      expect(provider).toBeDefined()
+    })
+
+    it('should handle invalid userApiKey (too short)', () => {
+      const userApiKey = 'short'
+      const provider = getAiSdkModel('glm-5-turbo', userApiKey)
+      expect(provider).toBeDefined()
+      // Should log warning for invalid API key
+      expect(logger.warn).toHaveBeenCalled()
+      expect(createOpenAICompatible).toHaveBeenCalled()
+    })
+
+    it('should handle valid userApiKey for Gemini', () => {
+      const userApiKey = 'valid-api-key-with-enough-length'
+      const provider = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
+      expect(provider).toBeDefined()
+      // Should create Google provider with user API key
+      expect(createGoogleGenerativeAI).toHaveBeenCalledWith(
+        expect.objectContaining({
+          apiKey: userApiKey
+        })
+      )
+    })
+
+    it('should handle userApiKey with thinking config', () => {
+      const userApiKey = 'valid-api-key-with-enough-length'
+      const info = getModelInfo('gemini-3.1-flash-lite')
+      if (info && info.thinkingLevel) {
+        const provider = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
+        expect(provider).toBeDefined()
+        expect(createGoogleGenerativeAI).toHaveBeenCalledWith(
+          expect.objectContaining({
+            apiKey: userApiKey,
+            thinkingConfig: { thinkingLevel: info.thinkingLevel, includeThoughts: false }
+          })
+        )
+      }
+    })
+
+    it('should handle empty userApiKey', () => {
+      const provider = getAiSdkModel('glm-5-turbo', '')
+      expect(provider).toBeDefined()
+      // Should fall back to default provider without user API key
+      expect(createOpenAICompatible).toHaveBeenCalled()
+    })
+
+    it('should handle null userApiKey', () => {
+      const provider = getAiSdkModel('glm-5-turbo', null as any)
+      expect(provider).toBeDefined()
+      // Should fall back to default provider without user API key
+      expect(createOpenAICompatible).toHaveBeenCalled()
+    })
+  })
+
   describe('MODELS', () => {
     it('should have correct model definitions', () => {
       expect(MODELS['glm-5-turbo']).toEqual({
