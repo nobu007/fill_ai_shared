@@ -23,6 +23,12 @@ export const ANTHROPIC_API_URL = process.env.ANTHROPIC_API_URL || 'https://api.a
 // ─── Default AI Model ───────────────────────────────────────
 export const DEFAULT_AI_MODEL = process.env.DEFAULT_AI_MODEL || 'glm-5-turbo'
 
+// ─── Quality Evaluation Settings ───────────────────────────
+/** LLM model used for quality evaluation benchmarks (§2.4 centralized config) */
+export const EVAL_MODEL = process.env.EVAL_MODEL || 'glm-5-turbo'
+/** LLM model override for benchmark runner CLI */
+export const BENCHMARK_MODEL = process.env.BENCHMARK_MODEL || DEFAULT_AI_MODEL
+
 // ─── Content Limits ─────────────────────────────────────────
 export const MAX_CONTENT_LENGTH = Number(process.env.MAX_CONTENT_LENGTH || 100000)
 export const MIN_CONTENT_LENGTH = Number(process.env.MIN_CONTENT_LENGTH || 50)
