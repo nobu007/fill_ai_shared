@@ -170,6 +170,7 @@ describe('ERROR_MESSAGES', () => {
     expect(ERROR_MESSAGES.invitationEmailMismatch).toBe('この招待コードは指定されたメールアドレスのみ使用できます')
     expect(ERROR_MESSAGES.invalidMaxUses).toBe('max_usesは1〜1000の整数で指定してください')
     expect(ERROR_MESSAGES.invitationCodeRequired).toBe('招待コードが必要です')
+    expect(ERROR_MESSAGES.invitationRedeemFailed).toBe('招待コードの処理に失敗しました')
   })
 
   it('should have centralized API keys route messages', () => {
@@ -209,6 +210,13 @@ describe('ERROR_MESSAGES', () => {
     expect(ERROR_MESSAGES.globalPromptModifyAdminOnly).toBe('グローバルプロンプトの変更は管理者のみ可能です')
     expect(ERROR_MESSAGES.globalPromptDeleteAdminOnly).toBe('グローバルプロンプトの削除は管理者のみ可能です')
     expect(ERROR_MESSAGES.globalPromptCreateAdminOnly).toBe('グローバルプロンプトの作成は管理者のみ可能です')
+  })
+
+  it('should have centralized Proofread stream route messages', () => {
+    expect(typeof ERROR_MESSAGES.invalidAxes).toBe('function')
+    expect(ERROR_MESSAGES.invalidAxes(['structure', 'readability'])).toBe('無効な校正軸が指定されました。有効な軸: structure, readability')
+    expect(ERROR_MESSAGES.sessionNotFound).toBe('前回のセッションが見つかりません。新しい校正を行ってください。')
+    expect(ERROR_MESSAGES.sessionAlreadyCompleted).toBe('このセッションは既に完了しています。')
   })
 })
 

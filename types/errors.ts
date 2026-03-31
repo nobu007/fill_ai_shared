@@ -102,6 +102,7 @@ export const ERROR_MESSAGES = {
   invitationEmailMismatch: 'この招待コードは指定されたメールアドレスのみ使用できます',
   invalidMaxUses: 'max_usesは1〜1000の整数で指定してください',
   invitationCodeRequired: '招待コードが必要です',
+  invitationRedeemFailed: '招待コードの処理に失敗しました',
 
   // --- Content validation ---
   contentRequired: 'コンテンツが必要です',
@@ -160,6 +161,9 @@ export const ERROR_MESSAGES = {
 
   // --- Proofread route messages ---
   invalidRequest: '無効なリクエストです',
+  invalidAxes: (axes: string[]) => `無効な校正軸が指定されました。有効な軸: ${axes.join(', ')}`,
+  sessionNotFound: '前回のセッションが見つかりません。新しい校正を行ってください。',
+  sessionAlreadyCompleted: 'このセッションは既に完了しています。',
 
   // --- Blog Auto AI route messages ---
   urlAndApiKeyRequired: 'URLとAPIキーは必須です',
