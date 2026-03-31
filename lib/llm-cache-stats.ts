@@ -46,13 +46,10 @@ export function resetCacheStats(): void {
   resetCounters()
 }
 
-/** Get the active cache provider from centralized config (lazy eval for testability) */
+/** Get the active cache provider — lazy eval for test env mock compatibility (§2.4) */
 export function getCacheProvider(): CacheProvider {
   const env = process.env.LLM_CACHE_PROVIDER || 'portkey'
-  if (env !== 'portkey' && env !== 'local') {
-    return 'portkey'
-  }
-  return env
+  return env === 'local' ? 'local' : 'portkey'
 }
 
 /** Get unified cache stats report */

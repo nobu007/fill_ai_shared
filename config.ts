@@ -86,6 +86,24 @@ export const FILL_AUTO_APPLY_THRESHOLD = Number(process.env.FILL_AUTO_APPLY_THRE
 export const MAX_MAPPING_PROMPT_LENGTH = Number(process.env.MAX_MAPPING_PROMPT_LENGTH || 100_000)
 export const FILL_FALLBACK_MODELS = (process.env.FILL_FALLBACK_MODELS || 'glm-4.7-flash,glm-5-turbo').split(',').filter(Boolean)
 
+// ─── Phase Engine Settings (§2.4 centralized config) ──────
+/** Number of chunks processed per batch in phase engine pipeline */
+export const ENGINE_CHUNK_BATCH_SIZE = Number(process.env.CHUNK_BATCH_SIZE || 5)
+/** Delay between chunk batch processing rounds (ms) */
+export const ENGINE_CHUNK_PROCESS_DELAY_MS = Number(process.env.CHUNK_PROCESS_DELAY_MS || 1000)
+/** Initial delay before phase engine starts processing (ms) */
+export const ENGINE_PHASE_START_DELAY_MS = Number(process.env.PHASE_START_DELAY_MS || 500)
+/** Maximum tokens for summary generation phase */
+export const ENGINE_SUMMARY_MAX_TOKENS = Number(process.env.SUMMARY_MAX_TOKENS || 300)
+/** Default confidence threshold for phase evaluation */
+export const ENGINE_DEFAULT_CONFIDENCE_THRESHOLD = Number(process.env.DEFAULT_CONFIDENCE_THRESHOLD || 0.7)
+/** Maximum input characters per processing chunk (Constitution §3.3) */
+export const ENGINE_MAX_INPUT_CHARS = Number(process.env.MAX_INPUT_CHARS || 15_000)
+/** Auto-apply threshold for patches (alias of FILL_AUTO_APPLY_THRESHOLD for engine context) */
+export const ENGINE_AUTO_APPLY_THRESHOLD = Number(process.env.AUTO_APPLY_THRESHOLD || FILL_AUTO_APPLY_THRESHOLD)
+/** Max tokens for LLM calls in phase engine (higher than default for complex processing) */
+export const ENGINE_LLM_MAX_TOKENS = Number(process.env.LLM_DEFAULT_MAX_TOKENS || 10000)
+
 // ─── LLM Fallback Settings ────────────────────────────────
 export const LLM_FALLBACK_STABLE_MODELS = (process.env.LLM_FALLBACK_STABLE_MODELS || 'glm-5-turbo').split(',').filter(Boolean)
 export const LLM_FALLBACK_DEFAULT_MODELS = (process.env.LLM_FALLBACK_DEFAULT_MODELS || 'glm-5-turbo,glm-4.7-flash').split(',').filter(Boolean)
