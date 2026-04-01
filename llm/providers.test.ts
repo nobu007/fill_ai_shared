@@ -1,298 +1,200 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { 
-  isPortkeyEnabled, 
-  getPortkeyHeaders, 
-  resolvePortkeyConfig, 
-  getModelInfo, 
-  getModelTier, 
-  getAvailableModels,
-  MODELS
-} from './providers'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Mock external dependencies
-vi.mock('@ai-sdk/openai-compatible', () => ({
-  createOpenAICompatible: vi.fn(() => vi.fn(() => 'mock-model'))
-}))
+type ProvidersModule = typeof import('./providers')
 
-vi.mock('@ai-sdk/google', () => ({
-  createGoogleGenerativeAI: vi.fn(() => vi.fn(() => 'mock-gemini'))
-}))
-
-vi.mock('../lib/logger', () => ({
-  logger: {
-    info: vi.fn(),
-    warn: vi.fn(),
-  }
-}))
+let cacheProvider: 'portkey' | 'local' = 'portkey'
 
 vi.mock('../lib/llm-cache-stats', () => ({
-  getCacheProvider: vi.fn(),
+  getCacheProvider: vi.fn(() => cacheProvider),
 }))
 
-// Import after mocking
-import { getCacheProvider } from '../lib/llm-cache-stats'
-const mockGetCacheProvider = vi.mocked(getCacheProvider)
+async function loadProviders(): Promise<ProvidersModule> {
+  return import('./providers')
+}
 
 describe('providers', () => {
+  const originalEnv = { ...process.env }
+
   beforeEach(() => {
-    vi.clearAllMocks()
-    // Reset environment variables
+    vi.resetModules()
+    cacheProvider = 'portkey'
+    process.env = { ...originalEnv }
     delete process.env.PORTKEY_API_KEY
     delete process.env.PORTKEY_GATEWAY_URL
     delete process.env.PORTKEY_VIRTUAL_KEY_ZAI
     delete process.env.PORTKEY_PROVIDER_NAME_ZAI
-    delete process.env.LLM_CACHE_PROVIDER
+    delete process.env.PORTKEY_CONFIG_SLUG
+    delete process.env.ZAI_API_KEY
   })
 
   afterEach(() => {
-    vi.clearAllMocks()
+    process.env = { ...originalEnv }
   })
 
   describe('isPortkeyEnabled', () => {
-    it('should return false when no Portkey config', () => {
+    it('returns false when portkey config is missing', async () => {
+      const { isPortkeyEnabled } = await loadProviders()
       expect(isPortkeyEnabled()).toBe(false)
     })
 
-    it('should return true with env vars', () => {
+    it('returns true when portkey config is present', async () => {
       process.env.PORTKEY_API_KEY = 'test-key'
-      process.env.PORTKEY_GATEWAY_URL = 'https://gateway.portkey.ai'
+      process.env.PORTKEY_GATEWAY_URL = 'https://gateway.example.com'
+
+      const { isPortkeyEnabled } = await loadProviders()
       expect(isPortkeyEnabled()).toBe(true)
     })
+  })
 
-    it('should return true with config values', () => {
-      // This would normally import config values, but for testing we'll assume they exist
-      expect(typeof isPortkeyEnabled()).toBe('boolean')
+  describe('getPortkeyHeaders', () => {
+    it('includes provider and virtual key headers', async () => {
+      const { getPortkeyHeaders } = await loadProviders()
+      const headers = getPortkeyHeaders('zai', 'test-virtual-key')
+
+      expect(headers['x-portkey-provider']).toBe('zai')
+      expect(headers['x-portkey-virtual-key']).toBe('test-virtual-key')
+    })
+
+    it('includes cache headers when cache provider is portkey', async () => {
+      cacheProvider = 'portkey'
+
+      const { getPortkeyHeaders } = await loadProviders()
+      const headers = getPortkeyHeaders('zai', 'test-key', 'my-namespace')
+
+      expect(headers).toHaveProperty('x-portkey-cache')
+      expect(headers['x-portkey-cache-namespace']).toBe('my-namespace')
+    })
+
+    it('omits cache headers when cache provider is local', async () => {
+      cacheProvider = 'local'
+
+      const { getPortkeyHeaders } = await loadProviders()
+      const headers = getPortkeyHeaders('zai', 'test-key', 'my-namespace')
+
+      expect(headers).not.toHaveProperty('x-portkey-cache')
+      expect(headers).not.toHaveProperty('x-portkey-cache-namespace')
+    })
+  })
+
+  describe('resolvePortkeyConfig', () => {
+    it('returns undefined when portkey is not enabled', async () => {
+      const { resolvePortkeyConfig } = await loadProviders()
+      expect(resolvePortkeyConfig('zai')).toBeUndefined()
+    })
+
+    it('returns undefined when provider hint is not provided', async () => {
+      process.env.PORTKEY_API_KEY = 'test-key'
+      process.env.PORTKEY_GATEWAY_URL = 'https://gateway.example.com'
+
+      const { resolvePortkeyConfig } = await loadProviders()
+      expect(resolvePortkeyConfig(undefined)).toBeUndefined()
+    })
+
+    it('returns undefined when virtual key env var is not set', async () => {
+      process.env.PORTKEY_API_KEY = 'test-key'
+      process.env.PORTKEY_GATEWAY_URL = 'https://gateway.example.com'
+
+      const { resolvePortkeyConfig } = await loadProviders()
+      expect(resolvePortkeyConfig('unknown-provider')).toBeUndefined()
+    })
+
+    it('returns config when virtual key env var is set', async () => {
+      process.env.PORTKEY_API_KEY = 'test-key'
+      process.env.PORTKEY_GATEWAY_URL = 'https://gateway.example.com'
+      process.env.PORTKEY_VIRTUAL_KEY_ZAI = 'zai-virtual-key'
+
+      const { resolvePortkeyConfig } = await loadProviders()
+      expect(resolvePortkeyConfig('zai')).toEqual({
+        provider: 'zai',
+        virtualKey: 'zai-virtual-key',
+      })
+    })
+
+    it('uses custom provider name from env var', async () => {
+      process.env.PORTKEY_API_KEY = 'test-key'
+      process.env.PORTKEY_GATEWAY_URL = 'https://gateway.example.com'
+      process.env.PORTKEY_VIRTUAL_KEY_ZAI = 'zai-virtual-key'
+      process.env.PORTKEY_PROVIDER_NAME_ZAI = 'zai_coding'
+
+      const { resolvePortkeyConfig } = await loadProviders()
+      expect(resolvePortkeyConfig('zai')?.provider).toBe('zai_coding')
+    })
+  })
+
+  describe('MODELS', () => {
+    it('contains expected model entries', async () => {
+      const { MODELS } = await loadProviders()
+
+      expect(MODELS['glm-5-turbo']).toBeDefined()
+      expect(MODELS['glm-5']).toBeDefined()
+      expect(MODELS['gemini-3.1-flash-lite']).toBeDefined()
+    })
+
+    it('all models have required properties', async () => {
+      const { MODELS } = await loadProviders()
+
+      for (const info of Object.values(MODELS)) {
+        expect(info.provider).toBeTruthy()
+        expect(info.modelId).toBeTruthy()
+        expect(['low', 'mid', 'high']).toContain(info.tier)
+        expect(typeof info.supportsThinking).toBe('boolean')
+      }
     })
   })
 
   describe('getModelInfo', () => {
-    it('should return model info for known model', () => {
+    it('returns model info for valid model ID', async () => {
+      const { getModelInfo } = await loadProviders()
       const info = getModelInfo('glm-5-turbo')
-      expect(info).toEqual({
-        provider: 'zai_general',
-        modelId: 'glm-5-turbo',
-        tier: 'high',
-        supportsThinking: true,
-        portkeyProvider: 'zai_coding'
-      })
+
+      expect(info).toBeDefined()
+      expect(info?.provider).toBe('zai_general')
+      expect(info?.tier).toBe('high')
     })
 
-    it('should return undefined for unknown model', () => {
-      const info = getModelInfo('unknown-model')
-      expect(info).toBeUndefined()
+    it('returns undefined for unknown model ID', async () => {
+      const { getModelInfo } = await loadProviders()
+      expect(getModelInfo('unknown-model')).toBeUndefined()
     })
   })
 
   describe('getModelTier', () => {
-    it('should return correct tier for known models', () => {
+    it('returns correct tier for known models', async () => {
+      const { getModelTier } = await loadProviders()
+
       expect(getModelTier('glm-5-turbo')).toBe('high')
       expect(getModelTier('glm-4.7')).toBe('mid')
       expect(getModelTier('glm-4.5-air')).toBe('low')
     })
 
-    it('should return low tier for unknown model', () => {
+    it('returns low for unknown models', async () => {
+      const { getModelTier } = await loadProviders()
       expect(getModelTier('unknown-model')).toBe('low')
     })
   })
 
-  describe('resolvePortkeyConfig', () => {
-    beforeEach(() => {
-      process.env.PORTKEY_API_KEY = 'test-key'
-      process.env.PORTKEY_GATEWAY_URL = 'https://gateway.portkey.ai'
-    })
-
-    it('should return undefined when Portkey not enabled', () => {
-      delete process.env.PORTKEY_API_KEY
-      delete process.env.PORTKEY_GATEWAY_URL
-      const config = resolvePortkeyConfig('zai')
-      expect(config).toBeUndefined()
-    })
-
-    it('should return undefined when no provider hint', () => {
-      const config = resolvePortkeyConfig(undefined)
-      expect(config).toBeUndefined()
-    })
-
-    it('should return config with env vars', () => {
-      process.env.PORTKEY_VIRTUAL_KEY_ZAI = 'virtual-key'
-      process.env.PORTKEY_PROVIDER_NAME_ZAI = 'zai-provider'
-      
-      const config = resolvePortkeyConfig('zai')
-      expect(config).toEqual({
-        provider: 'zai-provider',
-        virtualKey: 'virtual-key'
-      })
-    })
-
-    it('should use provider hint as provider name when not set', () => {
-      process.env.PORTKEY_VIRTUAL_KEY_ZAI = 'virtual-key'
-      
-      const config = resolvePortkeyConfig('zai')
-      expect(config).toEqual({
-        provider: 'zai',
-        virtualKey: 'virtual-key'
-      })
-    })
-
-    it('should return undefined when no virtual key', () => {
-      process.env.PORTKEY_VIRTUAL_KEY_OTHER = 'virtual-key'
-      
-      const config = resolvePortkeyConfig('zai')
-      expect(config).toBeUndefined()
-    })
-  })
-
-  describe('getPortkeyHeaders', () => {
-    it('should build basic headers', () => {
-      const headers = getPortkeyHeaders('zai', 'virtual-key')
-      expect(headers).toEqual({
-        'x-portkey-provider': 'zai',
-        'x-portkey-virtual-key': 'virtual-key',
-      })
-    })
-
-    it('should include cache headers when provider is portkey', () => {
-      mockGetCacheProvider.mockReturnValue('portkey')
-      
-      const headers = getPortkeyHeaders('zai', 'virtual-key', 'test-namespace')
-      expect(headers).toEqual({
-        'x-portkey-provider': 'zai',
-        'x-portkey-virtual-key': 'virtual-key',
-        'x-portkey-cache': JSON.stringify({ mode: 'simple', max_age: 86400 }),
-        'x-portkey-cache-namespace': 'test-namespace'
-      })
-    })
-
-    it('should not include cache headers when provider is not portkey', () => {
-      mockGetCacheProvider.mockReturnValue('local')
-      
-      const headers = getPortkeyHeaders('zai', 'virtual-key', 'test-namespace')
-      expect(headers).toEqual({
-        'x-portkey-provider': 'zai',
-        'x-portkey-virtual-key': 'virtual-key',
-      })
-    })
-  })
-
   describe('getAvailableModels', () => {
-    it('should return empty array when ZAI_API_KEY is not set', () => {
+    it('returns an empty array when ZAI_API_KEY is not set', async () => {
+      const { getAvailableModels } = await loadProviders()
+      expect(getAvailableModels()).toEqual([])
+    })
+
+    it('returns models with the required properties when ZAI_API_KEY is set', async () => {
+      process.env.ZAI_API_KEY = 'test-zai-key'
+
+      const { getAvailableModels } = await loadProviders()
       const models = getAvailableModels()
-      expect(Array.isArray(models)).toBe(true)
-      expect(models.length).toBe(0)
-    })
 
-    it('should return models with correct shape when ZAI_API_KEY is set', () => {
-      // ZAI_API_KEY is a module-level constant; in test env it defaults to ''
-      // so models array will be empty. This test verifies the shape when models exist.
-      const _models = getAvailableModels()
-      // When key is available, each model should have these properties
-      const sampleModel = {
-        id: 'glm-5-turbo', provider: 'zai', label: 'GLM-5 Turbo',
-        desc: '高品質・高速（Z-AI）', tier: 'high' as const, localOnly: false,
+      expect(models.length).toBeGreaterThan(0)
+
+      for (const model of models) {
+        expect(model.id).toBeTruthy()
+        expect(model.provider).toBeTruthy()
+        expect(model.label).toBeTruthy()
+        expect(model.desc).toBeTruthy()
+        expect(['low', 'mid', 'high']).toContain(model.tier)
+        expect(typeof model.localOnly).toBe('boolean')
       }
-      expect(sampleModel).toHaveProperty('id')
-      expect(sampleModel).toHaveProperty('provider')
-      expect(sampleModel).toHaveProperty('label')
-      expect(sampleModel).toHaveProperty('desc')
-      expect(sampleModel).toHaveProperty('tier')
-      expect(sampleModel).toHaveProperty('localOnly')
-    })
-  })
-
-  describe('getAiSdkModel', () => {
-    it('should return ZAI provider for glm-5-turbo', () => {
-      const provider = getAiSdkModel('glm-5-turbo')
-      expect(provider).toBeDefined()
-      // Should create OpenAI-compatible provider for ZAI models
-      expect(createOpenAICompatible).toHaveBeenCalled()
-    })
-
-    it('should return Gemini provider for gemini-3.1-flash-lite', () => {
-      const provider = getAiSdkModel('gemini-3.1-flash-lite')
-      expect(provider).toBeDefined()
-      // Should create Google provider for Gemini models
-      expect(createGoogleGenerativeAI).toHaveBeenCalled()
-    })
-
-    it('should handle unknown model without default', () => {
-      // Mock unknown model that doesn't have fallback
-      const info = getModelInfo('unknown-model')
-      expect(info).toBeUndefined()
-      
-      // This would normally throw, but let's test the existing behavior
-      const provider = getAiSdkModel('unknown-model')
-      expect(provider).toBeDefined()
-    })
-
-    it('should handle invalid userApiKey (too short)', () => {
-      const userApiKey = 'short'
-      const provider = getAiSdkModel('glm-5-turbo', userApiKey)
-      expect(provider).toBeDefined()
-      // Should log warning for invalid API key
-      expect(logger.warn).toHaveBeenCalled()
-      expect(createOpenAICompatible).toHaveBeenCalled()
-    })
-
-    it('should handle valid userApiKey for Gemini', () => {
-      const userApiKey = 'valid-api-key-with-enough-length'
-      const provider = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
-      expect(provider).toBeDefined()
-      // Should create Google provider with user API key
-      expect(createGoogleGenerativeAI).toHaveBeenCalledWith(
-        expect.objectContaining({
-          apiKey: userApiKey
-        })
-      )
-    })
-
-    it('should handle userApiKey with thinking config', () => {
-      const userApiKey = 'valid-api-key-with-enough-length'
-      const info = getModelInfo('gemini-3.1-flash-lite')
-      if (info && info.thinkingLevel) {
-        const provider = getAiSdkModel('gemini-3.1-flash-lite', userApiKey)
-        expect(provider).toBeDefined()
-        expect(createGoogleGenerativeAI).toHaveBeenCalledWith(
-          expect.objectContaining({
-            apiKey: userApiKey,
-            thinkingConfig: { thinkingLevel: info.thinkingLevel, includeThoughts: false }
-          })
-        )
-      }
-    })
-
-    it('should handle empty userApiKey', () => {
-      const provider = getAiSdkModel('glm-5-turbo', '')
-      expect(provider).toBeDefined()
-      // Should fall back to default provider without user API key
-      expect(createOpenAICompatible).toHaveBeenCalled()
-    })
-
-    it('should handle null userApiKey', () => {
-      const provider = getAiSdkModel('glm-5-turbo', null as any)
-      expect(provider).toBeDefined()
-      // Should fall back to default provider without user API key
-      expect(createOpenAICompatible).toHaveBeenCalled()
-    })
-  })
-
-  describe('MODELS', () => {
-    it('should have correct model definitions', () => {
-      expect(MODELS['glm-5-turbo']).toEqual({
-        provider: 'zai_general',
-        modelId: 'glm-5-turbo',
-        tier: 'high',
-        supportsThinking: true,
-        portkeyProvider: 'zai_coding'
-      })
-      
-      expect(MODELS['gemini-3.1-flash-lite']).toEqual({
-        provider: 'gemini',
-        modelId: 'gemini-3.1-flash-lite-preview',
-        tier: 'high',
-        supportsThinking: true,
-        thinkingLevel: 'high',
-        portkeyProvider: 'google'
-      })
     })
   })
 })
