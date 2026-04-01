@@ -335,6 +335,7 @@ export const VALID_FAMILY_RELATIONSHIPS = [
 ] as const
 
 export const MAX_FAMILY_MEMBERS = 20
+export const MAX_USER_DATA_ENTRIES = 100
 
 // ─── Pagination / Error Handling ───────────────────────────
 export const DEFAULT_PAGE_LIMIT = Number(process.env.DEFAULT_PAGE_LIMIT || 50)
