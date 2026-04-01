@@ -296,6 +296,8 @@ export const BLOG_AUTO_AI_SYNC_PER_PAGE = Number(process.env.BLOG_AUTO_AI_SYNC_P
 export const BLOG_AUTO_AI_MAX_OFFSET = Number(process.env.BLOG_AUTO_AI_MAX_OFFSET || 10_000)
 export const BLOG_AUTO_AI_FETCH_CONCURRENCY = Number(process.env.BLOG_AUTO_AI_FETCH_CONCURRENCY || 5)
 export const BLOG_AUTO_AI_DETAIL_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_DETAIL_TIMEOUT_MS || 30_000)
+export const BLOG_AUTO_AI_CONNECT_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_CONNECT_TIMEOUT_MS || 15_000)
+export const BLOG_AUTO_AI_LIST_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_LIST_TIMEOUT_MS || 30_000)
 export const BLOG_AUTO_AI_LIST_LIMIT = Number(process.env.BLOG_AUTO_AI_LIST_LIMIT || 50)
 
 // ─── Contact Enhance Rate Limits ───────────────────────────
