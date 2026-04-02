@@ -65,12 +65,13 @@ export async function createClientWithDebug() {
         id: debugUserId || 'debug-user',
         email: 'debug@example.com',
       },
+      isDebug: true,
     }
   }
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  return { supabase, user }
+  return { supabase, user, isDebug: false }
 }
 
 export function createServiceClient() {

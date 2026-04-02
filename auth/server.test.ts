@@ -9,6 +9,20 @@ vi.mock('../lib/logger', () => ({
   logger: { info: vi.fn(), warn: mockLoggerWarn, error: vi.fn() },
 }))
 
+// Mock config to allow overriding IS_PRODUCTION and debug vars in tests
+let _isProduction = true
+vi.mock('../config', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>
+  return {
+    ...actual,
+    get IS_PRODUCTION() { return _isProduction },
+    // These need to be getters to read from process.env at access time
+    get DEBUG_AUTH_TOKEN() { return process.env.DEBUG_AUTH_TOKEN || '' },
+    get DEBUG_USER_ID() { return process.env.DEBUG_USER_ID || '' },
+    get SUPABASE_SERVICE_ROLE_KEY() { return process.env.SUPABASE_SERVICE_ROLE_KEY || '' },
+  }
+})
+
 // Mock @supabase/ssr before importing server
 const mockGetAll = vi.fn()
 const mockGetUser = vi.fn()
@@ -45,6 +59,7 @@ beforeEach(() => {
 
 afterEach(() => {
   process.env = originalEnv
+  _isProduction = true
 })
 
 describe('createClient', () => {
@@ -143,6 +158,7 @@ describe('createClient', () => {
 describe('createClientWithDebug', () => {
   describe('debug mode (development only)', () => {
     beforeEach(() => {
+      _isProduction = false
       // @ts-expect-error -- test override of readonly NODE_ENV
       process.env.NODE_ENV = 'development'
       process.env.DEBUG_AUTH_TOKEN = 'test-debug-token'
