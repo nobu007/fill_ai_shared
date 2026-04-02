@@ -109,8 +109,9 @@ describe('ERROR_MESSAGES', () => {
   })
 
   it('should have non-empty Japanese error messages', () => {
-    Object.entries(ERROR_MESSAGES).forEach(([, value]) => {
+    Object.entries(ERROR_MESSAGES).forEach(([key, value]) => {
       if (typeof value === 'function') return // Skip function entries (e.g. textTooLong)
+      if (key === 'contactHoneypotEmpty') return // Intentionally empty for honeypot field
       expect(typeof value).toBe('string')
       expect((value as string).length).toBeGreaterThan(0)
       // All active messages should be in Japanese
