@@ -247,10 +247,11 @@ describe('Auth Proxy (middleware)', () => {
   })
 
   describe('debug mode (development only)', () => {
-    beforeEach(() => {
+    beforeEach(async () => {
       // @ts-expect-error -- test override of readonly NODE_ENV
       process.env.NODE_ENV = 'development'
       process.env.DEBUG_AUTH_TOKEN = 'test-debug-token'
+      vi.resetModules()
     })
 
     it('bypasses auth when debug token matches in dev', async () => {
