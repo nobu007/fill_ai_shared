@@ -109,8 +109,11 @@ describe('ERROR_MESSAGES', () => {
   })
 
   it('should have non-empty Japanese error messages', () => {
-    Object.entries(ERROR_MESSAGES).forEach(([, value]) => {
+    // contactHoneypotEmpty is intentionally empty (honeypot field for spam detection)
+    const allowedEmptyKeys = ['contactHoneypotEmpty']
+    Object.entries(ERROR_MESSAGES).forEach(([key, value]) => {
       if (typeof value === 'function') return // Skip function entries (e.g. textTooLong)
+      if (allowedEmptyKeys.includes(key)) return // Skip intentionally empty values
       expect(typeof value).toBe('string')
       expect((value as string).length).toBeGreaterThan(0)
       // All active messages should be in Japanese

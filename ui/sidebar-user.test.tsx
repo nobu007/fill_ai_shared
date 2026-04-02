@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, cleanup, waitFor, act } from '@testing-library/react'
+import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SidebarUser, MobileMenuButton, MobileSidebar } from './sidebar-user'
 
@@ -66,16 +66,13 @@ describe('SidebarUser Component', () => {
 
   describe('Initial Render', () => {
     it('renders loading state initially', () => {
-      act(() => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
+
       expect(screen.getByText('読み込み中...')).toBeInTheDocument()
     })
 
     it('displays user display name after loading', async () => {
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
 
       await waitFor(() => {
         expect(screen.getByText('Test User')).toBeInTheDocument()
@@ -83,9 +80,7 @@ describe('SidebarUser Component', () => {
     })
 
     it('displays membership badge', async () => {
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
 
       await waitFor(() => {
         expect(screen.getByText('PRO')).toBeInTheDocument()
@@ -93,19 +88,15 @@ describe('SidebarUser Component', () => {
     })
 
     it('displays credits count', async () => {
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
 
       await waitFor(() => {
         expect(screen.getByText('100 枚')).toBeInTheDocument()
       })
     })
 
-    it('renders logout button', async () => {
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+    it('renders logout button', () => {
+      render(<SidebarUser />)
 
       expect(screen.getByTestId('logout-icon')).toBeInTheDocument()
     })
@@ -117,9 +108,7 @@ describe('SidebarUser Component', () => {
         data: { display_name: 'Test User', membership: 'pro', credits: 100 },
       })
 
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
 
       await waitFor(() => {
         const badge = screen.getByText('PRO')
@@ -133,9 +122,7 @@ describe('SidebarUser Component', () => {
         data: { display_name: 'Test User', membership: 'beta', credits: 50 },
       })
 
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
 
       await waitFor(() => {
         const badge = screen.getByText('BETA')
@@ -149,9 +136,7 @@ describe('SidebarUser Component', () => {
         data: { display_name: 'Test User', membership: 'free', credits: 10 },
       })
 
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
 
       await waitFor(() => {
         const badge = screen.getByText('FREE')
@@ -163,9 +148,7 @@ describe('SidebarUser Component', () => {
 
   describe('Logout Form', () => {
     it('renders logout form with correct action', async () => {
-      const { container } = await act(async () => {
-        return render(<SidebarUser />)
-      })
+      const { container } = render(<SidebarUser />)
 
       await waitFor(() => {
         const form = container.querySelector('form[action="/auth/signout"]')
@@ -175,9 +158,7 @@ describe('SidebarUser Component', () => {
     })
 
     it('renders logout button with icon', async () => {
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button')
@@ -197,9 +178,7 @@ describe('SidebarUser Component', () => {
         data: { display_name: null, membership: 'free', credits: 0 },
       })
 
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
 
       await waitFor(() => {
         expect(screen.getByText('user')).toBeInTheDocument()
@@ -214,9 +193,7 @@ describe('SidebarUser Component', () => {
         data: { display_name: null, membership: 'free', credits: 0 },
       })
 
-      await act(async () => {
-        render(<SidebarUser />)
-      })
+      render(<SidebarUser />)
 
       await waitFor(() => {
         expect(screen.getByText('ユーザー')).toBeInTheDocument()
@@ -229,6 +206,7 @@ describe('MobileMenuButton Component', () => {
   it('renders menu button', () => {
     const handleClick = vi.fn()
     render(<MobileMenuButton onClick={handleClick} />)
+
     expect(screen.getByTestId('menu-icon')).toBeInTheDocument()
   })
 
@@ -245,6 +223,7 @@ describe('MobileMenuButton Component', () => {
 
   it('has correct aria-label', () => {
     render(<MobileMenuButton onClick={() => {}} />)
+
     const button = screen.getByRole('button')
     expect(button).toHaveAttribute('aria-label', 'メニュー')
   })
@@ -253,10 +232,6 @@ describe('MobileMenuButton Component', () => {
 describe('MobileSidebar Component', () => {
   it('does not render sidebar when isOpen is false', () => {
     const { container } = render(<MobileSidebar isOpen={false} onClose={() => {}} />)
-    
-    act(() => {
-      // Force re-render to check state
-    })
 
     expect(container.querySelector('.translate-x-0')).not.toBeInTheDocument()
     expect(container.querySelector('.-translate-x-full')).toBeInTheDocument()
@@ -265,10 +240,6 @@ describe('MobileSidebar Component', () => {
   it('renders sidebar when isOpen is true', () => {
     const { container } = render(<MobileSidebar isOpen={true} onClose={() => {}} />)
 
-    act(() => {
-      // Force re-render to check state
-    })
-
     expect(container.querySelector('.translate-x-0')).toBeInTheDocument()
     expect(container.querySelector('.-translate-x-full')).not.toBeInTheDocument()
   })
@@ -276,18 +247,12 @@ describe('MobileSidebar Component', () => {
   it('renders overlay when isOpen is true', () => {
     const { container } = render(<MobileSidebar isOpen={true} onClose={() => {}} />)
 
-    act(() => {
-      // Force re-render to check state
-    })
-
     const overlay = container.querySelector('.bg-black\\/30')
     expect(overlay).toBeInTheDocument()
   })
 
   it('renders all navigation items', () => {
-    act(() => {
-      render(<MobileSidebar isOpen={true} onClose={() => {}} />)
-    })
+    render(<MobileSidebar isOpen={true} onClose={() => {}} />)
 
     expect(screen.getByText('ダッシュボード')).toBeInTheDocument()
     expect(screen.getByText('フォーム入力')).toBeInTheDocument()
@@ -297,9 +262,8 @@ describe('MobileSidebar Component', () => {
   })
 
   it('renders close button', () => {
-    act(() => {
-      render(<MobileSidebar isOpen={true} onClose={() => {}} />)
-    })
+    render(<MobileSidebar isOpen={true} onClose={() => {}} />)
+
     expect(screen.getByTestId('x-icon')).toBeInTheDocument()
   })
 

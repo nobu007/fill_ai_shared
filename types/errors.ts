@@ -147,10 +147,10 @@ export const ERROR_MESSAGES = {
   // --- Contact route messages ---
   allFieldsRequired: 'すべての項目は必須です',
   contactSaveFailed: 'お問い合わせの保存に失敗しました',
-  contactHoneypotEmpty: '',
-  contactRateLimited: 'リクエストが多すぎます。しばらく待ってから再度お試しください。',
-  contactDailyCapExceeded: '本日のリクエスト上限に達しました。明日以降に再度お試しください。',
+  contactRateLimited: 'リクエストが多すぎます。しばらく待ってからお試しください。',
+  contactDailyCapExceeded: '本日のリクエスト上限に達しました。明日再度お試しください。',
   contactAiFailed: 'AIの処理に失敗しました。そのまま送信してください。',
+  contactHoneypotEmpty: '',
 
   // --- Prompts route messages ---
   promptsFetchFailed: 'プロンプトの取得に失敗しました',

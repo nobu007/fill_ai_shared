@@ -423,4 +423,4 @@ export const CLAUDE_VALIDATION_MODEL = process.env.CLAUDE_VALIDATION_MODEL || 'c
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL || 'https://fill-ai-pink.vercel.app'
 
 // ─── Middleware / Auth ─────────────────────────────────────
-export const AUTH_PUBLIC_PATHS = ['/', '/auth', '/api', '/terms', '/privacy', '/commercial-law', '/contact', '/invite', '/demo'] as const
+export const AUTH_PUBLIC_PATHS = ['/', '/auth', '/api', '/terms', '/privacy', '/commercial-law', '/contact', '/invite'] as const
