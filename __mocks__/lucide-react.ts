@@ -1,0 +1,19 @@
+// Central mock for all lucide-react icons used across the app
+export const LogOut = () => null
+export const Menu = () => null
+export const X = () => null
+export const LayoutDashboard = () => null
+export const FileText = () => null
+export const Globe = () => null
+export const History = () => null
+export const CreditCard = () => null
+export const Settings = () => null
+export const BarChart3 = () => null
+export const Zap = () => null
+export const TrendingUp = () => null
+export const FileUp = () => null
+export const Users = () => null
+export const MessageSquare = () => null
+export const Loader2 = () => null
+export const Lock = () => null
+export const Info = () => null

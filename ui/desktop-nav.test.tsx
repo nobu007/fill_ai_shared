@@ -6,14 +6,12 @@ import { DesktopNav } from './desktop-nav'
 vi.mock('lucide-react', () => ({
   LayoutDashboard: () => <div data-testid="dashboard-icon" />,
   FileText: () => <div data-testid="filetext-icon" />,
-  FileUp: () => <div data-testid="fileup-icon" />,
   Globe: () => <div data-testid="globe-icon" />,
-  Users: () => <div data-testid="users-icon" />,
   History: () => <div data-testid="history-icon" />,
-  MessageSquare: () => <div data-testid="messagesquare-icon" />,
   CreditCard: () => <div data-testid="creditcard-icon" />,
   Settings: () => <div data-testid="settings-icon" />,
   BarChart3: () => <div data-testid="barchart3-icon" />,
+  Zap: () => <div data-testid="zap-icon" />,
 }))
 
 // Mock Next.js navigation
@@ -44,9 +42,12 @@ describe('DesktopNav Component', () => {
       render(<DesktopNav />)
 
       expect(screen.getByText('ダッシュボード')).toBeInTheDocument()
-      expect(screen.getByText('フォーム入力')).toBeInTheDocument()
+      expect(screen.getByText('校正する')).toBeInTheDocument()
+      expect(screen.getByText('サイト管理')).toBeInTheDocument()
       expect(screen.getByText('履歴')).toBeInTheDocument()
+      expect(screen.getByText('用量監視')).toBeInTheDocument()
       expect(screen.getByText('クレジット')).toBeInTheDocument()
+      expect(screen.getByText('サブスクリプション')).toBeInTheDocument()
       expect(screen.getByText('設定')).toBeInTheDocument()
     })
 
@@ -54,9 +55,11 @@ describe('DesktopNav Component', () => {
       render(<DesktopNav />)
 
       expect(screen.getByTestId('dashboard-icon')).toBeInTheDocument()
-      expect(screen.getByTestId('fileup-icon')).toBeInTheDocument()
+      expect(screen.getByTestId('zap-icon')).toBeInTheDocument()
+      expect(screen.getByTestId('globe-icon')).toBeInTheDocument()
       expect(screen.getByTestId('history-icon')).toBeInTheDocument()
-      expect(screen.getByTestId('creditcard-icon')).toBeInTheDocument()
+      // CreditCard icon is used by both /credits and /subscription
+      expect(screen.getAllByTestId('creditcard-icon')).toHaveLength(2)
       expect(screen.getByTestId('settings-icon')).toBeInTheDocument()
     })
   })
@@ -74,9 +77,9 @@ describe('DesktopNav Component', () => {
       // Default mock already returns '/'
       const { container } = render(<DesktopNav />)
 
-      const fillLink = container.querySelector('a[href="/fill"]')
-      expect(fillLink).toHaveClass('text-gray-600', 'hover:bg-gray-100', 'hover:text-gray-900')
-      expect(fillLink).not.toHaveClass('bg-blue-50', 'text-blue-700')
+      const proofreadLink = container.querySelector('a[href="/proofread"]')
+      expect(proofreadLink).toHaveClass('text-gray-600', 'hover:bg-gray-100', 'hover:text-gray-900')
+      expect(proofreadLink).not.toHaveClass('bg-blue-50', 'text-blue-700')
     })
   })
 
@@ -85,9 +88,12 @@ describe('DesktopNav Component', () => {
       const { container } = render(<DesktopNav />)
 
       expect(container.querySelector('a[href="/"]')).toBeInTheDocument()
-      expect(container.querySelector('a[href="/fill"]')).toBeInTheDocument()
+      expect(container.querySelector('a[href="/proofread"]')).toBeInTheDocument()
+      expect(container.querySelector('a[href="/sites"]')).toBeInTheDocument()
       expect(container.querySelector('a[href="/history"]')).toBeInTheDocument()
+      expect(container.querySelector('a[href="/usage"]')).toBeInTheDocument()
       expect(container.querySelector('a[href="/credits"]')).toBeInTheDocument()
+      expect(container.querySelector('a[href="/subscription"]')).toBeInTheDocument()
       expect(container.querySelector('a[href="/settings"]')).toBeInTheDocument()
     })
   })

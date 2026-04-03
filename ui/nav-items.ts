@@ -1,11 +1,12 @@
 import {
   BarChart3,
   CreditCard,
-  FileUp,
+  FileText,
+  Globe,
   History,
   LayoutDashboard,
   Settings,
-  Users,
+  Zap,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -17,11 +18,12 @@ export interface NavItem {
 
 export const navItems: NavItem[] = [
   { href: '/', label: 'ダッシュボード', icon: LayoutDashboard },
-  { href: '/fill', label: 'フォーム入力', icon: FileUp },
-  { href: '/family', label: '家族情報', icon: Users },
+  { href: '/proofread', label: '校正する', icon: Zap },
+  { href: '/sites', label: 'サイト管理', icon: Globe },
   { href: '/history', label: '履歴', icon: History },
-  { href: '/usage', label: '用量', icon: BarChart3 },
+  { href: '/usage', label: '用量監視', icon: BarChart3 },
   { href: '/credits', label: 'クレジット', icon: CreditCard },
+  { href: '/subscription', label: 'サブスクリプション', icon: CreditCard },
   { href: '/settings', label: '設定', icon: Settings },
 ]
 

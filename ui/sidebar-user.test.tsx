@@ -3,22 +3,24 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SidebarUser, MobileMenuButton, MobileSidebar } from './sidebar-user'
 
-// Mock lucide-react icons
-vi.mock('lucide-react', () => ({
-  LogOut: () => <div data-testid="logout-icon" />,
-  Menu: () => <div data-testid="menu-icon" />,
-  X: () => <div data-testid="x-icon" />,
-  LayoutDashboard: () => <div data-testid="dashboard-icon" />,
-  FileText: () => <div data-testid="filetext-icon" />,
-  FileUp: () => <div data-testid="fileup-icon" />,
-  Globe: () => <div data-testid="globe-icon" />,
-  Users: () => <div data-testid="users-icon" />,
-  History: () => <div data-testid="history-icon" />,
-  MessageSquare: () => <div data-testid="messagesquare-icon" />,
-  CreditCard: () => <div data-testid="creditcard-icon" />,
-  Settings: () => <div data-testid="settings-icon" />,
-  BarChart3: () => <div data-testid="barchart3-icon" />,
-}))
+// Mock lucide-react icons (extends centralized mock in src/shared/__mocks__/lucide-react.ts)
+vi.mock('lucide-react', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('lucide-react')>()
+  return {
+    ...actual,
+    LogOut: () => <div data-testid="logout-icon" />,
+    Menu: () => <div data-testid="menu-icon" />,
+    X: () => <div data-testid="x-icon" />,
+    LayoutDashboard: () => <div data-testid="dashboard-icon" />,
+    FileText: () => <div data-testid="filetext-icon" />,
+    Globe: () => <div data-testid="globe-icon" />,
+    History: () => <div data-testid="history-icon" />,
+    CreditCard: () => <div data-testid="creditcard-icon" />,
+    Settings: () => <div data-testid="settings-icon" />,
+    BarChart3: () => <div data-testid="barchart3-icon" />,
+    Zap: () => <div data-testid="zap-icon" />,
+  }
+})
 
 // Mock Next.js navigation
 vi.mock('next/navigation', () => ({
@@ -255,9 +257,12 @@ describe('MobileSidebar Component', () => {
     render(<MobileSidebar isOpen={true} onClose={() => {}} />)
 
     expect(screen.getByText('ダッシュボード')).toBeInTheDocument()
-    expect(screen.getByText('フォーム入力')).toBeInTheDocument()
+    expect(screen.getByText('校正する')).toBeInTheDocument()
+    expect(screen.getByText('サイト管理')).toBeInTheDocument()
     expect(screen.getByText('履歴')).toBeInTheDocument()
+    expect(screen.getByText('用量監視')).toBeInTheDocument()
     expect(screen.getByText('クレジット')).toBeInTheDocument()
+    expect(screen.getByText('サブスクリプション')).toBeInTheDocument()
     expect(screen.getByText('設定')).toBeInTheDocument()
   })
 

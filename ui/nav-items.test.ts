@@ -3,7 +3,7 @@ import { navItems, isActive } from './nav-items'
 
 describe('navItems', () => {
   it('has expected number of items', () => {
-    expect(navItems).toHaveLength(7)
+    expect(navItems).toHaveLength(8)
   })
 
   it('has unique hrefs', () => {
@@ -31,12 +31,12 @@ describe('navItems', () => {
 describe('isActive', () => {
   it('matches root path exactly', () => {
     expect(isActive('/', '/')).toBe(true)
-    expect(isActive('/', '/fill')).toBe(false)
+    expect(isActive('/', '/proofread')).toBe(false)
   })
 
   it('matches sub-paths with startsWith', () => {
-    expect(isActive('/fill', '/fill')).toBe(true)
-    expect(isActive('/fill', '/fill/something')).toBe(true)
-    expect(isActive('/fill', '/')).toBe(false)
+    expect(isActive('/proofread', '/proofread')).toBe(true)
+    expect(isActive('/proofread', '/proofread/something')).toBe(true)
+    expect(isActive('/proofread', '/')).toBe(false)
   })
 })

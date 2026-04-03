@@ -1,5 +1,38 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { configureLlmCache, isLlmCacheEnabled, buildCacheKey } from './llm-cache'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { configureLlmCache, isLlmCacheEnabled, buildCacheKey, getCachedLlmResponse, setCachedLlmResponse, clearLlmCache, getLlmCacheStats } from './llm-cache'
+
+// Mock fs module properly
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>
+  const mockEntries: unknown[] = []
+
+  return {
+    ...actual,
+    readFile: vi.fn(async () => {
+      if (mockEntries.length === 0) throw new Error('File not found')
+      return mockEntries.map(e => JSON.stringify(e as unknown)).join('\n') + (mockEntries.length ? '\n' : '')
+    }),
+    writeFile: vi.fn(async (path, content) => {
+      // Parse content to update mockEntries
+      const lines = content.trim().split('\n').filter(Boolean)
+      mockEntries.length = 0 // Clear existing
+      for (const line of lines) {
+        if (line.trim()) mockEntries.push(JSON.parse(line) as unknown)
+      }
+    }),
+    rm: vi.fn(),
+    mkdir: vi.fn(),
+  }
+})
+
+// Mock path module
+vi.mock('node:path', async (importOriginal) => {
+  const actual = await importOriginal() as Record<string, unknown>
+  return {
+    ...actual,
+    join: vi.fn((...args) => '/tmp/test-cache/llm-cache.jsonl'),
+  }
+})
 
 describe('llm-cache', () => {
   const mockCacheDir = '/tmp/test-cache'
