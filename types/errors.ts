@@ -29,6 +29,7 @@ export type ErrorCode =
   | 'MONTHLY_LIMIT_EXCEEDED'
   | 'CONTENT_LENGTH_EXCEEDED'
   | 'AXIS_NOT_AVAILABLE'
+  | 'RATE_LIMITED'
 
 /** Helper to create a typed error response for Next.js route handlers */
 export function errorResponse(
@@ -132,6 +133,9 @@ export const ERROR_MESSAGES = {
   apiKeyVerificationFailed: 'APIキーの検証に失敗しました。正しいキーを入力してください。',
   saveFailed: '保存に失敗しました',
   invalidProvider: '無効なプロバイダーです',
+
+  // --- Rate limit messages ---
+  rateLimited: 'リクエストが多すぎます。60秒後に再試行してください。',
 
   // --- Fill service messages (§2.4) ---
   fillSessionCreateFailed: 'セッション作成に失敗しました',
