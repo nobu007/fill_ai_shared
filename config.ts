@@ -300,6 +300,12 @@ export const BLOG_AUTO_AI_CONNECT_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_C
 export const BLOG_AUTO_AI_LIST_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_LIST_TIMEOUT_MS || 30_000)
 export const BLOG_AUTO_AI_LIST_LIMIT = Number(process.env.BLOG_AUTO_AI_LIST_LIMIT || 50)
 
+// ─── Fill API Rate Limits ──────────────────────────────────
+/** Maximum fill API requests per user within the rate limit window (§1.2 Safety) */
+export const FILL_RATE_LIMIT_MAX = Number(process.env.FILL_RATE_LIMIT_MAX || 10)
+/** Fill API rate limit window in milliseconds (§1.2 Safety) */
+export const FILL_RATE_LIMIT_WINDOW_MS = Number(process.env.FILL_RATE_LIMIT_WINDOW_MS || 60_000)
+
 // ─── Contact Enhance Rate Limits ───────────────────────────
 export const CONTACT_ENHANCE_RATE_LIMIT_MAX = Number(process.env.CONTACT_ENHANCE_RATE_LIMIT_MAX || 2)
 export const CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS = Number(process.env.CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS || 300_000)
