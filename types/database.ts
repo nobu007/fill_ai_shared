@@ -349,6 +349,46 @@ export interface Database {
           description?: string | null
         }
       }
+      subscriptions: {
+        Row: {
+          id: string
+          user_id: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string
+          stripe_price_id: string
+          plan: 'free' | 'pro'
+          status: string
+          current_period_start: string
+          current_period_end: string
+          canceled_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id: string
+          stripe_price_id: string
+          plan?: 'free' | 'pro'
+          status: string
+          current_period_start: string
+          current_period_end: string
+          canceled_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          stripe_customer_id?: string | null
+          stripe_price_id?: string
+          plan?: 'free' | 'pro'
+          status?: string
+          current_period_start?: string
+          current_period_end?: string
+          canceled_at?: string | null
+          updated_at?: string
+        }
+      }
       family_members: {
         Row: {
           id: string
