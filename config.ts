@@ -227,7 +227,7 @@ export const FILL_MAPPING_PROMPT_TEMPLATE = process.env.FILL_MAPPING_PROMPT_TEMP
 // ─── Stripe ────────────────────────────────────────────────
 export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || ''
 export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || ''
-export const STRIPE_API_VERSION = process.env.STRIPE_API_VERSION || '2026-02-25.clover'
+export const STRIPE_API_VERSION = process.env.STRIPE_API_VERSION || '2026-03-25.dahlia'
 /** Timeout for Stripe API key validation connectivity check (ms) */
 export const STRIPE_API_TIMEOUT_MS = Number(process.env.STRIPE_API_TIMEOUT_MS || 5_000)
 /** Timeout for Stripe Price ID bulk validation (ms) — higher than API check since it makes multiple requests */
