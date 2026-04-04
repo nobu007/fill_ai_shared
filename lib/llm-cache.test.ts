@@ -112,4 +112,84 @@ describe('llm-cache', () => {
       expect(key1).not.toBe(key2)
     })
   })
+
+  describe('getCachedLlmResponse', () => {
+    it('should return null when cache is disabled', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'local'
+      configureLlmCache({ enabled: false })
+      const result = await getCachedLlmResponse(mockModel, mockSystemPrompt, mockUserPrompt)
+      expect(result).toBeNull()
+    })
+
+    it('should return null when cache provider is not local', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'portkey'
+      configureLlmCache({ enabled: true })
+      const result = await getCachedLlmResponse(mockModel, mockSystemPrompt, mockUserPrompt)
+      expect(result).toBeNull()
+    })
+
+    it('should return null for cache miss', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'local'
+      configureLlmCache({ enabled: true, cacheDir: mockCacheDir })
+      const result = await getCachedLlmResponse(mockModel, mockSystemPrompt, mockUserPrompt)
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('setCachedLlmResponse', () => {
+    it('should not cache when disabled', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'local'
+      configureLlmCache({ enabled: false })
+      await setCachedLlmResponse(mockModel, mockSystemPrompt, mockUserPrompt, 'test response')
+      // Should not throw
+    })
+
+    it('should not cache when provider is not local', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'portkey'
+      configureLlmCache({ enabled: true })
+      await setCachedLlmResponse(mockModel, mockSystemPrompt, mockUserPrompt, 'test response')
+      // Should not throw
+    })
+
+    it('should not cache empty response without force', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'local'
+      configureLlmCache({ enabled: true, cacheDir: mockCacheDir })
+      await setCachedLlmResponse(mockModel, mockSystemPrompt, mockUserPrompt, '')
+      // Should not throw
+    })
+
+    it('should cache empty response with force option', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'local'
+      configureLlmCache({ enabled: true, cacheDir: mockCacheDir })
+      await setCachedLlmResponse(mockModel, mockSystemPrompt, mockUserPrompt, '', { force: true })
+      // Should not throw
+    })
+
+    it('should cache non-empty response', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'local'
+      configureLlmCache({ enabled: true, cacheDir: mockCacheDir })
+      await setCachedLlmResponse(mockModel, mockSystemPrompt, mockUserPrompt, 'test response')
+      // Should not throw
+    })
+  })
+
+  describe('clearLlmCache', () => {
+    it('should clear cache without error', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'local'
+      configureLlmCache({ enabled: true, cacheDir: mockCacheDir })
+      await clearLlmCache()
+      // Should not throw
+    })
+  })
+
+  describe('getLlmCacheStats', () => {
+    it('should return cache stats', async () => {
+      process.env.LLM_CACHE_PROVIDER = 'local'
+      configureLlmCache({ enabled: true, cacheDir: mockCacheDir })
+      const stats = await getLlmCacheStats()
+      expect(stats).toHaveProperty('entries')
+      expect(stats).toHaveProperty('dir')
+      expect(stats.dir).toBe(mockCacheDir)
+    })
+  })
 })
