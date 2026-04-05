@@ -40,7 +40,7 @@ describe('crypto-helpers', () => {
       expect(mockDecrypt).toHaveBeenCalledWith(encryptedText, 'test-key')
     })
 
-    it('should return raw text on decryption failure', () => {
+    it('should return empty string on decryption failure', () => {
       const encryptedText = 'encrypted-data'
       
       mockIsEncrypted.mockReturnValue(true)
@@ -48,11 +48,11 @@ describe('crypto-helpers', () => {
         throw new Error('Decryption failed')
       })
       
-      expect(safeDecrypt(encryptedText)).toBe(encryptedText)
+      expect(safeDecrypt(encryptedText)).toBe('')
       expect(mockLogger.error).toHaveBeenCalledWith(
         'crypto/safe-decrypt',
-        'Decryption failed, returning raw value',
- expect.any(Error)
+        'Decryption failed, returning empty string',
+        expect.any(Object)
       )
     })
   })
@@ -68,14 +68,19 @@ describe('crypto-helpers', () => {
       expect(mockEncrypt).toHaveBeenCalledWith(plainText, 'test-key')
     })
 
-    it('should return plain text on encryption failure', () => {
+    it('should throw on encryption failure', () => {
       const plainText = 'plain text'
       
       mockEncrypt.mockImplementation(() => {
         throw new Error('Encryption failed')
       })
       
-      expect(safeEncrypt(plainText)).toBe(plainText)
+      expect(() => safeEncrypt(plainText)).toThrow('Encryption failed')
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        'crypto/safe-encrypt',
+        'Encryption failed',
+        expect.any(Object)
+      )
     })
   })
 })

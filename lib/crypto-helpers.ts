@@ -10,6 +10,7 @@ import { logger } from './logger'
 
 /**
  * 値を復号化する（暗号化されていなければそのまま返す）
+ * 復号失敗時は空文字を返す（暗号文の露出を防ぐ）
  */
 export function safeDecrypt(value: string | null | undefined): string {
   if (!value) return ''
@@ -17,18 +18,20 @@ export function safeDecrypt(value: string | null | undefined): string {
   try {
     return decrypt(value, getEncryptionKey())
   } catch (err) {
-    logger.error('crypto/safe-decrypt', 'Decryption failed, returning raw value', err)
-    return value
+    logger.error('crypto/safe-decrypt', 'Decryption failed, returning empty string', { error: err instanceof Error ? err.message : String(err) })
+    return ''
   }
 }
 
 /**
- * 値を暗号化する（ENCRYPTION_KEY未設定時は平文のまま）
+ * 値を暗号化する（ENCRYPTION_KEY未設定時はエラーをthrow）
+ * 平文保存による情報漏洩を防ぐため、暗号化失敗時は例外をスローする
  */
 export function safeEncrypt(value: string): string {
   try {
     return encrypt(value, getEncryptionKey())
-  } catch {
-    return value
+  } catch (err) {
+    logger.error('crypto/safe-encrypt', 'Encryption failed', { error: err instanceof Error ? err.message : String(err) })
+    throw new Error('Encryption failed: ' + (err instanceof Error ? err.message : String(err)))
   }
 }
