@@ -1,22 +1,14 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies, headers } from 'next/headers'
-import { DEBUG_AUTH_TOKEN, DEBUG_USER_ID, IS_PRODUCTION, SUPABASE_SERVICE_ROLE_KEY } from '../config'
+import { DEBUG_AUTH_TOKEN, DEBUG_USER_ID, IS_PRODUCTION, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_URL, SUPABASE_ANON_KEY } from '../config'
 import { logger } from '../lib/logger'
-
-function getSupabaseUrl() {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL || ''
-}
-
-function getSupabaseAnonKey() {
-  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-}
 
 export async function createClient() {
   const cookieStore = await cookies()
 
   return createServerClient(
-    getSupabaseUrl(),
-    getSupabaseAnonKey(),
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
@@ -40,7 +32,6 @@ export async function createClientWithDebug() {
   const debugToken = DEBUG_AUTH_TOKEN
   const debugUserId = DEBUG_USER_ID
   const serviceRoleKey = SUPABASE_SERVICE_ROLE_KEY
-  const anonKey = getSupabaseAnonKey()
   const isDebug = isDev && !!debugToken && headersList.get('x-debug-token') === debugToken
 
   if (isDebug) {
@@ -49,8 +40,8 @@ export async function createClientWithDebug() {
     }
 
     const supabase = createServerClient(
-      getSupabaseUrl(),
-      serviceRoleKey || anonKey,
+      SUPABASE_URL,
+      serviceRoleKey || SUPABASE_ANON_KEY,
       {
         cookies: {
           getAll: () => [],
@@ -76,7 +67,7 @@ export async function createClientWithDebug() {
 
 export function createServiceClient() {
   return createServerClient(
-    getSupabaseUrl(),
+    SUPABASE_URL,
     SUPABASE_SERVICE_ROLE_KEY,
     {
       cookies: {
