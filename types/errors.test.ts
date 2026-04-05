@@ -225,6 +225,24 @@ describe('ERROR_MESSAGES', () => {
     expect(ERROR_MESSAGES.userDataNotArray).toBe('user_data は配列形式で指定してください。')
     expect(ERROR_MESSAGES.userDataItemInvalid).toBe('user_data の各項目には label, category, value (文字列) が必要です。')
   })
+
+  it('should have function-based usage limit messages', () => {
+    expect(ERROR_MESSAGES.monthlyLimitExceeded(100)).toBe('今月の利用回数が上限（100回）に達しています。来月までお待ちいただくか、プランをアップグレードしてください。')
+    expect(ERROR_MESSAGES.contentLengthExceeded(10000, 15000)).toBe('フリープランの文字数制限は10,000文字です。15,000文字のテキストはプランをアップグレードしてご利用ください。')
+    expect(ERROR_MESSAGES.axisNotAvailable(['tone'], ['structure', 'readability'])).toBe('フリープランではstructure、readabilityのみ利用可能です。「tone」はプランをアップグレードしてご利用ください。')
+  })
+
+  it('should have function-based WP and content messages', () => {
+    expect(ERROR_MESSAGES.wpUpdateFailed(500)).toBe('WordPressの更新に失敗しました (HTTP 500)')
+    expect(ERROR_MESSAGES.blogAutoAiError(403)).toBe('Blog Auto AI API エラー (HTTP 403)')
+    expect(ERROR_MESSAGES.wpFetchFailed()).toBe('記事の取得に失敗しました')
+    expect(ERROR_MESSAGES.wpFetchFailed('timeout')).toBe('記事の取得に失敗しました: timeout')
+    expect(ERROR_MESSAGES.contentTooShort(100)).toBe('コンテンツは100文字以上で入力してください')
+    expect(ERROR_MESSAGES.contentTooLong(5000)).toBe('コンテンツは5000文字以内で入力してください')
+    expect(ERROR_MESSAGES.memberLimitReached(10)).toBe('メンバー数は10人以内にしてください')
+    expect(ERROR_MESSAGES.promptTooLarge(8000, 10000)).toBe('プロンプトが長すぎます（最大8000文字、10000文字）')
+    expect(ERROR_MESSAGES.invalidProviderName('unknown')).toBe('無効なプロバイダー: unknown')
+  })
 })
 
 describe('ApiErrorResponse type', () => {

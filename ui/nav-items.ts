@@ -1,7 +1,6 @@
 import {
   BarChart3,
   CreditCard,
-  FileText,
   Globe,
   History,
   LayoutDashboard,

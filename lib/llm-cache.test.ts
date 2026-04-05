@@ -30,7 +30,7 @@ vi.mock('node:path', async (importOriginal) => {
   const actual = await importOriginal() as Record<string, unknown>
   return {
     ...actual,
-    join: vi.fn((...args) => '/tmp/test-cache/llm-cache.jsonl'),
+    join: vi.fn((..._args) => '/tmp/test-cache/llm-cache.jsonl'),
   }
 })
 
