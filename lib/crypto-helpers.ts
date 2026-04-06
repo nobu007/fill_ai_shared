@@ -32,6 +32,6 @@ export function safeEncrypt(value: string): string {
     return encrypt(value, getEncryptionKey())
   } catch (err) {
     logger.error('crypto/safe-encrypt', 'Encryption failed', { error: err instanceof Error ? err.message : String(err) })
-    throw new Error('Encryption failed: ' + (err instanceof Error ? err.message : String(err)))
+    throw new Error('Encryption failed: ' + (err instanceof Error ? err.message : String(err)), { cause: err })
   }
 }
