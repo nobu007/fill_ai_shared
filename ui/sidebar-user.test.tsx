@@ -62,15 +62,23 @@ describe('SidebarUser Component', () => {
     global.fetch = vi.fn()
   })
 
-  afterEach(() => {
+  afterEach(async () => {
+    // Wait for any pending state updates before cleanup to avoid act() warnings
+    await waitFor(() => {})
     cleanup()
   })
 
   describe('Initial Render', () => {
-    it('renders loading state initially', () => {
+    it('renders loading state initially', async () => {
       render(<SidebarUser />)
 
+      // Check loading state immediately after render
       expect(screen.getByText('読み込み中...')).toBeInTheDocument()
+
+      // Wait for async state updates to complete to avoid act() warnings
+      await waitFor(() => {
+        expect(screen.getByText('Test User')).toBeInTheDocument()
+      })
     })
 
     it('displays user display name after loading', async () => {
@@ -97,8 +105,13 @@ describe('SidebarUser Component', () => {
       })
     })
 
-    it('renders logout button', () => {
+    it('renders logout button', async () => {
       render(<SidebarUser />)
+
+      // Wait for async state updates to complete to avoid act() warnings
+      await waitFor(() => {
+        expect(screen.getByText('Test User')).toBeInTheDocument()
+      })
 
       expect(screen.getByTestId('logout-icon')).toBeInTheDocument()
     })
@@ -232,29 +245,49 @@ describe('MobileMenuButton Component', () => {
 })
 
 describe('MobileSidebar Component', () => {
-  it('does not render sidebar when isOpen is false', () => {
+  it('does not render sidebar when isOpen is false', async () => {
     const { container } = render(<MobileSidebar isOpen={false} onClose={() => {}} />)
+
+    // Wait for SidebarUser async state updates to complete
+    await waitFor(() => {
+      expect(screen.getByText('Test User')).toBeInTheDocument()
+    })
 
     expect(container.querySelector('.translate-x-0')).not.toBeInTheDocument()
     expect(container.querySelector('.-translate-x-full')).toBeInTheDocument()
   })
 
-  it('renders sidebar when isOpen is true', () => {
+  it('renders sidebar when isOpen is true', async () => {
     const { container } = render(<MobileSidebar isOpen={true} onClose={() => {}} />)
+
+    // Wait for SidebarUser async state updates to complete
+    await waitFor(() => {
+      expect(screen.getByText('Test User')).toBeInTheDocument()
+    })
 
     expect(container.querySelector('.translate-x-0')).toBeInTheDocument()
     expect(container.querySelector('.-translate-x-full')).not.toBeInTheDocument()
   })
 
-  it('renders overlay when isOpen is true', () => {
+  it('renders overlay when isOpen is true', async () => {
     const { container } = render(<MobileSidebar isOpen={true} onClose={() => {}} />)
+
+    // Wait for SidebarUser async state updates to complete
+    await waitFor(() => {
+      expect(screen.getByText('Test User')).toBeInTheDocument()
+    })
 
     const overlay = container.querySelector('.bg-black\\/30')
     expect(overlay).toBeInTheDocument()
   })
 
-  it('renders all navigation items', () => {
+  it('renders all navigation items', async () => {
     render(<MobileSidebar isOpen={true} onClose={() => {}} />)
+
+    // Wait for SidebarUser async state updates to complete
+    await waitFor(() => {
+      expect(screen.getByText('Test User')).toBeInTheDocument()
+    })
 
     expect(screen.getByText('ダッシュボード')).toBeInTheDocument()
     expect(screen.getByText('校正する')).toBeInTheDocument()
@@ -266,8 +299,13 @@ describe('MobileSidebar Component', () => {
     expect(screen.getByText('設定')).toBeInTheDocument()
   })
 
-  it('renders close button', () => {
+  it('renders close button', async () => {
     render(<MobileSidebar isOpen={true} onClose={() => {}} />)
+
+    // Wait for SidebarUser async state updates to complete
+    await waitFor(() => {
+      expect(screen.getByText('Test User')).toBeInTheDocument()
+    })
 
     expect(screen.getByTestId('x-icon')).toBeInTheDocument()
   })
@@ -276,6 +314,11 @@ describe('MobileSidebar Component', () => {
     const user = userEvent.setup()
     const handleClose = vi.fn()
     const { container } = render(<MobileSidebar isOpen={true} onClose={handleClose} />)
+
+    // Wait for SidebarUser async state updates to complete
+    await waitFor(() => {
+      expect(screen.getByText('Test User')).toBeInTheDocument()
+    })
 
     const overlay = container.querySelector('.bg-black\\/30')
     if (overlay) {
