@@ -30,6 +30,7 @@ export type ErrorCode =
   | 'CONTENT_LENGTH_EXCEEDED'
   | 'AXIS_NOT_AVAILABLE'
   | 'RATE_LIMITED'
+  | 'UPSTREAM_ERROR'
 
 /** Helper to create a typed error response for Next.js route handlers */
 export function errorResponse(
