@@ -85,6 +85,12 @@ export const FILL_AUTO_APPLY_THRESHOLD = Number(process.env.FILL_AUTO_APPLY_THRE
 /** Maximum prompt size for LLM mapping requests (Constitution §1.2 Stability — prevent resource exhaustion) */
 export const MAX_MAPPING_PROMPT_LENGTH = Number(process.env.MAX_MAPPING_PROMPT_LENGTH || 100_000)
 export const FILL_FALLBACK_MODELS = (process.env.FILL_FALLBACK_MODELS || 'glm-4.7-flash,glm-5-turbo').split(',').filter(Boolean)
+/** VLM compression threshold in KB — PDFs below this size skip JPEG compression */
+export const FILL_VLM_COMPRESS_THRESHOLD_KB = Number(process.env.FILL_VLM_COMPRESS_THRESHOLD_KB || 200)
+/** JPEG quality for VLM compression (0.0–1.0) */
+export const FILL_VLM_COMPRESS_QUALITY = Number(process.env.FILL_VLM_COMPRESS_QUALITY || 0.8)
+/** Max pixel dimension for VLM compression */
+export const FILL_VLM_COMPRESS_MAX_DIMENSION = Number(process.env.FILL_VLM_COMPRESS_MAX_DIMENSION || 1600)
 
 // Phase Engine settings are defined in src/lib/engine/engine-config.ts
 // to avoid circular dependencies with fill_ai_shared.
