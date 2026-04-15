@@ -413,5 +413,17 @@ export const CLAUDE_VALIDATION_MODEL = process.env.CLAUDE_VALIDATION_MODEL || 'c
 // ─── App URL ───────────────────────────────────────────────
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_VERCEL_URL || 'https://fill-ai-pink.vercel.app'
 
+// ─── Storage Retention / Deletion Policy (M1-3) ──────────
+/** TTL in days: PDF files older than this are eligible for deletion */
+export const STORAGE_RETENTION_DAYS = Number(process.env.STORAGE_RETENTION_DAYS || 30)
+/** TTL in days: fill_sessions older than this are eligible for cleanup */
+export const SESSION_RETENTION_DAYS = Number(process.env.SESSION_RETENTION_DAYS || 90)
+/** Maximum number of files to delete in a single cleanup run (safety limit) */
+export const STORAGE_CLEANUP_BATCH_SIZE = Number(process.env.STORAGE_CLEANUP_BATCH_SIZE || 100)
+/** Storage bucket name for PDF files */
+export const STORAGE_BUCKET_NAME = process.env.STORAGE_BUCKET_NAME || 'pdfs'
+/** Whether the storage cleanup cron is enabled */
+export const STORAGE_CLEANUP_ENABLED = process.env.STORAGE_CLEANUP_ENABLED !== 'false'
+
 // ─── Middleware / Auth ─────────────────────────────────────
 export const AUTH_PUBLIC_PATHS = ['/', '/auth', '/api', '/terms', '/privacy', '/commercial-law', '/contact', '/invite'] as const
