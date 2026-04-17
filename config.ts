@@ -355,8 +355,14 @@ export const ADMIN_USER_IDS: string[] = (() => {
   return raw.split(',').map(id => id.trim()).filter(Boolean)
 })()
 
-if (!ENCRYPTION_KEY && typeof window === 'undefined') {
-  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build'
+const isServerRuntime = typeof window === 'undefined'
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build'
+
+if (!ENCRYPTION_KEY && isServerRuntime) {
+  // Allow secret injection at runtime during build, but block booting a real production server
+  if (process.env.NODE_ENV === 'production' && !isBuildTime) {
+    throw new Error('ENCRYPTION_KEY is required in production runtime')
+  }
   if (!isBuildTime) {
     console.warn('[WARNING] ENCRYPTION_KEY is not set. Sensitive data may be stored as plaintext.')
   }
