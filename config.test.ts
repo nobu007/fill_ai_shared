@@ -33,6 +33,19 @@ import {
   PROVIDER_LABELS,
   CLAUDE_VALIDATION_MODEL,
   AUTH_PUBLIC_PATHS,
+  PDF_DPI,
+  MM_PER_INCH,
+  A4_WIDTH_MM,
+  A4_HEIGHT_MM,
+  SCAN_TEXT_THRESHOLD,
+  FILL_RATE_LIMIT_MAX,
+  FILL_RATE_LIMIT_WINDOW_MS,
+  PII_PROXIMITY_THRESHOLD,
+  VALID_FAMILY_RELATIONSHIPS,
+  MAX_FAMILY_MEMBERS,
+  MAX_USER_DATA_ENTRIES,
+  ENHANCE_RENDER_SCALE,
+  ENHANCE_SHARPEN_AMOUNT,
 } from './config'
 
 describe('Validation Limits (Constitution §4.5)', () => {
@@ -403,5 +416,122 @@ describe('BYOK Model Configuration (Constitution §2.4)', () => {
     for (const p of AUTH_PUBLIC_PATHS) {
       expect(p.startsWith('/')).toBe(true)
     }
+  })
+})
+
+describe('Environment Variable Defaults — Alerts & Monitoring (Constitution §2.4)', () => {
+  it('STRIPE_PRICE_ID defaults to empty string', () => {
+    expect(typeof STRIPE_PRICE_ID).toBe('string')
+    expect(STRIPE_PRICE_ID).toBe('')
+  })
+
+  it('ALERTS_SECRET defaults to empty string', () => {
+    expect(typeof ALERTS_SECRET).toBe('string')
+    expect(ALERTS_SECRET).toBe('')
+  })
+
+  it('SLACK_ALERTS_WEBHOOK_URL defaults to empty string', () => {
+    expect(typeof SLACK_ALERTS_WEBHOOK_URL).toBe('string')
+    expect(SLACK_ALERTS_WEBHOOK_URL).toBe('')
+  })
+})
+
+describe('PDF Constants (Core Mission — Constitution §2.4)', () => {
+  it('PDF_DPI is standard 72 dpi', () => {
+    expect(typeof PDF_DPI).toBe('number')
+    expect(PDF_DPI).toBe(72)
+  })
+
+  it('MM_PER_INCH is exact conversion factor', () => {
+    expect(typeof MM_PER_INCH).toBe('number')
+    expect(MM_PER_INCH).toBe(25.4)
+  })
+
+  it('A4_WIDTH_MM is standard 210mm', () => {
+    expect(typeof A4_WIDTH_MM).toBe('number')
+    expect(A4_WIDTH_MM).toBe(210)
+  })
+
+  it('A4_HEIGHT_MM is standard 297mm', () => {
+    expect(typeof A4_HEIGHT_MM).toBe('number')
+    expect(A4_HEIGHT_MM).toBe(297)
+  })
+
+  it('A4 dimensions are consistent with MM_PER_INCH and PDF_DPI', () => {
+    // A4 in PDF points = mm / MM_PER_INCH * PDF_DPI
+    const expectedWidthPoints = A4_WIDTH_MM / MM_PER_INCH * PDF_DPI
+    const expectedHeightPoints = A4_HEIGHT_MM / MM_PER_INCH * PDF_DPI
+    expect(expectedWidthPoints).toBeCloseTo(595.28, 1) // Standard A4 width in points
+    expect(expectedHeightPoints).toBeCloseTo(841.89, 1) // Standard A4 height in points
+  })
+
+  it('SCAN_TEXT_THRESHOLD is a positive number for OCR quality gate', () => {
+    expect(typeof SCAN_TEXT_THRESHOLD).toBe('number')
+    expect(SCAN_TEXT_THRESHOLD).toBeGreaterThan(0)
+  })
+})
+
+describe('Fill API Rate Limits (Constitution §1.2 Safety)', () => {
+  it('FILL_RATE_LIMIT_MAX is a positive integer', () => {
+    expect(typeof FILL_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(FILL_RATE_LIMIT_MAX)).toBe(true)
+    expect(FILL_RATE_LIMIT_MAX).toBeGreaterThan(0)
+  })
+
+  it('FILL_RATE_LIMIT_WINDOW_MS is a positive number in seconds range', () => {
+    expect(typeof FILL_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(FILL_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    // Should be in a reasonable window (1s to 10min)
+    expect(FILL_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+})
+
+describe('PII Masking Constants (Constitution §4.6)', () => {
+  it('PII_PROXIMITY_THRESHOLD is a positive number for spatial detection', () => {
+    expect(typeof PII_PROXIMITY_THRESHOLD).toBe('number')
+    expect(PII_PROXIMITY_THRESHOLD).toBeGreaterThan(0)
+  })
+})
+
+describe('Family & UserData Limits (Core Mission — Constitution §2.4)', () => {
+  it('VALID_FAMILY_RELATIONSHIPS contains expected Japanese relationships', () => {
+    expect(Array.isArray(VALID_FAMILY_RELATIONSHIPS)).toBe(true)
+    expect(VALID_FAMILY_RELATIONSHIPS).toContain('本人')
+    expect(VALID_FAMILY_RELATIONSHIPS).toContain('配偶者')
+    expect(VALID_FAMILY_RELATIONSHIPS).toContain('父')
+    expect(VALID_FAMILY_RELATIONSHIPS).toContain('母')
+    expect(VALID_FAMILY_RELATIONSHIPS).toContain('子')
+    expect(VALID_FAMILY_RELATIONSHIPS).toContain('その他')
+  })
+
+  it('MAX_FAMILY_MEMBERS is a positive integer', () => {
+    expect(typeof MAX_FAMILY_MEMBERS).toBe('number')
+    expect(Number.isInteger(MAX_FAMILY_MEMBERS)).toBe(true)
+    expect(MAX_FAMILY_MEMBERS).toBeGreaterThan(0)
+  })
+
+  it('MAX_USER_DATA_ENTRIES is a positive integer', () => {
+    expect(typeof MAX_USER_DATA_ENTRIES).toBe('number')
+    expect(Number.isInteger(MAX_USER_DATA_ENTRIES)).toBe(true)
+    expect(MAX_USER_DATA_ENTRIES).toBeGreaterThan(0)
+  })
+
+  it('MAX_FAMILY_MEMBERS is less than MAX_USER_DATA_ENTRIES', () => {
+    // Family members are a subset of user data entries
+    expect(MAX_FAMILY_MEMBERS).toBeLessThan(MAX_USER_DATA_ENTRIES)
+  })
+})
+
+describe('PDF Enhancement Constants (Core Mission — Constitution §2.4)', () => {
+  it('ENHANCE_RENDER_SCALE is a positive number (typically 1-4)', () => {
+    expect(typeof ENHANCE_RENDER_SCALE).toBe('number')
+    expect(ENHANCE_RENDER_SCALE).toBeGreaterThanOrEqual(1)
+    expect(ENHANCE_RENDER_SCALE).toBeLessThanOrEqual(4)
+  })
+
+  it('ENHANCE_SHARPEN_AMOUNT is a number between 0 and 1', () => {
+    expect(typeof ENHANCE_SHARPEN_AMOUNT).toBe('number')
+    expect(ENHANCE_SHARPEN_AMOUNT).toBeGreaterThanOrEqual(0)
+    expect(ENHANCE_SHARPEN_AMOUNT).toBeLessThanOrEqual(1)
   })
 })
