@@ -46,6 +46,9 @@ import {
   MAX_USER_DATA_ENTRIES,
   ENHANCE_RENDER_SCALE,
   ENHANCE_SHARPEN_AMOUNT,
+  STRIPE_PRICE_ID,
+  ALERTS_SECRET,
+  SLACK_ALERTS_WEBHOOK_URL,
 } from './config'
 
 describe('Validation Limits (Constitution §4.5)', () => {

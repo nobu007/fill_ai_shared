@@ -69,6 +69,10 @@ export const APP_DESCRIPTION = process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'PDF�
 export const APP_ICON = process.env.NEXT_PUBLIC_APP_ICON || '📝'
 
 // ─── PDF / Form Fill Settings ──────────────────────────────
+/** Page count threshold to switch to parallel VLM extraction for large PDFs */
+export const FILL_PARALLEL_PAGE_THRESHOLD = Number(process.env.FILL_PARALLEL_PAGE_THRESHOLD || 5)
+/** Max concurrent VLM calls during parallel page extraction */
+export const FILL_PARALLEL_CONCURRENCY = Number(process.env.FILL_PARALLEL_CONCURRENCY || 3)
 export const MAX_PDF_SIZE_BYTES = Number(process.env.MAX_PDF_SIZE_BYTES || 10_000_000)
 export const MAX_PDF_PAGES = Number(process.env.MAX_PDF_PAGES || 50)
 export const FILL_MAPPING_TIMEOUT_MS = Number(process.env.FILL_MAPPING_TIMEOUT_MS || 30_000)
@@ -218,6 +222,8 @@ export const FILL_MAPPING_PROMPT_TEMPLATE = process.env.FILL_MAPPING_PROMPT_TEMP
 // ─── Stripe ────────────────────────────────────────────────
 export const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || ''
 export const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || ''
+/** Default Stripe Price ID for subscription checkout (fallback when no priceId in request) */
+export const STRIPE_PRICE_ID = process.env.STRIPE_PRICE_ID || ''
 export const STRIPE_API_VERSION = process.env.STRIPE_API_VERSION || '2026-03-25.dahlia'
 /** Timeout for Stripe API key validation connectivity check (ms) */
 export const STRIPE_API_TIMEOUT_MS = Number(process.env.STRIPE_API_TIMEOUT_MS || 5_000)
@@ -349,6 +355,12 @@ export const INVITATION_CODE_MAX_LENGTH = Number(process.env.INVITATION_CODE_MAX
 export const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || ''
 export const DEBUG_AUTH_TOKEN = process.env.DEBUG_AUTH_TOKEN || ''
 export const DEBUG_USER_ID = process.env.DEBUG_USER_ID || ''
+// --- Alerts / Monitoring ---
+/** Secret token for authenticating alerts webhook calls */
+export const ALERTS_SECRET = process.env.ALERTS_SECRET || ''
+/** Slack webhook URL for sending alert notifications */
+export const SLACK_ALERTS_WEBHOOK_URL = process.env.SLACK_ALERTS_WEBHOOK_URL || ''
+
 export const ADMIN_USER_IDS: string[] = (() => {
   const raw = process.env.ADMIN_USER_IDS || ''
   if (!raw) return []
