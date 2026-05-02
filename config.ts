@@ -54,8 +54,18 @@ export const LLM_RETRY_DELAY_MS = Number(process.env.LLM_RETRY_DELAY_MS || 5000)
 export const MAX_RETRY_DELAY_MS = Number(process.env.MAX_RETRY_DELAY_MS || 60_000)
 export const RATE_LIMIT_BASE_DELAY_MS = Number(process.env.RATE_LIMIT_BASE_DELAY_MS || 30_000)
 
-
-
+/** LLM Throttle: per-model rate limit — max LLM calls per sliding window */
+export const LLM_THROTTLE_RATE_LIMIT_MAX = Number(process.env.LLM_THROTTLE_RATE_LIMIT_MAX || 30)
+/** LLM Throttle: per-model sliding window duration (ms) */
+export const LLM_THROTTLE_RATE_LIMIT_WINDOW_MS = Number(process.env.LLM_THROTTLE_RATE_LIMIT_WINDOW_MS || 60_000)
+/** LLM Throttle: consecutive failures before circuit breaker trips */
+export const LLM_THROTTLE_CIRCUIT_BREAKER_THRESHOLD = Number(process.env.LLM_THROTTLE_CIRCUIT_BREAKER_THRESHOLD || 3)
+/** LLM Throttle: circuit breaker cooldown after tripping (ms) */
+export const LLM_THROTTLE_CIRCUIT_BREAKER_COOLDOWN_MS = Number(process.env.LLM_THROTTLE_CIRCUIT_BREAKER_COOLDOWN_MS || 30_000)
+/** LLM Throttle: max concurrent LLM calls across all models */
+export const LLM_THROTTLE_MAX_CONCURRENCY = Number(process.env.LLM_THROTTLE_MAX_CONCURRENCY || 5)
+/** LLM Throttle: max adaptive delay cap (ms) */
+export const LLM_THROTTLE_ADAPTIVE_DELAY_MAX_MS = Number(process.env.LLM_THROTTLE_ADAPTIVE_DELAY_MAX_MS || 30_000)
 
 // ─── OpenAI/Gemini/Anthropic Key Validation ────────────────
 export const OPENAI_MODELS_ENDPOINT = process.env.OPENAI_MODELS_ENDPOINT || 'https://api.openai.com/v1/models'
