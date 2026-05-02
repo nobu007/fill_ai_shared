@@ -105,6 +105,10 @@ export const FILL_VLM_COMPRESS_THRESHOLD_KB = Number(process.env.FILL_VLM_COMPRE
 export const FILL_VLM_COMPRESS_QUALITY = Number(process.env.FILL_VLM_COMPRESS_QUALITY || 0.8)
 /** Max pixel dimension for VLM compression */
 export const FILL_VLM_COMPRESS_MAX_DIMENSION = Number(process.env.FILL_VLM_COMPRESS_MAX_DIMENSION || 1600)
+/** Page count threshold to trigger parallel page extraction (10+ pages) */
+export const FILL_PARALLEL_PAGE_THRESHOLD = Number(process.env.FILL_PARALLEL_PAGE_THRESHOLD || 10)
+/** Max concurrent pages for parallel extraction */
+export const FILL_PARALLEL_CONCURRENCY = Number(process.env.FILL_PARALLEL_CONCURRENCY || 4)
 
 // Phase Engine settings are defined in src/lib/engine/engine-config.ts
 // to avoid circular dependencies with fill_ai_shared.
