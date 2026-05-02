@@ -79,10 +79,6 @@ export const APP_DESCRIPTION = process.env.NEXT_PUBLIC_APP_DESCRIPTION || 'PDF�
 export const APP_ICON = process.env.NEXT_PUBLIC_APP_ICON || '📝'
 
 // ─── PDF / Form Fill Settings ──────────────────────────────
-/** Page count threshold to switch to parallel VLM extraction for large PDFs */
-export const FILL_PARALLEL_PAGE_THRESHOLD = Number(process.env.FILL_PARALLEL_PAGE_THRESHOLD || 5)
-/** Max concurrent VLM calls during parallel page extraction */
-export const FILL_PARALLEL_CONCURRENCY = Number(process.env.FILL_PARALLEL_CONCURRENCY || 3)
 export const MAX_PDF_SIZE_BYTES = Number(process.env.MAX_PDF_SIZE_BYTES || 10_000_000)
 export const MAX_PDF_PAGES = Number(process.env.MAX_PDF_PAGES || 50)
 export const FILL_MAPPING_TIMEOUT_MS = Number(process.env.FILL_MAPPING_TIMEOUT_MS || 30_000)
