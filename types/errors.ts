@@ -31,6 +31,7 @@ export type ErrorCode =
   | 'AXIS_NOT_AVAILABLE'
   | 'RATE_LIMITED'
   | 'UPSTREAM_ERROR'
+  | 'INVALID_STATE'
 
 /** Helper to create a typed error response for Next.js route handlers */
 export function errorResponse(
