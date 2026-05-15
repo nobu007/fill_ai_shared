@@ -77,8 +77,15 @@ class ApiMetricsCollector {
   }
 
   snapshot(): ApiMetricsSnapshot {
+    const endpoints: typeof this.endpoints = {}
+    for (const [key, ep] of Object.entries(this.endpoints)) {
+      endpoints[key] = {
+        ...ep,
+        responses: { ...ep.responses },
+      }
+    }
     return {
-      endpoints: { ...this.endpoints },
+      endpoints,
       uptime: `${Math.round((Date.now() - this.startTime.getTime()) / 1000)}s`,
       collectedAt: new Date().toISOString(),
     }

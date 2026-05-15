@@ -459,5 +459,9 @@ export const STORAGE_BUCKET_NAME = process.env.STORAGE_BUCKET_NAME || 'pdfs'
 /** Whether the storage cleanup cron is enabled */
 export const STORAGE_CLEANUP_ENABLED = process.env.STORAGE_CLEANUP_ENABLED !== 'false'
 
+// ─── Proofread Model Usage ────────────────────────────────
+export const PROOFREAD_MODEL_USAGE_ENABLED = process.env.PROOFREAD_MODEL_USAGE_ENABLED !== 'false'
+export const PROOFREAD_MODEL_USAGE_VERBOSE = process.env.PROOFREAD_MODEL_USAGE_VERBOSE === 'true'
+
 // ─── Middleware / Auth ─────────────────────────────────────
 export const AUTH_PUBLIC_PATHS = ['/', '/auth', '/api', '/terms', '/privacy', '/commercial-law', '/contact', '/invite'] as const
