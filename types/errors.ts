@@ -146,6 +146,7 @@ export const ERROR_MESSAGES = {
 
   // --- Settings route messages ---
   settingsFetchFailed: '設定の取得に失敗しました',
+  settingsSaveFailed: '設定の保存に失敗しました',
 
   // --- Config route messages ---
   configLoadFailed: '設定の読み込みに失敗しました',
