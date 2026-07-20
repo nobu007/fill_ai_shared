@@ -307,6 +307,10 @@ export const BLOG_AUTO_AI_CONNECT_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_C
 export const BLOG_AUTO_AI_LIST_TIMEOUT_MS = Number(process.env.BLOG_AUTO_AI_LIST_TIMEOUT_MS || 30_000)
 export const BLOG_AUTO_AI_LIST_LIMIT = Number(process.env.BLOG_AUTO_AI_LIST_LIMIT || 50)
 
+// ─── API Monitoring ────────────────────────────────────────
+/** Maximum recent duration samples retained per endpoint for P95/P99 metrics. */
+export const API_METRICS_DURATION_SAMPLE_LIMIT = Number(process.env.API_METRICS_DURATION_SAMPLE_LIMIT || 100)
+
 // ─── Fill API Rate Limits ──────────────────────────────────
 /** Maximum fill API requests per user within the rate limit window (§1.2 Safety) */
 export const FILL_RATE_LIMIT_MAX = Number(process.env.FILL_RATE_LIMIT_MAX || 10)

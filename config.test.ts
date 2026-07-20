@@ -40,6 +40,7 @@ import {
   SCAN_TEXT_THRESHOLD,
   FILL_RATE_LIMIT_MAX,
   FILL_RATE_LIMIT_WINDOW_MS,
+  API_METRICS_DURATION_SAMPLE_LIMIT,
   PII_PROXIMITY_THRESHOLD,
   VALID_FAMILY_RELATIONSHIPS,
   MAX_FAMILY_MEMBERS,
@@ -423,6 +424,12 @@ describe('BYOK Model Configuration (Constitution §2.4)', () => {
 })
 
 describe('Environment Variable Defaults — Alerts & Monitoring (Constitution §2.4)', () => {
+  it('API_METRICS_DURATION_SAMPLE_LIMIT defaults to a bounded positive sample size', () => {
+    expect(API_METRICS_DURATION_SAMPLE_LIMIT).toBe(100)
+    expect(Number.isInteger(API_METRICS_DURATION_SAMPLE_LIMIT)).toBe(true)
+    expect(API_METRICS_DURATION_SAMPLE_LIMIT).toBeGreaterThan(0)
+  })
+
   it('STRIPE_PRICE_ID defaults to empty string', () => {
     expect(typeof STRIPE_PRICE_ID).toBe('string')
     expect(STRIPE_PRICE_ID).toBe('')
