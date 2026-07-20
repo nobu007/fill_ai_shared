@@ -32,6 +32,8 @@ export interface RateLimiter {
   check(key: string): boolean
   /** Get remaining requests for a key within the current window. */
   getRemainingRequests(key: string): number
+  /** Get whole seconds until the current window resets (0 when no active window exists). */
+  getRetryAfterSeconds(key: string): number
   /** Get aggregate statistics. */
   getStats(): RateLimiterStats
 }
@@ -156,6 +158,14 @@ export function createRateLimiter(config: RateLimiterConfig): RateLimiter {
       }
 
       return Math.max(0, config.maxRequests - entry.count)
+    },
+
+    getRetryAfterSeconds(key: string): number {
+      const entry = store.get(key)
+      if (!entry) return 0
+
+      const remainingMs = config.windowMs - (Date.now() - entry.windowStart)
+      return remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0
     },
 
     getStats(): RateLimiterStats {

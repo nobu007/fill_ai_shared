@@ -136,7 +136,31 @@ describe('getRemainingRequests', () => {
   })
 })
 
-// ─── Stats ───────────────────────────────────────────────
+// ─── Retry-After ──────────────────────────────────────────
+
+describe('getRetryAfterSeconds', () => {
+  it('returns the ceiling of the active window duration in seconds', () => {
+    const limiter = createRateLimiter({ maxRequests: 1, windowMs: 5_000 })
+
+    limiter.check('user-1')
+    expect(limiter.getRetryAfterSeconds('user-1')).toBe(5)
+
+    advanceTime(1_001)
+    expect(limiter.getRetryAfterSeconds('user-1')).toBe(4)
+  })
+
+  it('returns zero when no active window exists', () => {
+    const limiter = createRateLimiter({ maxRequests: 1, windowMs: 5_000 })
+
+    expect(limiter.getRetryAfterSeconds('new-user')).toBe(0)
+
+    limiter.check('expired-user')
+    advanceTime(5_001)
+    expect(limiter.getRetryAfterSeconds('expired-user')).toBe(0)
+  })
+})
+
+// ─── Stats ────────────────────────────────────────────────
 
 describe('getStats', () => {
   it('returns correct initial stats', () => {
