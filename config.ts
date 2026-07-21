@@ -20,6 +20,10 @@ export const GEMINI_API_KEY = process.env.GEMINI_API_KEY || ''
 export const GEMINI_THINKING_LEVEL = (process.env.GEMINI_THINKING_LEVEL as 'minimal' | 'low' | 'medium' | 'high') || 'high'
 export const ANTHROPIC_API_URL = process.env.ANTHROPIC_API_URL || 'https://api.anthropic.com/v1/messages'
 
+// ─── MiniMax LLM（fallback tail — Amendment #3）──────────────
+export const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY || ''
+export const MINIMAX_BASE_URL = process.env.MINIMAX_BASE_URL || 'https://api.minimax.io/v1'
+
 // ─── Default AI Model ───────────────────────────────────────
 export const DEFAULT_AI_MODEL = process.env.DEFAULT_AI_MODEL || 'glm-5-turbo'
 
