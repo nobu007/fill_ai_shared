@@ -98,7 +98,7 @@ export const FILL_OCR_MODEL = process.env.FILL_OCR_MODEL || 'glm-ocr'
 export const FILL_AUTO_APPLY_THRESHOLD = Number(process.env.FILL_AUTO_APPLY_THRESHOLD || 0.8)
 /** Maximum prompt size for LLM mapping requests (Constitution §1.2 Stability — prevent resource exhaustion) */
 export const MAX_MAPPING_PROMPT_LENGTH = Number(process.env.MAX_MAPPING_PROMPT_LENGTH || 100_000)
-export const FILL_FALLBACK_MODELS = (process.env.FILL_FALLBACK_MODELS || 'glm-4.7-flash,glm-5-turbo').split(',').filter(Boolean)
+export const FILL_FALLBACK_MODELS = (process.env.FILL_FALLBACK_MODELS || 'glm-4.7-flash,glm-5-turbo,MiniMax-M3').split(',').filter(Boolean)
 /** VLM compression threshold in KB — PDFs below this size skip JPEG compression */
 export const FILL_VLM_COMPRESS_THRESHOLD_KB = Number(process.env.FILL_VLM_COMPRESS_THRESHOLD_KB || 200)
 /** JPEG quality for VLM compression (0.0–1.0) */
