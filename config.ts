@@ -316,15 +316,69 @@ export const BLOG_AUTO_AI_LIST_LIMIT = Number(process.env.BLOG_AUTO_AI_LIST_LIMI
 export const API_METRICS_DURATION_SAMPLE_LIMIT = Number(process.env.API_METRICS_DURATION_SAMPLE_LIMIT || 100)
 
 // ─── Fill API Rate Limits ──────────────────────────────────
-/** Maximum fill API requests per user within the rate limit window (§1.2 Safety) */
+/**
+ * Maximum fill API requests per user within the rate limit window.
+ * Override per tenant via FILL_RATE_LIMIT_MAX env var.
+ * Exceeding this limit returns HTTP 429 and increments the rateLimited counter
+ * in /api/fill/metrics.
+ *
+ * @example
+ *   # Default: 10 requests per 60-second window per user
+ *   FILL_RATE_LIMIT_MAX=20   # increase to 20 req/window
+ *   FILL_RATE_LIMIT_MAX=5    # decrease to 5 req/window (strict)
+ */
 export const FILL_RATE_LIMIT_MAX = Number(process.env.FILL_RATE_LIMIT_MAX || 10)
-/** Fill API rate limit window in milliseconds (§1.2 Safety) */
+/** Rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below FILL_RATE_LIMIT_MAX.
+ * Override via FILL_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   FILL_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   FILL_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
 export const FILL_RATE_LIMIT_WINDOW_MS = Number(process.env.FILL_RATE_LIMIT_WINDOW_MS || 60_000)
 
 // ─── Contact Enhance Rate Limits ───────────────────────────
+/**
+ * Maximum contact enhance API requests per user within the rate limit window.
+ * Override via CONTACT_ENHANCE_RATE_LIMIT_MAX env var.
+ * Exceeding this limit returns HTTP 429 and increments the rateLimited counter
+ * in the contact-enhance metrics.
+ *
+ * @example
+ *   # Default: 2 requests per 300-second (5-minute) window per user
+ *   CONTACT_ENHANCE_RATE_LIMIT_MAX=5   # increase to 5 req/window
+ */
 export const CONTACT_ENHANCE_RATE_LIMIT_MAX = Number(process.env.CONTACT_ENHANCE_RATE_LIMIT_MAX || 2)
+/**
+ * Contact enhance rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below CONTACT_ENHANCE_RATE_LIMIT_MAX.
+ * Override via CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS=300000    # default: 5-minute window
+ *   CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS=600000    # 10-minute window (more relaxed)
+ */
 export const CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS = Number(process.env.CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS || 300_000)
+/**
+ * Interval in milliseconds between automatic cleanup of expired contact enhance entries.
+ * Override via CONTACT_ENHANCE_CLEANUP_INTERVAL_MS env var.
+ *
+ * @example
+ *   CONTACT_ENHANCE_CLEANUP_INTERVAL_MS=300000    # default: 5-minute cleanup cycle
+ */
 export const CONTACT_ENHANCE_CLEANUP_INTERVAL_MS = Number(process.env.CONTACT_ENHANCE_CLEANUP_INTERVAL_MS || 300_000)
+/**
+ * Maximum number of contact enhance requests per user per day (daily hard cap).
+ * Override via CONTACT_ENHANCE_DAILY_CAP_MAX env var.
+ * This is a separate daily-level cap on top of the per-window rate limit.
+ *
+ * @example
+ *   CONTACT_ENHANCE_DAILY_CAP_MAX=100   # default: 100 requests per user per day
+ *   CONTACT_ENHANCE_DAILY_CAP_MAX=50    # stricter daily cap
+ */
 export const CONTACT_ENHANCE_DAILY_CAP_MAX = Number(process.env.CONTACT_ENHANCE_DAILY_CAP_MAX || 100)
 /** Maximum message length for contact enhance API (Constitution §2.4) */
 export const CONTACT_ENHANCE_MESSAGE_MAX_LENGTH = Number(process.env.CONTACT_ENHANCE_MESSAGE_MAX_LENGTH || 5000)
