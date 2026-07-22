@@ -415,6 +415,31 @@ export interface Database {
           updated_at?: string
         }
       }
+      user_corrections: {
+        Row: {
+          id: string
+          user_id: string
+          session_id: string | null
+          placeholder: string
+          llm_category: string
+          user_category: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          session_id?: string | null
+          placeholder: string
+          llm_category: string
+          user_category: string
+          created_at?: string
+        }
+        Update: {
+          placeholder?: string
+          llm_category?: string
+          user_category?: string
+        }
+      }
     }
   }
 }
