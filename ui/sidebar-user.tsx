@@ -1,13 +1,13 @@
 'use client'
 
-import { APP_NAME, APP_ICON } from '../config'
-
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
+import { LogOut, Menu, X, Globe } from 'lucide-react'
 import { createClient } from '../auth/client'
-import { LogOut, Menu, X } from 'lucide-react'
-import { navItems, isActive } from './nav-items'
+import { getNavItems, isActive } from './nav-items'
+import { APP_ICON, APP_NAME } from '@/shared/config'
+import { LOCALE_LABELS, type Locale } from '../../lib/i18n'
 
 export function SidebarUser() {
   const [displayName, setDisplayName] = useState('読み込み中...')
@@ -77,6 +77,8 @@ export function MobileMenuButton({ onClick }: { onClick: () => void }) {
 
 export function MobileSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname()
+  const locale = pathname.startsWith('/en') ? 'en' : 'ja'
+  const navItems = getNavItems(locale)
 
   return (
     <>
@@ -112,5 +114,38 @@ export function MobileSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: (
         </div>
       </div>
     </>
+  )
+}
+
+/**
+ * Language switcher component — renders a dropdown or button to toggle locale.
+ * Works in both / (ja) and /en/* routes.
+ */
+export function LanguageSwitcher({ currentLocale }: { currentLocale: Locale }) {
+  const pathname = usePathname()
+
+  const switchLocale: Locale = currentLocale === 'ja' ? 'en' : 'ja'
+
+  // Build the new path: for /en/ routes, swap /en prefix; for / routes, prepend /en
+  let newPath: string
+  if (currentLocale === 'ja') {
+    // /foo → /en/foo
+    newPath = `/en${pathname === '/' ? '' : pathname}`
+  } else {
+    // /en/foo → /foo (strip /en prefix)
+    newPath = pathname.replace(/^\/en/, '') || '/'
+  }
+
+  const label = LOCALE_LABELS[switchLocale]
+
+  return (
+    <Link
+      href={newPath}
+      className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
+      title={label}
+    >
+      <Globe size={16} />
+      <span>{label}</span>
+    </Link>
   )
 }

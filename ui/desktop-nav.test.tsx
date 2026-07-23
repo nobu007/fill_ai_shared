@@ -55,12 +55,13 @@ describe('DesktopNav Component', () => {
       render(<DesktopNav />)
 
       expect(screen.getByTestId('dashboard-icon')).toBeInTheDocument()
-      expect(screen.getByTestId('zap-icon')).toBeInTheDocument()
+      expect(screen.getAllByTestId('zap-icon')).toHaveLength(2)
       expect(screen.getByTestId('globe-icon')).toBeInTheDocument()
       expect(screen.getByTestId('history-icon')).toBeInTheDocument()
       // CreditCard icon is used by both /credits and /subscription
       expect(screen.getAllByTestId('creditcard-icon')).toHaveLength(2)
       expect(screen.getByTestId('settings-icon')).toBeInTheDocument()
+      expect(screen.getByTestId('barchart3-icon')).toBeInTheDocument()
     })
   })
 

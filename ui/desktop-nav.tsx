@@ -2,10 +2,12 @@
 
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
-import { navItems, isActive } from './nav-items'
+import { getNavItems, isActive } from './nav-items'
 
 export function DesktopNav() {
   const pathname = usePathname()
+  const locale = pathname.startsWith('/en') ? 'en' : 'ja'
+  const navItems = getNavItems(locale)
 
   return (
     <>
