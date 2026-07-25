@@ -415,6 +415,32 @@ export interface Database {
           updated_at?: string
         }
       }
+      pdf_templates: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          pdf_fingerprint: string
+          field_mappings: Json
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          pdf_fingerprint: string
+          field_mappings: Json
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          name?: string
+          pdf_fingerprint?: string
+          field_mappings?: Json
+          updated_at?: string
+        }
+      }
       user_corrections: {
         Row: {
           id: string
