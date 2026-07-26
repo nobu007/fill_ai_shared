@@ -22,6 +22,8 @@ const mockConfig = vi.hoisted(() => ({
   portkeyGatewayUrl: '',
   portkeyConfigSlug: '',
   zaiApiKey: '',
+  minimaxApiKey: '',
+  minimaxBaseUrl: 'https://api.minimax.test/v1',
   geminiApiKey: '',
   defaultAiModel: 'glm-5-turbo',
   geminiThinkingLevel: 'high' as string,
@@ -52,6 +54,8 @@ vi.mock('../lib/llm-cache-stats', () => ({
 vi.mock('../config', () => ({
   get ZAI_API_URL() { return 'https://api.example.com' },
   get ZAI_API_KEY() { return mockConfig.zaiApiKey },
+  get MINIMAX_API_KEY() { return mockConfig.minimaxApiKey },
+  get MINIMAX_BASE_URL() { return mockConfig.minimaxBaseUrl },
   get DEFAULT_AI_MODEL() { return mockConfig.defaultAiModel },
   get PORTKEY_API_KEY() { return mockConfig.portkeyApiKey },
   get PORTKEY_GATEWAY_URL() { return mockConfig.portkeyGatewayUrl },
@@ -73,6 +77,8 @@ describe('providers', () => {
     mockConfig.portkeyGatewayUrl = ''
     mockConfig.portkeyConfigSlug = ''
     mockConfig.zaiApiKey = ''
+    mockConfig.minimaxApiKey = ''
+    mockConfig.minimaxBaseUrl = 'https://api.minimax.test/v1'
     mockConfig.geminiApiKey = ''
     mockConfig.defaultAiModel = 'glm-5-turbo'
     mockConfig.geminiThinkingLevel = 'high'
@@ -238,6 +244,15 @@ describe('providers', () => {
   })
 
   describe('MODELS', () => {
+    it('should register MiniMax-M3 as the Anthropic Messages API fallback model', () => {
+      expect(MODELS['MiniMax-M3']).toEqual({
+        provider: 'minimax',
+        modelId: 'MiniMax-M3',
+        tier: 'mid',
+        supportsThinking: false,
+      })
+    })
+
     it('should have correct model definitions', () => {
       expect(MODELS['glm-5-turbo']).toEqual({
         provider: 'zai_general',
@@ -259,6 +274,49 @@ describe('providers', () => {
   })
 
   describe('getAiSdkModel', () => {
+    // --- MiniMax fallback paths ---
+
+    it('should use MiniMax server key with the Anthropic Messages API base URL', () => {
+      mockConfig.minimaxApiKey = 'minimax-server-key'
+
+      const result = getAiSdkModel('MiniMax-M3')
+
+      expect(result).toBe('mock-model')
+      expect(mockCreateOpenAI).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'minimax-anthropic',
+          baseURL: 'https://api.minimax.test/v1',
+          apiKey: 'minimax-server-key',
+          headers: expect.objectContaining({
+            'anthropic-version': '2023-06-01',
+          }),
+        })
+      )
+    })
+
+    it('should throw when MiniMax-M3 is requested without MINIMAX_API_KEY', () => {
+      mockConfig.minimaxApiKey = ''
+      expect(() => getAiSdkModel('MiniMax-M3')).toThrow('MINIMAX_API_KEY not set for MiniMax-M3')
+    })
+
+    it('should use a valid BYOK key for MiniMax with Anthropic headers', () => {
+      const userKey = 'valid-minimax-key-1234567890'
+
+      const result = getAiSdkModel('MiniMax-M3', userKey)
+
+      expect(result).toBe('mock-model')
+      expect(mockCreateOpenAI).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'minimax-anthropic',
+          baseURL: 'https://api.minimax.test/v1',
+          apiKey: 'valid-minimax-key-1234567890',
+          headers: expect.objectContaining({
+            'anthropic-version': '2023-06-01',
+          }),
+        })
+      )
+    })
+
     // --- Default ZAI paths (no BYOK, no Portkey) ---
 
     it('should return ZAI model for known modelId without BYOK or Portkey', () => {

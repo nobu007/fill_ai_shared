@@ -2,6 +2,7 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import {
   ZAI_API_URL, ZAI_API_KEY, DEFAULT_AI_MODEL,
+  MINIMAX_API_KEY, MINIMAX_BASE_URL,
   PORTKEY_API_KEY, PORTKEY_GATEWAY_URL, PORTKEY_CONFIG_SLUG,
   GEMINI_API_KEY, GEMINI_THINKING_LEVEL,
 } from '../config'
@@ -29,6 +30,15 @@ function getZaiProvider(portkeyConfig?: { provider: string; virtualKey: string }
     name: 'zai-general',
     baseURL: ZAI_API_URL,
     apiKey: ZAI_API_KEY,
+  })
+}
+
+function getMinimaxProvider(apiKey: string) {
+  return createOpenAICompatible({
+    name: 'minimax-anthropic',
+    baseURL: MINIMAX_BASE_URL,
+    apiKey,
+    headers: { 'anthropic-version': '2023-06-01' },
   })
 }
 
@@ -100,6 +110,8 @@ export const MODELS: Record<string, ModelInfo> = {
   'glm-4.5-air': { provider: 'zai_general', modelId: 'glm-4.5-air', tier: 'low',  supportsThinking: true, portkeyProvider: 'zai_coding' },
   'glm-4.7-coding': { provider: 'zai_general', modelId: 'glm-4.7-coding', tier: 'mid', supportsThinking: true, portkeyProvider: 'zai_coding' },
   'glm-4.7-flash': { provider: 'zai_general', modelId: 'glm-4.7-flash', tier: 'low', supportsThinking: true, portkeyProvider: 'zai_coding' },
+  // MiniMax-M3 uses the Anthropic Messages API as the fallback tail.
+  'MiniMax-M3': { provider: 'minimax', modelId: 'MiniMax-M3', tier: 'mid', supportsThinking: false },
   // Google Gemini（fallback用）
   'gemini-3.1-flash-lite': { provider: 'gemini', modelId: 'gemini-3.1-flash-lite-preview', tier: 'high', supportsThinking: true, thinkingLevel: GEMINI_THINKING_LEVEL, portkeyProvider: 'google' },
 }
@@ -143,6 +155,10 @@ export function getAiSdkModel(modelId: string, userApiKey?: string) {
           const provider = createGoogleGenerativeAI({ apiKey: userApiKey, ...opts })
           return provider(info.modelId)
         }
+        case 'minimax': {
+          const provider = getMinimaxProvider(userApiKey)
+          return provider(info.modelId)
+        }
         case 'zai_general':
         default: {
           const provider = createOpenAICompatible({
@@ -169,6 +185,13 @@ export function getAiSdkModel(modelId: string, userApiKey?: string) {
       return getZaiProvider(fallbackConfig)(MODELS[DEFAULT_AI_MODEL]!.modelId)
     }
     return geminiProvider(info.modelId)
+  }
+
+  if (info.provider === 'minimax') {
+    if (!MINIMAX_API_KEY) {
+      throw new Error('MINIMAX_API_KEY not set for MiniMax-M3')
+    }
+    return getMinimaxProvider(MINIMAX_API_KEY)(info.modelId)
   }
 
   return getZaiProvider(resolvePortkeyConfig(info.portkeyProvider))(info.modelId)
