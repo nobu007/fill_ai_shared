@@ -17,8 +17,10 @@ export function safeDecrypt(value: string | null | undefined): string {
   if (!isEncrypted(value)) return value
   try {
     return decrypt(value, getEncryptionKey())
-  } catch (err) {
-    logger.error('crypto/safe-decrypt', 'Decryption failed, returning empty string', { error: err instanceof Error ? err.message : String(err) })
+  } catch {
+    // §4.6: caught error may carry decrypted plaintext fragments, key
+    // material, or auth payload. Log metadata-only; do not echo err.message.
+    logger.error('crypto/safe-decrypt', 'Decryption failed, returning empty string', { error: 'decryption request failed' })
     return ''
   }
 }
@@ -31,7 +33,11 @@ export function safeEncrypt(value: string): string {
   try {
     return encrypt(value, getEncryptionKey())
   } catch (err) {
-    logger.error('crypto/safe-encrypt', 'Encryption failed', { error: err instanceof Error ? err.message : String(err) })
-    throw new Error('Encryption failed: ' + (err instanceof Error ? err.message : String(err)), { cause: err })
+    // §4.6: caught error may carry plaintext BYOK keys, ENCRYPTION_KEY
+    // fragments, or buffer contents. Log metadata-only; do not echo
+    // err.message. The `err` binding is preserved for the rethrow's cause
+    // chain so callers can still inspect the original failure.
+    logger.error('crypto/safe-encrypt', 'Encryption failed', { error: 'encryption request failed' })
+    throw new Error('Encryption failed', { cause: err })
   }
 }
