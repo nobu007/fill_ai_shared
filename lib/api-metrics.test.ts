@@ -152,7 +152,7 @@ describe('ApiMetricsCollector', () => {
       expect(snap.endpoints['POST proofread/v2'].responses[400]).toBe(1)
     })
 
-    it('wraps handler and records 500 on throw', async () => {
+    it('wraps handler and records 500 without retaining error message text (§4.6)', async () => {
       await expect(
         trackApiRequest('proofread/v2', 'POST', async () => {
           throw new Error('test error')
@@ -160,8 +160,40 @@ describe('ApiMetricsCollector', () => {
       ).rejects.toThrow('test error')
 
       const snap = metrics.snapshot()
-      expect(snap.endpoints['POST proofread/v2'].responses[500]).toBe(1)
-      expect(snap.endpoints['POST proofread/v2'].lastError).toBe('test error')
+      const ep = snap.endpoints['POST proofread/v2']
+      expect(ep.responses[500]).toBe(1)
+      expect(ep.lastError).toBeNull()
+      expect(ep.lastErrorAt).toBeNull()
+    })
+
+    it('does not retain thrown Error message text in metrics (§4.6)', async () => {
+      const pii = 'X-PII-MARKER-SHARED-METRICS-ERROR-7f3a'
+
+      await expect(
+        trackApiRequest('pii-leak-check', 'POST', async () => {
+          throw new Error(`Provider echoed user content: ${pii}`)
+        })
+      ).rejects.toThrow(pii)
+
+      const ep = metrics.snapshot().endpoints['POST pii-leak-check']
+      expect(ep.responses[500]).toBe(1)
+      expect(JSON.stringify(ep)).not.toContain(pii)
+      expect(ep.lastError).toBeNull()
+    })
+
+    it('does not stringify thrown non-Error values into metrics (§4.6)', async () => {
+      const pii = 'X-PII-MARKER-SHARED-METRICS-VALUE-9c4e'
+
+      await expect(
+        trackApiRequest('pii-value-leak-check', 'POST', async () => {
+          throw `sensitive payload: ${pii}`
+        })
+      ).rejects.toBe(`sensitive payload: ${pii}`)
+
+      const ep = metrics.snapshot().endpoints['POST pii-value-leak-check']
+      expect(ep.responses[500]).toBe(1)
+      expect(JSON.stringify(ep)).not.toContain(pii)
+      expect(ep.lastError).toBeNull()
     })
 
     it('records response time', async () => {

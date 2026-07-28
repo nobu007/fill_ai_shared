@@ -141,9 +141,11 @@ export async function trackApiRequest(
     metrics.record(endpoint, method, response.status, durationMs)
     return response
   } catch (err) {
+    // Privacy boundary: provider/database exceptions can echo request or user
+    // content. Preserve the 500 count while keeping raw thrown values out of
+    // the in-memory snapshot, which consumers may expose through diagnostics.
     const durationMs = performance.now() - start
-    const errorMessage = err instanceof Error ? err.message : String(err)
-    metrics.record(endpoint, method, 500, durationMs, errorMessage)
+    metrics.record(endpoint, method, 500, durationMs)
     throw err
   }
 }
