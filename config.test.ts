@@ -48,6 +48,8 @@ import {
   ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS,
   CONTACT_FORM_RATE_LIMIT_MAX,
   CONTACT_FORM_RATE_LIMIT_WINDOW_MS,
+  FAMILY_MEMBERS_RATE_LIMIT_MAX,
+  FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS,
   API_METRICS_DURATION_SAMPLE_LIMIT,
   PII_PROXIMITY_THRESHOLD,
   VALID_FAMILY_RELATIONSHIPS,
@@ -606,6 +608,36 @@ describe('Contact Form API Rate Limits (Constitution §1.2 Safety + §4.6 PII)',
     const { ENV_VAR_NAMES } = await import('./env')
     expect(ENV_VAR_NAMES).toContain('CONTACT_FORM_RATE_LIMIT_MAX')
     expect(ENV_VAR_NAMES).toContain('CONTACT_FORM_RATE_LIMIT_WINDOW_MS')
+  })
+})
+
+// CYCLE=194: §1.2 Safety hardening wave continued from CYCLE=188 (corrections) +
+// CYCLE=190 (user-data) + CYCLE=191 (keys) + CYCLE=192 (account-data) +
+// CYCLE=193 (contact-form). /api/family-members is the last Core Mission
+// write endpoint (POST/PUT/DELETE — PII-bearing member name + relationship,
+// §4.6) without rate-limit protection. Named singleton `family-members-api`
+// so the budget is isolated from the user-data / keys / account-data /
+// contact-form singletons — family-member churn cannot starve any other
+// write budget and vice versa. Per-user keying (user.id) because the
+// endpoint requires Supabase auth.
+describe('FAMILY_MEMBERS_RATE_LIMIT_* (CYCLE=194 — /api/family-members §1.2 Safety + §4.6 PII)', () => {
+  it('FAMILY_MEMBERS_RATE_LIMIT_MAX defaults to 20 (per-user, authenticated — matches MAX_FAMILY_MEMBERS cap, permissive for drag-edit UX)', () => {
+    expect(typeof FAMILY_MEMBERS_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(FAMILY_MEMBERS_RATE_LIMIT_MAX)).toBe(true)
+    expect(FAMILY_MEMBERS_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(FAMILY_MEMBERS_RATE_LIMIT_MAX).toBeLessThanOrEqual(50)
+  })
+
+  it('FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds — matches sibling limiter budget)', () => {
+    expect(typeof FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('FAMILY_MEMBERS_RATE_LIMIT_MAX + FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FAMILY_MEMBERS_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS')
   })
 })
 

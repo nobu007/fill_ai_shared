@@ -593,6 +593,49 @@ export const CONTACT_FORM_RATE_LIMIT_WINDOW_MS = getEnvNumber(
   60000,
 )
 
+// ─── Family Members Rate Limits ────────────────────────────
+/**
+ * Maximum family-member mutations per user within the rate limit window.
+ * §1.2 Safety: family-member rows are PII-bearing (member name + relationship,
+ * §4.6) and the endpoint exposes POST/PUT/DELETE — the only Core Mission
+ * mutation endpoint left without rate-limit protection after the CYCLE=188–193
+ * hardening wave. The endpoint accepts authenticated mutations; keying the
+ * budget by `user.id` matches the user-data (CYCLE=190) + keys (CYCLE=191) +
+ * account-data (CYCLE=192) wave.
+ *
+ * Budget is intentionally more permissive than account-data (5/window) because
+ * legitimate UI flows drag-edit names, re-order sort_order, and delete/insert
+ * during onboarding — 20/window accommodates that without enabling abuse.
+ * Hard cap of MAX_FAMILY_MEMBERS (currently 20) rows already bounds the per-user
+ * row count, so this limiter only blocks the *abuse vector* (rapid insert/delete
+ * churn that bypasses the row cap by deleting then re-inserting).
+ *
+ * Override via FAMILY_MEMBERS_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   # Default: 20 mutations per 60-second window per user
+ *   FAMILY_MEMBERS_RATE_LIMIT_MAX=40  # more relaxed (e.g. for power users)
+ *   FAMILY_MEMBERS_RATE_LIMIT_MAX=10  # stricter
+ */
+export const FAMILY_MEMBERS_RATE_LIMIT_MAX = getEnvNumber(
+  'FAMILY_MEMBERS_RATE_LIMIT_MAX',
+  20,
+)
+/**
+ * Family-members rate limit window in milliseconds.
+ * Sliding window: a mutation is allowed if (current_time - window_start) < this value
+ * and the mutation count within the window is below FAMILY_MEMBERS_RATE_LIMIT_MAX.
+ * Override via FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+
 // ─── Contact Enhance Rate Limits ───────────────────────────
 /**
  * Maximum contact enhance API requests per user within the rate limit window.

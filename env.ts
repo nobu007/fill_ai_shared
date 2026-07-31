@@ -189,6 +189,9 @@ export const ENV_VAR_NAMES = [
   // Contact form submission (per-IP, unauthenticated)
   'CONTACT_FORM_RATE_LIMIT_MAX',
   'CONTACT_FORM_RATE_LIMIT_WINDOW_MS',
+  // Family members mutations (per-user, authenticated — PII-bearing, §4.6)
+  'FAMILY_MEMBERS_RATE_LIMIT_MAX',
+  'FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS',
   // Contact rate limits
   'CONTACT_ENHANCE_RATE_LIMIT_MAX',
   'CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS',
