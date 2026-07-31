@@ -210,6 +210,9 @@ export const ENV_VAR_NAMES = [
   // Blog Auto AI sync (per-user, authenticated — bulk external fetch fan-out, §1.2 Safety + §4.6)
   'BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX',
   'BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS',
+  // Credits checkout (per-user, authenticated — external paid API for credit pack purchase, §1.2 Safety)
+  'CREDITS_CHECKOUT_RATE_LIMIT_MAX',
+  'CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS',
   // Contact rate limits
   'CONTACT_ENHANCE_RATE_LIMIT_MAX',
   'CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS',

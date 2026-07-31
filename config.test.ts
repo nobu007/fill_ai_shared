@@ -1142,3 +1142,67 @@ describe('Blog Auto AI Rate Limits (Constitution §1.2 Safety)', () => {
     expect(ENV_VAR_NAMES).toContain('BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS')
   })
 })
+
+describe('Credits Checkout Rate Limits (Constitution §1.2 Safety)', () => {
+  // CYCLE=198 regression tests — guarantee the new CREDITS_CHECKOUT_RATE_LIMIT_*
+  // defaults match the route-level rate-limiter construction in
+  // src/app/api/credits/checkout/route.ts (credits-checkout-api named singleton,
+  // gated AFTER packId allowlist + auth + BEFORE Stripe checkout.sessions.create).
+  // Each test isolates its own env var via process.env + vi.resetModules to
+  // match the convention from CYCLE=188..197.
+  const originalMax = process.env.CREDITS_CHECKOUT_RATE_LIMIT_MAX
+  const originalWindow = process.env.CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS
+
+  afterEach(() => {
+    if (originalMax === undefined) {
+      delete process.env.CREDITS_CHECKOUT_RATE_LIMIT_MAX
+    } else {
+      process.env.CREDITS_CHECKOUT_RATE_LIMIT_MAX = originalMax
+    }
+    if (originalWindow === undefined) {
+      delete process.env.CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS
+    } else {
+      process.env.CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS = originalWindow
+    }
+    vi.resetModules()
+  })
+
+  it('CREDITS_CHECKOUT_RATE_LIMIT_MAX defaults to 5 (per-user, authenticated — one-time pack purchase + retry)', async () => {
+    delete process.env.CREDITS_CHECKOUT_RATE_LIMIT_MAX
+    vi.resetModules()
+    const { CREDITS_CHECKOUT_RATE_LIMIT_MAX } = await import('./config')
+    expect(typeof CREDITS_CHECKOUT_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(CREDITS_CHECKOUT_RATE_LIMIT_MAX)).toBe(true)
+    expect(CREDITS_CHECKOUT_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(CREDITS_CHECKOUT_RATE_LIMIT_MAX).toBeLessThanOrEqual(20)
+  })
+
+  it('CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds — matches sibling limiter budget)', async () => {
+    delete process.env.CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS
+    vi.resetModules()
+    const { CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(typeof CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('CREDITS_CHECKOUT_RATE_LIMIT_MAX env override is read at module load', async () => {
+    process.env.CREDITS_CHECKOUT_RATE_LIMIT_MAX = '10'
+    vi.resetModules()
+    const { CREDITS_CHECKOUT_RATE_LIMIT_MAX } = await import('./config')
+    expect(CREDITS_CHECKOUT_RATE_LIMIT_MAX).toBe(10)
+  })
+
+  it('CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS env override is read at module load', async () => {
+    process.env.CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS = '300000'
+    vi.resetModules()
+    const { CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS).toBe(300000)
+  })
+
+  it('both new env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('CREDITS_CHECKOUT_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS')
+  })
+})

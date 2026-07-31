@@ -908,6 +908,60 @@ export const BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS = getEnvNumber(
   60000,
 )
 
+// ─── Credits Checkout Rate Limits ──────────────────────────
+/**
+ * Maximum credits checkout requests (POST /api/credits/checkout) per user within
+ * the rate limit window. §1.2 Safety: every accepted request fires a real
+ * `stripe.checkout.sessions.create({ mode: 'payment', ... })` API call (charged
+ * against the Stripe API quota, creates a hosted Stripe checkout URL) for the
+ * user-selected credit pack (free-10, free-30, free-100, pro-100, pro-300,
+ * pro-1000). Without this gate, an attacker can rapidly drain Stripe API
+ * quota, force Stripe API rate-limit noise into the system, and spam the
+ * customer with Stripe checkout emails.
+ *
+ * This is the second financial endpoint protected — the first was the
+ * subscription `/api/subscription/create-checkout` (CYCLE=196, budget
+ * `stripe-checkout-api`). Credits checkout is intentionally given a NAMED
+ * SEPARATE singleton (`credits-checkout-api`) so credits-pack purchases
+ * cannot starve the subscription checkout budget (or vice versa) — a user
+ * who is buying a one-off credits pack should not be locked out of starting
+ * a new subscription, and a user who is upgrading a subscription should not
+ * be locked out of topping up their credits.
+ *
+ * Budget matches the subscription checkout budget (5/window) because both
+ * surface equivalent external paid API cost (one Stripe checkout.sessions.create
+ * per accepted request). A legitimate user clicks "Buy credits" once per pack
+ * choice; UI flows retry on transient Stripe failure (max 1 retry by
+ * convention), so 5/window is permissive for double-confirm + retry while
+ * still bounding abuse. The packId allowlist (6 fixed values) already bounds
+ * the input space, so this rate limiter is the only abuse-velocity control.
+ *
+ * Override via CREDITS_CHECKOUT_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   # Default: 5 credits-checkout creations per 60-second window per user
+ *   CREDITS_CHECKOUT_RATE_LIMIT_MAX=10  # more relaxed
+ *   CREDITS_CHECKOUT_RATE_LIMIT_MAX=3   # stricter
+ */
+export const CREDITS_CHECKOUT_RATE_LIMIT_MAX = getEnvNumber(
+  'CREDITS_CHECKOUT_RATE_LIMIT_MAX',
+  5,
+)
+/**
+ * Credits checkout rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below CREDITS_CHECKOUT_RATE_LIMIT_MAX.
+ * Override via CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+
 // ─── Contact Enhance Rate Limits ───────────────────────────
 /**
  * Maximum contact enhance API requests per user within the rate limit window.
