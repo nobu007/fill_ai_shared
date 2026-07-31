@@ -192,6 +192,24 @@ export const FILL_EXTRACTION_CACHE_TTL_MS = getEnvNumber(
  */
 export const FILL_HIGH_CONFIDENCE_THRESHOLD = getEnvNumber('FILL_HIGH_CONFIDENCE_THRESHOLD', 0.7)
 
+/**
+ * Confidence threshold for rule-based field auto-resolution in
+ * `src/lib/pdf/rule-matcher.ts` (RuleMatcher.matchAll).
+ *
+ * Single source of truth replacing the module-local `DEFAULT_AUTO_THRESHOLD = 0.95`.
+ * Fields whose regex-derived confidence >= this threshold are auto-resolved
+ * (no LLM fallback); fields below it are deferred for the LLM mapping pass.
+ *
+ * Override per environment via `FILL_RULE_MATCH_THRESHOLD` env var.
+ *   FILL_RULE_MATCH_THRESHOLD=0.85   # more aggressive auto-resolve (fewer LLM calls)
+ *   FILL_RULE_MATCH_THRESHOLD=0.99   # more conservative (more LLM fallback)
+ *
+ * Stored as a fraction (0.0–1.0) so it can be compared directly with `result.confidence`.
+ * Defaults to 0.95 — matches the pre-centralization hard-coded constant so behavior
+ * is unchanged on upgrade.
+ */
+export const FILL_RULE_MATCH_THRESHOLD = getEnvNumber('FILL_RULE_MATCH_THRESHOLD', 0.95)
+
 // Phase Engine settings are defined in src/lib/engine/engine-config.ts
 // to avoid circular dependencies with fill_ai_shared.
 

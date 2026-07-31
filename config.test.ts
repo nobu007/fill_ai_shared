@@ -682,3 +682,42 @@ describe('PDF Extraction Cache Configuration (extraction-cache.ts defaults)', ()
     expect(ENV_VAR_NAMES).toContain('FILL_EXTRACTION_CACHE_TTL_MS')
   })
 })
+
+describe('Rule Matcher Threshold Configuration (rule-matcher.ts DEFAULT_AUTO_THRESHOLD)', () => {
+  const originalThreshold = process.env.FILL_RULE_MATCH_THRESHOLD
+
+  afterEach(() => {
+    if (originalThreshold === undefined) {
+      delete process.env.FILL_RULE_MATCH_THRESHOLD
+    } else {
+      process.env.FILL_RULE_MATCH_THRESHOLD = originalThreshold
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_RULE_MATCH_THRESHOLD defaults to 0.95 (rule-matcher module-local DEFAULT_AUTO_THRESHOLD)', async () => {
+    delete process.env.FILL_RULE_MATCH_THRESHOLD
+    vi.resetModules()
+    const { FILL_RULE_MATCH_THRESHOLD } = await import('./config')
+    expect(FILL_RULE_MATCH_THRESHOLD).toBe(0.95)
+  })
+
+  it('FILL_RULE_MATCH_THRESHOLD env override is read at module load', async () => {
+    process.env.FILL_RULE_MATCH_THRESHOLD = '0.85'
+    vi.resetModules()
+    const { FILL_RULE_MATCH_THRESHOLD } = await import('./config')
+    expect(FILL_RULE_MATCH_THRESHOLD).toBe(0.85)
+  })
+
+  it('FILL_RULE_MATCH_THRESHOLD falls back to default on invalid env value (non-numeric)', async () => {
+    process.env.FILL_RULE_MATCH_THRESHOLD = 'not-a-number'
+    vi.resetModules()
+    const { FILL_RULE_MATCH_THRESHOLD } = await import('./config')
+    expect(FILL_RULE_MATCH_THRESHOLD).toBe(0.95)
+  })
+
+  it('FILL_RULE_MATCH_THRESHOLD env var appears in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_RULE_MATCH_THRESHOLD')
+  })
+})
