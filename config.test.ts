@@ -1046,3 +1046,99 @@ describe('Stripe Subscription Rate Limits (Constitution §1.2 Safety)', () => {
     expect(ENV_VAR_NAMES).toContain('STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS')
   })
 })
+
+describe('Blog Auto AI Rate Limits (Constitution §1.2 Safety)', () => {
+  // CYCLE=197 regression tests — guarantee the new BLOG_AUTO_AI_CONNECT_RATE_LIMIT_*
+  // and BLOG_AUTO_AI_SYNC_RATE_LIMIT_* defaults match the route-level rate-limiter
+  // constructions (blog-auto-ai-connect-api / blog-auto-ai-sync-api named singletons).
+  // Each test isolates its own env var via process.env + vi.resetModules to
+  // match the convention from CYCLE=188..196.
+  const originalConnectMax = process.env.BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX
+  const originalConnectWindow = process.env.BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS
+  const originalSyncMax = process.env.BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX
+  const originalSyncWindow = process.env.BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS
+
+  afterEach(() => {
+    if (originalConnectMax === undefined) {
+      delete process.env.BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX
+    } else {
+      process.env.BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX = originalConnectMax
+    }
+    if (originalConnectWindow === undefined) {
+      delete process.env.BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS
+    } else {
+      process.env.BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS = originalConnectWindow
+    }
+    if (originalSyncMax === undefined) {
+      delete process.env.BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX
+    } else {
+      process.env.BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX = originalSyncMax
+    }
+    if (originalSyncWindow === undefined) {
+      delete process.env.BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS
+    } else {
+      process.env.BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS = originalSyncWindow
+    }
+    vi.resetModules()
+  })
+
+  it('BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX defaults to 5 (per-user, authenticated — one-time setup action + retry)', async () => {
+    delete process.env.BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX
+    vi.resetModules()
+    const { BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX } = await import('./config')
+    expect(typeof BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX)).toBe(true)
+    expect(BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX).toBeLessThanOrEqual(20)
+  })
+
+  it('BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds)', async () => {
+    delete process.env.BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS
+    vi.resetModules()
+    const { BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(typeof BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX defaults to 3 (per-user, authenticated — bulk import action, tighter than connect)', async () => {
+    delete process.env.BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX
+    vi.resetModules()
+    const { BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX } = await import('./config')
+    expect(typeof BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX)).toBe(true)
+    expect(BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX).toBeLessThanOrEqual(20)
+  })
+
+  it('BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds)', async () => {
+    delete process.env.BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS
+    vi.resetModules()
+    const { BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(typeof BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX env override is read at module load', async () => {
+    process.env.BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX = '10'
+    vi.resetModules()
+    const { BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX } = await import('./config')
+    expect(BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX).toBe(10)
+  })
+
+  it('BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX env override is read at module load', async () => {
+    process.env.BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX = '2'
+    vi.resetModules()
+    const { BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX } = await import('./config')
+    expect(BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX).toBe(2)
+  })
+
+  it('all 4 new env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS')
+    expect(ENV_VAR_NAMES).toContain('BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS')
+  })
+})

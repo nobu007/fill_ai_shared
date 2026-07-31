@@ -204,6 +204,12 @@ export const ENV_VAR_NAMES = [
   // Subscription cancel (per-user, authenticated — destructive Stripe RPC, §1.2 Safety)
   'STRIPE_CANCEL_RATE_LIMIT_MAX',
   'STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS',
+  // Blog Auto AI connect (per-user, authenticated — external fetch + wp_sites PII-bearing write, §1.2 Safety + §4.6)
+  'BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX',
+  'BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS',
+  // Blog Auto AI sync (per-user, authenticated — bulk external fetch fan-out, §1.2 Safety + §4.6)
+  'BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX',
+  'BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS',
   // Contact rate limits
   'CONTACT_ENHANCE_RATE_LIMIT_MAX',
   'CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS',

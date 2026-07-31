@@ -810,6 +810,104 @@ export const STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS = getEnvNumber(
   60000,
 )
 
+// ─── Blog Auto AI Connect Rate Limits ───────────────────────
+/**
+ * Maximum Blog Auto AI connect requests (POST /api/blog-auto-ai/connect) per user
+ * within the rate limit window. §1.2 Safety: every accepted request fires a real
+ * external fetch to the user-supplied `${baseUrl}/api/proof-ai.php?action=list&limit=1`
+ * endpoint (charged against the upstream Blog Auto AI backend's quota + the
+ * connect URL is user-controlled → SSRF / external API abuse vector) and
+ * subsequently writes/updates a wp_sites row with safeEncrypt(apiKey)
+ * (PII-bearing per §4.6). Without this gate, an attacker can:
+ *   1. Repeatedly probe external URLs to drain upstream Blog Auto AI quota
+ *   2. Spam the wp_sites table with one-off entries
+ *   3. Force external API rate-limit noise into the system
+ *
+ * Named singleton (`blog-auto-ai-connect-api`) so the connect budget is isolated
+ * from the sync budget (`blog-auto-ai-sync-api`) and all sibling write budgets
+ * (fillRateLimiter / userDataRateLimiter / keysRateLimiter /
+ * accountDataRateLimiter / contactFormRateLimiter / familyMembersRateLimiter /
+ * invitationsRateLimiter / invitationsRedeemRateLimiter /
+ * stripeCheckoutRateLimiter / stripeCancelRateLimiter) — a flood of connect
+ * attempts cannot starve any other write budget (and vice versa).
+ *
+ * Budget is intentionally tight (5/window) because connecting to a Blog Auto AI
+ * site is a one-time setup action; legitimate users click "Connect" once per
+ * site, and reconnect-after-edit is the standard retry path. The 5/window
+ * ceiling is permissive for double-confirm + retry while still bounding abuse.
+ *
+ * Override via BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   # Default: 5 connect attempts per 60-second window per user
+ *   BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX=10  # more relaxed
+ *   BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX=3   # stricter
+ */
+export const BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX = getEnvNumber(
+  'BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX',
+  5,
+)
+/**
+ * Blog Auto AI connect rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below BLOG_AUTO_AI_CONNECT_RATE_LIMIT_MAX.
+ * Override via BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'BLOG_AUTO_AI_CONNECT_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+
+// ─── Blog Auto AI Sync Rate Limits ──────────────────────────
+/**
+ * Maximum Blog Auto AI sync requests (POST /api/blog-auto-ai/sync) per user within
+ * the rate limit window. §1.2 Safety: every accepted request fires multiple
+ * external fetches against the user's Blog Auto AI site — a LIST request for
+ * each pagination step (up to BLOG_AUTO_AI_LIST_LIMIT articles) plus a DETAIL
+ * request per article (BLOG_AUTO_AI_LIST_LIMIT articles total). Without this
+ * gate, a single script can repeatedly trigger bulk sync to:
+ *   1. DoS the upstream Blog Auto AI backend (LIST + DETAIL fan-out)
+ *   2. Repeatedly safeDecrypt the user's API key (GCM nonce reuse risk vector)
+ *   3. Saturate the sources supabase table with churn inserts/updates
+ *
+ * Named singleton (`blog-auto-ai-sync-api`) so the sync budget is isolated from
+ * the connect budget (`blog-auto-ai-connect-api`) and all sibling write budgets.
+ *
+ * Budget is intentionally tighter than connect (3/window vs 5/window) because
+ * sync is a bulk import action: a legitimate user initiates sync once, then
+ * waits for completion; 3/window is permissive for retry-on-failure (max 1-2
+ * retries by convention) while still bounding abuse. The connector/sync pair
+ * pattern matches account-data (5/window) and family-members (20/window)
+ * separation, scaled down for the higher external API cost.
+ *
+ * Override via BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   # Default: 3 sync attempts per 60-second window per user
+ *   BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX=10  # more relaxed
+ *   BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX=2   # stricter
+ */
+export const BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX = getEnvNumber(
+  'BLOG_AUTO_AI_SYNC_RATE_LIMIT_MAX',
+  3,
+)
+/**
+ * Blog Auto AI sync rate limit window in milliseconds.
+ * Override via BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'BLOG_AUTO_AI_SYNC_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+
 // ─── Contact Enhance Rate Limits ───────────────────────────
 /**
  * Maximum contact enhance API requests per user within the rate limit window.
