@@ -459,6 +459,33 @@ export const FILL_RATE_LIMIT_MAX = getEnvNumber('FILL_RATE_LIMIT_MAX', 10)
  */
 export const FILL_RATE_LIMIT_WINDOW_MS = getEnvNumber('FILL_RATE_LIMIT_WINDOW_MS', 60000)
 
+// ─── User Data Rate Limits ─────────────────────────────────
+/**
+ * Maximum user-data write API requests (POST/PUT/DELETE /api/user-data) per
+ * user within the rate limit window. Separate from FILL_RATE_LIMIT_MAX so the
+ * user-data budget (which feeds the fill pipeline) cannot be exhausted by
+ * unrelated fill traffic — and vice versa.
+ *
+ * Override via USER_DATA_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   # Default: 30 requests per 60-second window per user
+ *   USER_DATA_RATE_LIMIT_MAX=60   # increase to 60 req/window
+ *   USER_DATA_RATE_LIMIT_MAX=10   # decrease to 10 req/window (strict)
+ */
+export const USER_DATA_RATE_LIMIT_MAX = getEnvNumber('USER_DATA_RATE_LIMIT_MAX', 30)
+/**
+ * User-data rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below USER_DATA_RATE_LIMIT_MAX.
+ * Override via USER_DATA_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   USER_DATA_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   USER_DATA_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const USER_DATA_RATE_LIMIT_WINDOW_MS = getEnvNumber('USER_DATA_RATE_LIMIT_WINDOW_MS', 60000)
+
 // ─── Contact Enhance Rate Limits ───────────────────────────
 /**
  * Maximum contact enhance API requests per user within the rate limit window.

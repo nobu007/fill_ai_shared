@@ -40,6 +40,8 @@ import {
   SCAN_TEXT_THRESHOLD,
   FILL_RATE_LIMIT_MAX,
   FILL_RATE_LIMIT_WINDOW_MS,
+  USER_DATA_RATE_LIMIT_MAX,
+  USER_DATA_RATE_LIMIT_WINDOW_MS,
   API_METRICS_DURATION_SAMPLE_LIMIT,
   PII_PROXIMITY_THRESHOLD,
   VALID_FAMILY_RELATIONSHIPS,
@@ -493,6 +495,25 @@ describe('Fill API Rate Limits (Constitution §1.2 Safety)', () => {
     expect(FILL_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
     // Should be in a reasonable window (1s to 10min)
     expect(FILL_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+})
+
+describe('User Data API Rate Limits (Constitution §1.2 Safety)', () => {
+  it('USER_DATA_RATE_LIMIT_MAX defaults to 30', () => {
+    // §1.2 Safety: user-data writes (POST/PUT/DELETE) feed the fill pipeline
+    // via mapping, so the budget is independent from FILL_RATE_LIMIT_MAX to
+    // avoid one endpoint starving the other. 30/window is generous for
+    // human-driven data entry while still bounding automated abuse.
+    expect(typeof USER_DATA_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(USER_DATA_RATE_LIMIT_MAX)).toBe(true)
+    expect(USER_DATA_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(USER_DATA_RATE_LIMIT_MAX).toBeGreaterThanOrEqual(10)
+  })
+
+  it('USER_DATA_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds)', () => {
+    expect(typeof USER_DATA_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(USER_DATA_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(USER_DATA_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
   })
 })
 
