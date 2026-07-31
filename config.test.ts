@@ -44,6 +44,8 @@ import {
   USER_DATA_RATE_LIMIT_WINDOW_MS,
   KEYS_RATE_LIMIT_MAX,
   KEYS_RATE_LIMIT_WINDOW_MS,
+  ACCOUNT_DATA_RATE_LIMIT_MAX,
+  ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS,
   API_METRICS_DURATION_SAMPLE_LIMIT,
   PII_PROXIMITY_THRESHOLD,
   VALID_FAMILY_RELATIONSHIPS,
@@ -543,6 +545,35 @@ describe('API Keys API Rate Limits (Constitution §1.2 Safety)', () => {
     const { ENV_VAR_NAMES } = await import('./env')
     expect(ENV_VAR_NAMES).toContain('KEYS_RATE_LIMIT_MAX')
     expect(ENV_VAR_NAMES).toContain('KEYS_RATE_LIMIT_WINDOW_MS')
+  })
+})
+
+describe('Account Data Deletion API Rate Limits (Constitution §1.2 Safety + §4.6 PII)', () => {
+  // §1.2 Safety + §4.6 PII: DELETE /api/account/data cascades deletions across
+  // 10 user-scoped tables (PII-bearing). CYCLE=192 extends the §1.2 Safety wave
+  // from corrections (CYCLE=188), user-data (CYCLE=190), and keys (CYCLE=191)
+  // into account-data deletion. Budget is intentionally tighter than
+  // KEYS_RATE_LIMIT_MAX (10) because account deletion is a one-time event
+  // per account lifecycle — 5/window is permissive for a double-confirm UI flow
+  // while still bounding automated abuse. Named singleton (`account-data-api`)
+  // so the budget is isolated from all sibling limiters.
+  it('ACCOUNT_DATA_RATE_LIMIT_MAX defaults to 5 (destructive cascade — tight per-user budget)', () => {
+    expect(typeof ACCOUNT_DATA_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(ACCOUNT_DATA_RATE_LIMIT_MAX)).toBe(true)
+    expect(ACCOUNT_DATA_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(ACCOUNT_DATA_RATE_LIMIT_MAX).toBeLessThanOrEqual(10)
+  })
+
+  it('ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds — matches sibling limiter budget)', () => {
+    expect(typeof ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('ACCOUNT_DATA_RATE_LIMIT_MAX + ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('ACCOUNT_DATA_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS')
   })
 })
 

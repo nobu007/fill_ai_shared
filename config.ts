@@ -519,6 +519,49 @@ export const KEYS_RATE_LIMIT_MAX = getEnvNumber('KEYS_RATE_LIMIT_MAX', 10)
  */
 export const KEYS_RATE_LIMIT_WINDOW_MS = getEnvNumber('KEYS_RATE_LIMIT_WINDOW_MS', 60000)
 
+// ─── Account Data Deletion Rate Limits ──────────────────────
+/**
+ * Maximum account-data delete requests (DELETE /api/account/data) per user
+ * within the rate limit window. This endpoint cascades deletions across
+ * 10 user-scoped tables (fill_sessions, user_api_keys, credit_transactions,
+ * proofreading_*, contact_submissions, user_data, wp_*, site_settings, wp_sites)
+ * — Constitution §4.6 PII and §1.2 Safety both require that destructive
+ * cascades be tightly bounded. Without a gate, a tight script can re-trigger
+ * the cascade (each delete is its own Supabase RPC + RLS auth check) and
+ * churn log volume + Supabase DB load unboundedly.
+ *
+ * The budget is intentionally tighter than /api/keys (10/window) because
+ * account deletion is a one-time event per account lifecycle: a legitimate
+ * user clicks it once after exporting their data; an automated abuser
+ * hammers it. The 5/window cap is permissive enough for any sane UI flow
+ * (retry on transient failure, double-confirm) while still bounding
+ * abuse. Named singleton (`account-data-api`) so the budget is isolated
+ * from fillRateLimiter / userDataRateLimiter / keysRateLimiter — account
+ * deletion traffic cannot starve the fill pipeline and vice versa.
+ *
+ * Override via ACCOUNT_DATA_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   # Default: 5 requests per 60-second window per user
+ *   ACCOUNT_DATA_RATE_LIMIT_MAX=10  # increase to 10 req/window (more relaxed)
+ *   ACCOUNT_DATA_RATE_LIMIT_MAX=1   # decrease to 1 req/window (paranoid)
+ */
+export const ACCOUNT_DATA_RATE_LIMIT_MAX = getEnvNumber('ACCOUNT_DATA_RATE_LIMIT_MAX', 5)
+/**
+ * Account-data deletion rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below ACCOUNT_DATA_RATE_LIMIT_MAX.
+ * Override via ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+
 // ─── Contact Enhance Rate Limits ───────────────────────────
 /**
  * Maximum contact enhance API requests per user within the rate limit window.
