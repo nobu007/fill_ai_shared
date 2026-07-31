@@ -198,6 +198,12 @@ export const ENV_VAR_NAMES = [
   // Invitations redemption (per-user, authenticated — membership upgrade + §4.6 PII)
   'INVITATIONS_REDEEM_RATE_LIMIT_MAX',
   'INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS',
+  // Subscription / Stripe checkout (per-user, authenticated — external paid API, §1.2 Safety)
+  'STRIPE_CHECKOUT_RATE_LIMIT_MAX',
+  'STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS',
+  // Subscription cancel (per-user, authenticated — destructive Stripe RPC, §1.2 Safety)
+  'STRIPE_CANCEL_RATE_LIMIT_MAX',
+  'STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS',
   // Contact rate limits
   'CONTACT_ENHANCE_RATE_LIMIT_MAX',
   'CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS',

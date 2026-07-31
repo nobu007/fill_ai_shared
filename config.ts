@@ -713,6 +713,103 @@ export const INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS = getEnvNumber(
   60000,
 )
 
+// ─── Subscription / Stripe Checkout Rate Limits ────────────
+/**
+ * Maximum subscription checkout session creations (POST /api/subscription/create-checkout)
+ * per user within the rate limit window. §1.2 Safety: every accepted request triggers
+ * a real Stripe Checkout Session API call (charged against the Stripe API quota + creates
+ * a hosted checkout URL), a Supabase `profiles` read for the customer email, and returns
+ * a `sessionId` the caller can use to redirect to Stripe. Without a gate, an attacker
+ * can rapidly create Stripe Sessions to drain API quota, spam the user's email inbox
+ * with Stripe checkout emails, and force Stripe API rate-limit noise into the system.
+ * Tight budget prevents Stripe API quota exhaustion (the platform-wide abuse vector).
+ *
+ * Named singleton (`stripe-checkout-api`) so the checkout budget is isolated from all
+ * sibling write budgets (fillRateLimiter / userDataRateLimiter / keysRateLimiter /
+ * accountDataRateLimiter / contactFormRateLimiter / familyMembersRateLimiter /
+ * invitationsRateLimiter / invitationsRedeemRateLimiter) — a flood of checkout
+ * attempts cannot starve any other write budget (and vice versa).
+ *
+ * Budget is intentionally tight (5/window) because legitimate users click "Subscribe"
+ * once per plan choice; UI flows retry on transient Stripe failure (max 1 retry by
+ * convention), so 5/window is permissive for double-confirm + retry while still
+ * bounding abuse. The account-data (5/window) and family-members (20/window) limits
+ * are the closest siblings — checkout is tighter because it has an external paid
+ * API cost (vs. internal DB rows).
+ *
+ * Override via STRIPE_CHECKOUT_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   # Default: 5 checkout creations per 60-second window per user
+ *   STRIPE_CHECKOUT_RATE_LIMIT_MAX=10  # more relaxed
+ *   STRIPE_CHECKOUT_RATE_LIMIT_MAX=3   # stricter
+ */
+export const STRIPE_CHECKOUT_RATE_LIMIT_MAX = getEnvNumber(
+  'STRIPE_CHECKOUT_RATE_LIMIT_MAX',
+  5,
+)
+/**
+ * Stripe checkout rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below STRIPE_CHECKOUT_RATE_LIMIT_MAX.
+ * Override via STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+
+// ─── Subscription Cancel Rate Limits ───────────────────────
+/**
+ * Maximum subscription cancel requests (POST /api/subscription/cancel) per user within
+ * the rate limit window. §1.2 Safety: every accepted request fires a real Stripe
+ * `subscriptions.cancel(...)` RPC (charged against the Stripe API quota, irreversibly
+ * cancels the user's paid subscription) and a Supabase `subscriptions` row read.
+ * Without a gate, an attacker (or a buggy retry loop) can repeatedly cancel/restore
+ * churn against the Stripe subscriptions table bounded only by RLS + per-RPC latency,
+ * drowning out legitimate cancel requests and contaminating Stripe's subscription
+ * state. Tight budget prevents destructive churn from a single compromised token.
+ *
+ * Named singleton (`stripe-cancel-api`) so the cancel budget is isolated from the
+ * checkout budget (`stripe-checkout-api`) and all sibling write budgets — a flood of
+ * cancel attempts cannot starve the checkout budget or vice versa (an attacker who
+ * has captured a token cannot simultaneously drain checkout quota AND burn the
+ * subscription via cancel churn).
+ *
+ * Budget is intentionally the same tightness as checkout (5/window) because both
+ * touch the Stripe subscriptions API. Cancellation is a one-time lifecycle event
+ * (a legitimate user clicks "Cancel subscription" once); the budget is permissive
+ * for double-confirm UI flows and retry-on-transient-failure while still bounding
+ * abuse.
+ *
+ * Override via STRIPE_CANCEL_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   # Default: 5 cancellations per 60-second window per user
+ *   STRIPE_CANCEL_RATE_LIMIT_MAX=10  # more relaxed
+ *   STRIPE_CANCEL_RATE_LIMIT_MAX=3   # stricter
+ */
+export const STRIPE_CANCEL_RATE_LIMIT_MAX = getEnvNumber(
+  'STRIPE_CANCEL_RATE_LIMIT_MAX',
+  5,
+)
+/**
+ * Stripe cancel rate limit window in milliseconds.
+ * Override via STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+
 // ─── Contact Enhance Rate Limits ───────────────────────────
 /**
  * Maximum contact enhance API requests per user within the rate limit window.

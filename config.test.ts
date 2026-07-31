@@ -54,6 +54,12 @@ import {
   INVITATIONS_RATE_LIMIT_WINDOW_MS,
   INVITATIONS_REDEEM_RATE_LIMIT_MAX,
   INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS,
+  // STRIPE_* env vars are loaded only via dynamic `import('./config')` inside
+  // the 'Stripe Subscription Rate Limits' describe block at the bottom of
+  // this file (afterEach isolation requires vi.resetModules() before each
+  // test that touches process.env.STRIPE_*). They are intentionally not
+  // imported at module scope so the static getters do not capture the
+  // current process.env value before the test's afterEach hook runs.
   API_METRICS_DURATION_SAMPLE_LIMIT,
   PII_PROXIMITY_THRESHOLD,
   VALID_FAMILY_RELATIONSHIPS,
@@ -942,5 +948,101 @@ describe('Default Matcher ID Configuration (matcher-registry.ts DEFAULT_MATCHER_
   it('FILL_DEFAULT_MATCHER_ID env var appears in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
     const { ENV_VAR_NAMES } = await import('./env')
     expect(ENV_VAR_NAMES).toContain('FILL_DEFAULT_MATCHER_ID')
+  })
+})
+
+describe('Stripe Subscription Rate Limits (Constitution §1.2 Safety)', () => {
+  // CYCLE=196 regression tests — guarantee the new STRIPE_CHECKOUT_RATE_LIMIT_*
+  // and STRIPE_CANCEL_RATE_LIMIT_* defaults match the route-level rate-limiter
+  // constructions (stripe-checkout-api / stripe-cancel-api named singletons).
+  // Each test isolates its own env var via process.env + vi.resetModules to
+  // match the convention from CYCLE=179..195.
+  const originalCheckoutMax = process.env.STRIPE_CHECKOUT_RATE_LIMIT_MAX
+  const originalCheckoutWindow = process.env.STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS
+  const originalCancelMax = process.env.STRIPE_CANCEL_RATE_LIMIT_MAX
+  const originalCancelWindow = process.env.STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS
+
+  afterEach(() => {
+    if (originalCheckoutMax === undefined) {
+      delete process.env.STRIPE_CHECKOUT_RATE_LIMIT_MAX
+    } else {
+      process.env.STRIPE_CHECKOUT_RATE_LIMIT_MAX = originalCheckoutMax
+    }
+    if (originalCheckoutWindow === undefined) {
+      delete process.env.STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS
+    } else {
+      process.env.STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS = originalCheckoutWindow
+    }
+    if (originalCancelMax === undefined) {
+      delete process.env.STRIPE_CANCEL_RATE_LIMIT_MAX
+    } else {
+      process.env.STRIPE_CANCEL_RATE_LIMIT_MAX = originalCancelMax
+    }
+    if (originalCancelWindow === undefined) {
+      delete process.env.STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS
+    } else {
+      process.env.STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS = originalCancelWindow
+    }
+    vi.resetModules()
+  })
+
+  it('STRIPE_CHECKOUT_RATE_LIMIT_MAX defaults to 5 (per-user, authenticated — one-time plan choice + retry)', async () => {
+    delete process.env.STRIPE_CHECKOUT_RATE_LIMIT_MAX
+    vi.resetModules()
+    const { STRIPE_CHECKOUT_RATE_LIMIT_MAX } = await import('./config')
+    expect(typeof STRIPE_CHECKOUT_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(STRIPE_CHECKOUT_RATE_LIMIT_MAX)).toBe(true)
+    expect(STRIPE_CHECKOUT_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(STRIPE_CHECKOUT_RATE_LIMIT_MAX).toBeLessThanOrEqual(20)
+  })
+
+  it('STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds)', async () => {
+    delete process.env.STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS
+    vi.resetModules()
+    const { STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(typeof STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('STRIPE_CANCEL_RATE_LIMIT_MAX defaults to 5 (per-user, authenticated — destructive Stripe RPC)', async () => {
+    delete process.env.STRIPE_CANCEL_RATE_LIMIT_MAX
+    vi.resetModules()
+    const { STRIPE_CANCEL_RATE_LIMIT_MAX } = await import('./config')
+    expect(typeof STRIPE_CANCEL_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(STRIPE_CANCEL_RATE_LIMIT_MAX)).toBe(true)
+    expect(STRIPE_CANCEL_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(STRIPE_CANCEL_RATE_LIMIT_MAX).toBeLessThanOrEqual(20)
+  })
+
+  it('STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds)', async () => {
+    delete process.env.STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS
+    vi.resetModules()
+    const { STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(typeof STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('STRIPE_CHECKOUT_RATE_LIMIT_MAX env override is read at module load', async () => {
+    process.env.STRIPE_CHECKOUT_RATE_LIMIT_MAX = '10'
+    vi.resetModules()
+    const { STRIPE_CHECKOUT_RATE_LIMIT_MAX } = await import('./config')
+    expect(STRIPE_CHECKOUT_RATE_LIMIT_MAX).toBe(10)
+  })
+
+  it('STRIPE_CANCEL_RATE_LIMIT_MAX env override is read at module load', async () => {
+    process.env.STRIPE_CANCEL_RATE_LIMIT_MAX = '3'
+    vi.resetModules()
+    const { STRIPE_CANCEL_RATE_LIMIT_MAX } = await import('./config')
+    expect(STRIPE_CANCEL_RATE_LIMIT_MAX).toBe(3)
+  })
+
+  it('all 4 new env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('STRIPE_CHECKOUT_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('STRIPE_CHECKOUT_RATE_LIMIT_WINDOW_MS')
+    expect(ENV_VAR_NAMES).toContain('STRIPE_CANCEL_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('STRIPE_CANCEL_RATE_LIMIT_WINDOW_MS')
   })
 })
