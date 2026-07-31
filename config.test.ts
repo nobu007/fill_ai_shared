@@ -50,6 +50,10 @@ import {
   CONTACT_FORM_RATE_LIMIT_WINDOW_MS,
   FAMILY_MEMBERS_RATE_LIMIT_MAX,
   FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS,
+  INVITATIONS_RATE_LIMIT_MAX,
+  INVITATIONS_RATE_LIMIT_WINDOW_MS,
+  INVITATIONS_REDEEM_RATE_LIMIT_MAX,
+  INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS,
   API_METRICS_DURATION_SAMPLE_LIMIT,
   PII_PROXIMITY_THRESHOLD,
   VALID_FAMILY_RELATIONSHIPS,
@@ -638,6 +642,48 @@ describe('FAMILY_MEMBERS_RATE_LIMIT_* (CYCLE=194 — /api/family-members §1.2 S
     const { ENV_VAR_NAMES } = await import('./env')
     expect(ENV_VAR_NAMES).toContain('FAMILY_MEMBERS_RATE_LIMIT_MAX')
     expect(ENV_VAR_NAMES).toContain('FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS')
+  })
+})
+
+describe('INVITATIONS_RATE_LIMIT_* (CYCLE=195 — /api/invitations §1.2 Safety + §4.6 PII)', () => {
+  it('INVITATIONS_RATE_LIMIT_MAX defaults to 20 (per-admin, authenticated — permissive for bulk code-issuing campaigns)', () => {
+    expect(typeof INVITATIONS_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(INVITATIONS_RATE_LIMIT_MAX)).toBe(true)
+    expect(INVITATIONS_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(INVITATIONS_RATE_LIMIT_MAX).toBeLessThanOrEqual(50)
+  })
+
+  it('INVITATIONS_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds — matches sibling limiter budget)', () => {
+    expect(typeof INVITATIONS_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(INVITATIONS_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(INVITATIONS_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('INVITATIONS_REDEEM_RATE_LIMIT_MAX defaults to 10 (per-user, authenticated — tighter than admin CRUD; redemption is one-time lifecycle event)', () => {
+    expect(typeof INVITATIONS_REDEEM_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(INVITATIONS_REDEEM_RATE_LIMIT_MAX)).toBe(true)
+    expect(INVITATIONS_REDEEM_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(INVITATIONS_REDEEM_RATE_LIMIT_MAX).toBeLessThanOrEqual(20)
+  })
+
+  it('INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds)', () => {
+    expect(typeof INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('INVITATIONS_REDEEM_RATE_LIMIT_MAX is at most INVITATIONS_RATE_LIMIT_MAX (redeem budget tighter or equal to admin CRUD budget)', () => {
+    // Redemption is per-user one-time; admin CRUD is per-admin campaign-driven.
+    // Tighter or equal budget on redeem bounds brute-force attacks.
+    expect(INVITATIONS_REDEEM_RATE_LIMIT_MAX).toBeLessThanOrEqual(INVITATIONS_RATE_LIMIT_MAX)
+  })
+
+  it('all 4 new env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('INVITATIONS_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('INVITATIONS_RATE_LIMIT_WINDOW_MS')
+    expect(ENV_VAR_NAMES).toContain('INVITATIONS_REDEEM_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS')
   })
 })
 

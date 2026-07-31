@@ -636,6 +636,83 @@ export const FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS = getEnvNumber(
   60000,
 )
 
+// ─── Invitations Rate Limits ────────────────────────────────
+/**
+ * Maximum invitation CRUD (POST/DELETE /api/invitations) requests per admin
+ * within the rate limit window. Sliding window: a request is allowed if
+ * (current_time - window_start) < INVITATIONS_RATE_LIMIT_WINDOW_MS and the
+ * request count within the window is below INVITATIONS_RATE_LIMIT_MAX.
+ * Override via INVITATIONS_RATE_LIMIT_MAX env var.
+ *
+ * §1.2 Safety: per-admin budget for the admin-facing invitation-management
+ * surface (`/api/invitations` POST + DELETE mutate `beta_invitations` rows;
+ * the `email` column is PII, §4.6). Both POST and DELETE require the caller
+ * to pass the admin gate (ADMIN_USER_IDS env or profiles.membership='pro')
+ * — keying the budget by `user.id` means a compromised admin token still
+ * cannot burst unbounded code-issuing / invalidation churn. Budget is
+ * intentionally more permissive than redeem (20/window vs 10/window) because
+ * admin code-issuing flows batch-create codes for invitation campaigns.
+ *
+ * @example
+ *   # Default: 20 mutations per 60-second window per admin
+ *   INVITATIONS_RATE_LIMIT_MAX=40   # more relaxed (e.g. for bulk campaigns)
+ *   INVITATIONS_RATE_LIMIT_MAX=10   # stricter
+ */
+export const INVITATIONS_RATE_LIMIT_MAX = getEnvNumber(
+  'INVITATIONS_RATE_LIMIT_MAX',
+  20,
+)
+/**
+ * Invitations CRUD rate limit window in milliseconds.
+ * Override via INVITATIONS_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   INVITATIONS_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   INVITATIONS_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const INVITATIONS_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'INVITATIONS_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+/**
+ * Maximum invitation redemption (POST /api/invitations/redeem) requests per
+ * authenticated user within the rate limit window. Sliding window: a request
+ * is allowed if (current_time - window_start) < INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS
+ * and the request count within the window is below INVITATIONS_REDEEM_RATE_LIMIT_MAX.
+ * Override via INVITATIONS_REDEEM_RATE_LIMIT_MAX env var.
+ *
+ * §1.2 Safety + §4.6 PII: per-user budget for the redemption surface that
+ * upgrades the caller's profiles.membership to 'beta'. Redemption is a
+ * one-time lifecycle event — 10/window is permissive for double-confirm UI
+ * flows and retry-on-transient-failure while still bounding automated
+ * abuse (brute-forcing the redeem_invitation RPC). Named singleton
+ * (`invitations-redeem-api`) so redemption traffic is isolated from the
+ * admin CRUD budget (`invitations-api`) and from all sibling write budgets
+ * (`family-members-api` / `user-data-api` / `keys-api` /
+ * `account-data-api` / `contact-form-api`).
+ *
+ * @example
+ *   # Default: 10 redemption attempts per 60-second window per user
+ *   INVITATIONS_REDEEM_RATE_LIMIT_MAX=20  # more relaxed
+ *   INVITATIONS_REDEEM_RATE_LIMIT_MAX=3   # stricter (anti-brute-force)
+ */
+export const INVITATIONS_REDEEM_RATE_LIMIT_MAX = getEnvNumber(
+  'INVITATIONS_REDEEM_RATE_LIMIT_MAX',
+  10,
+)
+/**
+ * Invitations redemption rate limit window in milliseconds.
+ * Override via INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+
 // ─── Contact Enhance Rate Limits ───────────────────────────
 /**
  * Maximum contact enhance API requests per user within the rate limit window.

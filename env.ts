@@ -192,6 +192,12 @@ export const ENV_VAR_NAMES = [
   // Family members mutations (per-user, authenticated — PII-bearing, §4.6)
   'FAMILY_MEMBERS_RATE_LIMIT_MAX',
   'FAMILY_MEMBERS_RATE_LIMIT_WINDOW_MS',
+  // Invitations CRUD (per-admin, authenticated — PII-bearing, §4.6)
+  'INVITATIONS_RATE_LIMIT_MAX',
+  'INVITATIONS_RATE_LIMIT_WINDOW_MS',
+  // Invitations redemption (per-user, authenticated — membership upgrade + §4.6 PII)
+  'INVITATIONS_REDEEM_RATE_LIMIT_MAX',
+  'INVITATIONS_REDEEM_RATE_LIMIT_WINDOW_MS',
   // Contact rate limits
   'CONTACT_ENHANCE_RATE_LIMIT_MAX',
   'CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS',
