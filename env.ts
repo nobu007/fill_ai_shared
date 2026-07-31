@@ -186,6 +186,9 @@ export const ENV_VAR_NAMES = [
   // Account data deletion
   'ACCOUNT_DATA_RATE_LIMIT_MAX',
   'ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS',
+  // Contact form submission (per-IP, unauthenticated)
+  'CONTACT_FORM_RATE_LIMIT_MAX',
+  'CONTACT_FORM_RATE_LIMIT_WINDOW_MS',
   // Contact rate limits
   'CONTACT_ENHANCE_RATE_LIMIT_MAX',
   'CONTACT_ENHANCE_RATE_LIMIT_WINDOW_MS',

@@ -562,6 +562,37 @@ export const ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS = getEnvNumber(
   60000,
 )
 
+// ─── Contact Form Rate Limits ──────────────────────────────
+/**
+ * Maximum contact form submissions per IP within the rate limit window.
+ * §1.2 Safety: contact form writes 1 row to `contact_submissions` (PII-bearing,
+ * §4.6) and triggers an outbound Resend email send (charged API cost). Tight
+ * budget prevents form spam from churning the contact_submissions table and
+ * burning Resend quota. Budget is per-IP (not per-user) because the endpoint
+ * accepts unauthenticated submissions.
+ *
+ * Override via CONTACT_FORM_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   CONTACT_FORM_RATE_LIMIT_MAX=3   # default: 3 submissions per IP per window
+ *   CONTACT_FORM_RATE_LIMIT_MAX=10  # more relaxed (e.g. for public launch)
+ */
+export const CONTACT_FORM_RATE_LIMIT_MAX = getEnvNumber('CONTACT_FORM_RATE_LIMIT_MAX', 3)
+/**
+ * Contact form rate limit window in milliseconds.
+ * Sliding window: a submission is allowed if (current_time - window_start) < this value
+ * and the submission count within the window is below CONTACT_FORM_RATE_LIMIT_MAX.
+ * Override via CONTACT_FORM_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   CONTACT_FORM_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   CONTACT_FORM_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const CONTACT_FORM_RATE_LIMIT_WINDOW_MS = getEnvNumber(
+  'CONTACT_FORM_RATE_LIMIT_WINDOW_MS',
+  60000,
+)
+
 // ─── Contact Enhance Rate Limits ───────────────────────────
 /**
  * Maximum contact enhance API requests per user within the rate limit window.

@@ -46,6 +46,8 @@ import {
   KEYS_RATE_LIMIT_WINDOW_MS,
   ACCOUNT_DATA_RATE_LIMIT_MAX,
   ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS,
+  CONTACT_FORM_RATE_LIMIT_MAX,
+  CONTACT_FORM_RATE_LIMIT_WINDOW_MS,
   API_METRICS_DURATION_SAMPLE_LIMIT,
   PII_PROXIMITY_THRESHOLD,
   VALID_FAMILY_RELATIONSHIPS,
@@ -574,6 +576,36 @@ describe('Account Data Deletion API Rate Limits (Constitution §1.2 Safety + §4
     const { ENV_VAR_NAMES } = await import('./env')
     expect(ENV_VAR_NAMES).toContain('ACCOUNT_DATA_RATE_LIMIT_MAX')
     expect(ENV_VAR_NAMES).toContain('ACCOUNT_DATA_RATE_LIMIT_WINDOW_MS')
+  })
+})
+
+describe('Contact Form API Rate Limits (Constitution §1.2 Safety + §4.6 PII)', () => {
+  // §1.2 Safety + §4.6 PII: POST /api/contact writes 1 row to
+  // `contact_submissions` (PII-bearing) and triggers an outbound Resend email
+  // send (charged API cost). CYCLE=193 extends the §1.2 Safety wave from
+  // corrections (CYCLE=188), user-data (CYCLE=190), keys (CYCLE=191), and
+  // account-data (CYCLE=192) to the unauthenticated contact form endpoint.
+  // Budget is per-IP (not per-user) because the endpoint accepts anonymous
+  // submissions — no `user.id` available for keying. Named singleton
+  // (`contact-form-api`) so the budget is isolated from the contact-enhance
+  // limiter (which is per-user, scoped to the AI rewrite endpoint).
+  it('CONTACT_FORM_RATE_LIMIT_MAX defaults to 3 (per-IP, unauthenticated — tight budget to prevent Resend spam)', () => {
+    expect(typeof CONTACT_FORM_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(CONTACT_FORM_RATE_LIMIT_MAX)).toBe(true)
+    expect(CONTACT_FORM_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(CONTACT_FORM_RATE_LIMIT_MAX).toBeLessThanOrEqual(20)
+  })
+
+  it('CONTACT_FORM_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds — matches sibling limiter budget)', () => {
+    expect(typeof CONTACT_FORM_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(CONTACT_FORM_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(CONTACT_FORM_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('CONTACT_FORM_RATE_LIMIT_MAX + CONTACT_FORM_RATE_LIMIT_WINDOW_MS env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('CONTACT_FORM_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('CONTACT_FORM_RATE_LIMIT_WINDOW_MS')
   })
 })
 
