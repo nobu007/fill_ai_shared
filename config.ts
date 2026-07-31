@@ -113,6 +113,15 @@ export const FILL_VLM_COMPRESS_MAX_DIMENSION = getEnvNumber('FILL_VLM_COMPRESS_M
 export const FILL_PARALLEL_PAGE_THRESHOLD = getEnvNumber('FILL_PARALLEL_PAGE_THRESHOLD', 10)
 /** Max concurrent pages for parallel extraction */
 export const FILL_PARALLEL_CONCURRENCY = getEnvNumber('FILL_PARALLEL_CONCURRENCY', 4)
+/**
+ * Confidence threshold separating "high confidence" from "low confidence" mappings.
+ *
+ * Single source of truth consumed by both `src/lib/pdf/accuracy-tracker.ts`
+ * (correction-derived accuracy buckets) and `src/lib/infra/api-metrics.ts`
+ * (trackConfidence — production confidence counters). Defaults to 0.7.
+ * Stored as a fraction (0.0–1.0) so it can be compared directly with `mapping.confidence`.
+ */
+export const FILL_HIGH_CONFIDENCE_THRESHOLD = getEnvNumber('FILL_HIGH_CONFIDENCE_THRESHOLD', 0.7)
 
 // Phase Engine settings are defined in src/lib/engine/engine-config.ts
 // to avoid circular dependencies with fill_ai_shared.
