@@ -158,6 +158,30 @@ export const FILL_VLM_COMPRESS_MAX_DIMENSION = getEnvNumber('FILL_VLM_COMPRESS_M
 export const FILL_PARALLEL_PAGE_THRESHOLD = getEnvNumber('FILL_PARALLEL_PAGE_THRESHOLD', 10)
 /** Max concurrent pages for parallel extraction */
 export const FILL_PARALLEL_CONCURRENCY = getEnvNumber('FILL_PARALLEL_CONCURRENCY', 4)
+
+/**
+ * PDF extraction cache: max entries (LRU cap).
+ *
+ * Single source of truth consumed by `src/lib/pdf/extraction-cache.ts`.
+ * Defaults to 128 entries (matches prior module-local `DEFAULT_MAX_ENTRIES`).
+ * The cache evicts the oldest entry once full; reduce for memory-constrained
+ * serverless environments, increase for warm-cache reuse across cold starts.
+ */
+export const FILL_EXTRACTION_CACHE_MAX_ENTRIES = getEnvNumber(
+  'FILL_EXTRACTION_CACHE_MAX_ENTRIES',
+  128,
+)
+/**
+ * PDF extraction cache: per-entry TTL (ms).
+ *
+ * Single source of truth consumed by `src/lib/pdf/extraction-cache.ts`.
+ * Defaults to 30 minutes (1_800_000 ms — matches prior `DEFAULT_TTL_MS`).
+ * Entries older than this are considered expired and purged on access.
+ */
+export const FILL_EXTRACTION_CACHE_TTL_MS = getEnvNumber(
+  'FILL_EXTRACTION_CACHE_TTL_MS',
+  30 * 60 * 1000,
+)
 /**
  * Confidence threshold separating "high confidence" from "low confidence" mappings.
  *

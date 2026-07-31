@@ -629,3 +629,56 @@ describe('LLM Fallback Chain (Constitution §3.2 + §1.3.1)', () => {
     )
   })
 })
+
+describe('PDF Extraction Cache Configuration (extraction-cache.ts defaults)', () => {
+  const originalMax = process.env.FILL_EXTRACTION_CACHE_MAX_ENTRIES
+  const originalTtl = process.env.FILL_EXTRACTION_CACHE_TTL_MS
+
+  afterEach(() => {
+    if (originalMax === undefined) {
+      delete process.env.FILL_EXTRACTION_CACHE_MAX_ENTRIES
+    } else {
+      process.env.FILL_EXTRACTION_CACHE_MAX_ENTRIES = originalMax
+    }
+    if (originalTtl === undefined) {
+      delete process.env.FILL_EXTRACTION_CACHE_TTL_MS
+    } else {
+      process.env.FILL_EXTRACTION_CACHE_TTL_MS = originalTtl
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_EXTRACTION_CACHE_MAX_ENTRIES defaults to 128 (extraction-cache module-local DEFAULT_MAX_ENTRIES)', async () => {
+    delete process.env.FILL_EXTRACTION_CACHE_MAX_ENTRIES
+    vi.resetModules()
+    const { FILL_EXTRACTION_CACHE_MAX_ENTRIES } = await import('./config')
+    expect(FILL_EXTRACTION_CACHE_MAX_ENTRIES).toBe(128)
+  })
+
+  it('FILL_EXTRACTION_CACHE_TTL_MS defaults to 30 minutes (1_800_000 — matches extraction-cache DEFAULT_TTL_MS)', async () => {
+    delete process.env.FILL_EXTRACTION_CACHE_TTL_MS
+    vi.resetModules()
+    const { FILL_EXTRACTION_CACHE_TTL_MS } = await import('./config')
+    expect(FILL_EXTRACTION_CACHE_TTL_MS).toBe(30 * 60 * 1000)
+  })
+
+  it('FILL_EXTRACTION_CACHE_MAX_ENTRIES env override is read at module load', async () => {
+    process.env.FILL_EXTRACTION_CACHE_MAX_ENTRIES = '256'
+    vi.resetModules()
+    const { FILL_EXTRACTION_CACHE_MAX_ENTRIES } = await import('./config')
+    expect(FILL_EXTRACTION_CACHE_MAX_ENTRIES).toBe(256)
+  })
+
+  it('FILL_EXTRACTION_CACHE_TTL_MS env override is read at module load', async () => {
+    process.env.FILL_EXTRACTION_CACHE_TTL_MS = '600000'
+    vi.resetModules()
+    const { FILL_EXTRACTION_CACHE_TTL_MS } = await import('./config')
+    expect(FILL_EXTRACTION_CACHE_TTL_MS).toBe(600000)
+  })
+
+  it('both new env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_EXTRACTION_CACHE_MAX_ENTRIES')
+    expect(ENV_VAR_NAMES).toContain('FILL_EXTRACTION_CACHE_TTL_MS')
+  })
+})
