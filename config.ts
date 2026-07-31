@@ -210,6 +210,27 @@ export const FILL_HIGH_CONFIDENCE_THRESHOLD = getEnvNumber('FILL_HIGH_CONFIDENCE
  */
 export const FILL_RULE_MATCH_THRESHOLD = getEnvNumber('FILL_RULE_MATCH_THRESHOLD', 0.95)
 
+/**
+ * Default matcher strategy ID used by `matcherRegistry.getDefault()`
+ * in `src/lib/pdf/matcher-registry.ts` when no explicit strategy is requested.
+ *
+ * Single source of truth replacing the module-local `DEFAULT_MATCHER_ID = 'rule-based'`.
+ * Rule-based matching is the Core Mission default because it is deterministic and
+ * zero-cost (no LLM invocation); LLM-based and hybrid strategies remain available
+ * via `MatcherRegistry.setDefault()` and the per-request matcherId parameter
+ * (see `src/lib/pdf/fill-service.ts`).
+ *
+ * Override per environment via `FILL_DEFAULT_MATCHER_ID` env var.
+ *   FILL_DEFAULT_MATCHER_ID=rule-based   # default (regex-only, no LLM)
+ *   FILL_DEFAULT_MATCHER_ID=llm-based    # direct LLM (use sparingly — cost)
+ *   FILL_DEFAULT_MATCHER_ID=hybrid       # rule → LLM fallback (not yet built)
+ *
+ * The supplied value must be a non-empty string. Numeric or whitespace-only
+ * values fall back to the documented default via `getEnvWithDefault` + the
+ * `||` short-circuit at the call site.
+ */
+export const FILL_DEFAULT_MATCHER_ID = getEnvWithDefault('FILL_DEFAULT_MATCHER_ID', 'rule-based')
+
 // Phase Engine settings are defined in src/lib/engine/engine-config.ts
 // to avoid circular dependencies with fill_ai_shared.
 

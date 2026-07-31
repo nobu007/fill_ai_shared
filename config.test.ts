@@ -721,3 +721,35 @@ describe('Rule Matcher Threshold Configuration (rule-matcher.ts DEFAULT_AUTO_THR
     expect(ENV_VAR_NAMES).toContain('FILL_RULE_MATCH_THRESHOLD')
   })
 })
+
+describe('Default Matcher ID Configuration (matcher-registry.ts DEFAULT_MATCHER_ID)', () => {
+  const originalMatcherId = process.env.FILL_DEFAULT_MATCHER_ID
+
+  afterEach(() => {
+    if (originalMatcherId === undefined) {
+      delete process.env.FILL_DEFAULT_MATCHER_ID
+    } else {
+      process.env.FILL_DEFAULT_MATCHER_ID = originalMatcherId
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_DEFAULT_MATCHER_ID defaults to "rule-based" (matcher-registry module-local DEFAULT_MATCHER_ID)', async () => {
+    delete process.env.FILL_DEFAULT_MATCHER_ID
+    vi.resetModules()
+    const { FILL_DEFAULT_MATCHER_ID } = await import('./config')
+    expect(FILL_DEFAULT_MATCHER_ID).toBe('rule-based')
+  })
+
+  it('FILL_DEFAULT_MATCHER_ID env override is read at module load', async () => {
+    process.env.FILL_DEFAULT_MATCHER_ID = 'hybrid'
+    vi.resetModules()
+    const { FILL_DEFAULT_MATCHER_ID } = await import('./config')
+    expect(FILL_DEFAULT_MATCHER_ID).toBe('hybrid')
+  })
+
+  it('FILL_DEFAULT_MATCHER_ID env var appears in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_DEFAULT_MATCHER_ID')
+  })
+})
