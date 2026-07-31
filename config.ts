@@ -482,9 +482,42 @@ export const USER_DATA_RATE_LIMIT_MAX = getEnvNumber('USER_DATA_RATE_LIMIT_MAX',
  *
  * @example
  *   USER_DATA_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
- *   USER_DATA_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ *   USER_DATA_RATE_LIMIT_WINDOW_MS=600000   # 10-minute window (more relaxed; matches the fill budget)
  */
 export const USER_DATA_RATE_LIMIT_WINDOW_MS = getEnvNumber('USER_DATA_RATE_LIMIT_WINDOW_MS', 60000)
+
+// ─── API Keys Rate Limits ───────────────────────────────────
+/**
+ * Maximum /api/keys write requests (POST/DELETE) per user within the rate limit
+ * window. /api/keys is the BYOK endpoint: every POST triggers an outbound call
+ * to OpenAI / Gemini / Claude (provider validation), an AES-256-GCM encrypt(),
+ * and a Supabase user_api_keys upsert — the highest-cost write endpoint in the
+ * app. Without a gate, an attacker can burn CPU, leak via provider cost, and
+ * flood user_api_keys rows with a tight script.
+ *
+ * Named singleton (`keys-api`) so the keys budget is isolated from
+ * fillRateLimiter and userDataRateLimiter — keys traffic cannot starve the
+ * fill pipeline or vice versa.
+ *
+ * Override via KEYS_RATE_LIMIT_MAX env var.
+ *
+ * @example
+ *   # Default: 10 requests per 60-second window per user
+ *   KEYS_RATE_LIMIT_MAX=20   # increase to 20 req/window
+ *   KEYS_RATE_LIMIT_MAX=5    # decrease to 5 req/window (strict)
+ */
+export const KEYS_RATE_LIMIT_MAX = getEnvNumber('KEYS_RATE_LIMIT_MAX', 10)
+/**
+ * API-keys rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below KEYS_RATE_LIMIT_MAX.
+ * Override via KEYS_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   KEYS_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   KEYS_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const KEYS_RATE_LIMIT_WINDOW_MS = getEnvNumber('KEYS_RATE_LIMIT_WINDOW_MS', 60000)
 
 // ─── Contact Enhance Rate Limits ───────────────────────────
 /**

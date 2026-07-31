@@ -42,6 +42,8 @@ import {
   FILL_RATE_LIMIT_WINDOW_MS,
   USER_DATA_RATE_LIMIT_MAX,
   USER_DATA_RATE_LIMIT_WINDOW_MS,
+  KEYS_RATE_LIMIT_MAX,
+  KEYS_RATE_LIMIT_WINDOW_MS,
   API_METRICS_DURATION_SAMPLE_LIMIT,
   PII_PROXIMITY_THRESHOLD,
   VALID_FAMILY_RELATIONSHIPS,
@@ -514,6 +516,33 @@ describe('User Data API Rate Limits (Constitution §1.2 Safety)', () => {
     expect(typeof USER_DATA_RATE_LIMIT_WINDOW_MS).toBe('number')
     expect(USER_DATA_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
     expect(USER_DATA_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+})
+
+describe('API Keys API Rate Limits (Constitution §1.2 Safety)', () => {
+  // §1.2 Safety: /api/keys is the highest-cost write endpoint in the app
+  // (outbound provider validation fetch + AES-256-GCM encrypt() + Supabase
+  // user_api_keys upsert per POST). CYCLE=191 extends the §1.2 Safety wave
+  // from corrections (CYCLE=188) and user-data (CYCLE=190) into keys.
+  // Budget is independent from fillRateLimiter / userDataRateLimiter so keys
+  // traffic cannot starve the fill pipeline or vice versa.
+  it('KEYS_RATE_LIMIT_MAX defaults to 10 (single-digit budget per user per window)', () => {
+    expect(typeof KEYS_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(KEYS_RATE_LIMIT_MAX)).toBe(true)
+    expect(KEYS_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(KEYS_RATE_LIMIT_MAX).toBeLessThanOrEqual(100)
+  })
+
+  it('KEYS_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds — matches fill/user-data budget)', () => {
+    expect(typeof KEYS_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(KEYS_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(KEYS_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('KEYS_RATE_LIMIT_MAX + KEYS_RATE_LIMIT_WINDOW_MS env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('KEYS_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('KEYS_RATE_LIMIT_WINDOW_MS')
   })
 })
 
