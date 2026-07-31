@@ -102,7 +102,52 @@ export const FILL_OCR_MODEL = getEnvWithDefault('FILL_OCR_MODEL', 'glm-ocr')
 export const FILL_AUTO_APPLY_THRESHOLD = getEnvNumber('FILL_AUTO_APPLY_THRESHOLD', 0.8)
 /** Maximum prompt size for LLM mapping requests (Constitution §1.2 Stability — prevent resource exhaustion) */
 export const MAX_MAPPING_PROMPT_LENGTH = getEnvNumber('MAX_MAPPING_PROMPT_LENGTH', 100000)
-export const FILL_FALLBACK_MODELS = (getEnv('FILL_FALLBACK_MODELS') || 'glm-4.7-flash,glm-5-turbo,MiniMax-M3').split(',').filter(Boolean)
+/**
+ * Fill API fallback model chain (Constitution §3.2 + §1.3.1).
+ *
+ * Default order — read top-to-bottom — tries each provider in sequence
+ * until one succeeds:
+ *   1. glm-5-turbo      (Z-AI primary, fast general model)
+ *   2. glm-4.7-coding   (Z-AI secondary, slower but more accurate)
+ *   3. glm-4.7-flash    (Z-AI tertiary, ultra-low latency)
+ *   4. MiniMax-M3        (Amendment #3 fallback tail — Anthropic Messages API)
+ *
+ * Override via `FILL_FALLBACK_MODELS` env var (comma-separated). The fallback
+ * sequence is identical whether the override is set or the default applies.
+ */
+export const FILL_FALLBACK_MODELS = (getEnv('FILL_FALLBACK_MODELS') || 'glm-5-turbo,glm-4.7-coding,glm-4.7-flash,MiniMax-M3').split(',').filter(Boolean)
+
+/**
+ * Per-model LLM timeout overrides (ms) — Constitution §1.2 Stability.
+ *
+ * Faster models should respond in < 5-10s for short prompts. Using shorter
+ * timeouts prevents slow-model tail from dominating P99 latency. Per-model
+ * overrides are used when present; otherwise the global `FILL_MAPPING_TIMEOUT_MS`
+ * (default 30s) is the fallback.
+ *
+ * Single source of truth — consumed by `src/lib/pdf/llm.ts` `resolveModelTimeout()`.
+ * Override per-model via `FILL_MODEL_TIMEOUT_OVERRIDES` env var as a JSON object
+ * (e.g. `{"MiniMax-M3": 25000}`).
+ */
+export const FILL_MODEL_TIMEOUT_OVERRIDES: Readonly<Record<string, number>> = (() => {
+  const raw = getEnv('FILL_MODEL_TIMEOUT_OVERRIDES')
+  if (raw) {
+    try {
+      const parsed = JSON.parse(raw)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, number>
+      }
+    } catch {
+      // Fall through to defaults on parse error
+    }
+  }
+  return {
+    'glm-4.7-flash': 5_000,    // Ultra-low-latency: < 5s
+    'glm-5-turbo': 10_000,     // Fast general model: < 10s
+    'glm-4.7-coding': 15_000,  // Coding model: < 15s (slower but more accurate)
+    'MiniMax-M3': 20_000,      // Fallback tail: Anthropic Messages API, < 20s
+  }
+})()
 /** VLM compression threshold in KB — PDFs below this size skip JPEG compression */
 export const FILL_VLM_COMPRESS_THRESHOLD_KB = getEnvNumber('FILL_VLM_COMPRESS_THRESHOLD_KB', 200)
 /** JPEG quality for VLM compression (0.0–1.0) */
