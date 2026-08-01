@@ -118,6 +118,17 @@ function startCleanup(name: string, config: RateLimiterConfig): void {
  * Different names create independent rate limiters.
  */
 export function createRateLimiter(config: RateLimiterConfig): RateLimiter {
+  if (!Number.isInteger(config.maxRequests) || config.maxRequests <= 0) {
+    throw new Error('maxRequests must be a positive integer')
+  }
+  if (!Number.isFinite(config.windowMs) || config.windowMs <= 0) {
+    throw new Error('windowMs must be a positive finite number')
+  }
+  if (config.cleanupIntervalMs !== undefined &&
+    (!Number.isFinite(config.cleanupIntervalMs) || config.cleanupIntervalMs <= 0)) {
+    throw new Error('cleanupIntervalMs must be a positive finite number')
+  }
+
   const name = config.name ?? '__default__'
   const store = getStore(name)
   const blocked = getBlockedCounter(name)

@@ -305,20 +305,37 @@ describe('resetRateLimiterState', () => {
 // ─── Edge Cases ──────────────────────────────────────────
 
 describe('edge cases', () => {
+  it('rejects non-positive or non-integer maxRequests', () => {
+    for (const maxRequests of [0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() => createRateLimiter({ maxRequests, windowMs: 60_000 })).toThrow(
+        'maxRequests must be a positive integer',
+      )
+    }
+  })
+
+  it('rejects non-positive or non-finite window durations', () => {
+    for (const windowMs of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() => createRateLimiter({ maxRequests: 1, windowMs })).toThrow(
+        'windowMs must be a positive finite number',
+      )
+    }
+  })
+
+  it('rejects non-positive or non-finite cleanup intervals', () => {
+    for (const cleanupIntervalMs of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
+      expect(() => createRateLimiter({
+        maxRequests: 1,
+        windowMs: 60_000,
+        cleanupIntervalMs,
+      })).toThrow('cleanupIntervalMs must be a positive finite number')
+    }
+  })
+
   it('handles maxRequests of 1 (strictest limit)', () => {
     const limiter = createRateLimiter({ maxRequests: 1, windowMs: 60_000 })
 
     expect(limiter.check('user-1')).toBe(false)
     expect(limiter.check('user-1')).toBe(true)
-  })
-
-  it('handles maxRequests of 0 (blocks after first request)', () => {
-    // Note: the first request always creates a new window with count=1,
-    // so it's allowed. Subsequent requests within the window are blocked.
-    const limiter = createRateLimiter({ maxRequests: 0, windowMs: 60_000 })
-
-    expect(limiter.check('user-1')).toBe(false) // first request creates window
-    expect(limiter.check('user-1')).toBe(true)  // blocked: count(1) >= maxRequests(0)
   })
 
   it('handles very short window', () => {
