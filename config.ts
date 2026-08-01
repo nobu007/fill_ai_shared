@@ -1034,6 +1034,38 @@ export const TEMPLATES_RATE_LIMIT_MAX = getEnvNumber('TEMPLATES_RATE_LIMIT_MAX',
  *   TEMPLATES_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
  */
 export const TEMPLATES_RATE_LIMIT_WINDOW_MS = getEnvNumber('TEMPLATES_RATE_LIMIT_WINDOW_MS', 60000)
+
+// ─── Prompts Rate Limits ────────────────────────────────────
+/**
+ * Maximum prompts API write requests per user within the rate limit window.
+ * Override via PROMPTS_RATE_LIMIT_MAX env var.
+ *
+ * Prompts govern the `<axis_id> → system_prompt` text the LLM uses during the
+ * Core Mission fill pipeline (review axes like 'structure' / 'readability' /
+ * 'ai_tone', plus per-site custom prompts). Both POST (creates/updates via
+ * PUT) and PUT/DELETE are write endpoints and mutate the `prompts` table —
+ * system_prompt text is LLM-context-shaped and can contain user-confidential
+ * tuning instructions, which is why it sits under §4.6. Per-user budget so
+ * a compromised token cannot rapidly churn prompt rows bounded only by RLS
+ * + per-RPC latency.
+ *
+ * @example
+ *   # Default: 10 prompt mutations per 60-second window per user
+ *   PROMPTS_RATE_LIMIT_MAX=20  # more relaxed
+ *   PROMPTS_RATE_LIMIT_MAX=3   # stricter
+ */
+export const PROMPTS_RATE_LIMIT_MAX = getEnvNumber('PROMPTS_RATE_LIMIT_MAX', 10)
+/**
+ * Prompts rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below PROMPTS_RATE_LIMIT_MAX.
+ * Override via PROMPTS_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   PROMPTS_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   PROMPTS_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const PROMPTS_RATE_LIMIT_WINDOW_MS = getEnvNumber('PROMPTS_RATE_LIMIT_WINDOW_MS', 60000)
 /** Maximum category length for contact enhance API (Constitution §2.4) */
 export const CONTACT_ENHANCE_CATEGORY_MAX_LENGTH = getEnvNumber('CONTACT_ENHANCE_CATEGORY_MAX_LENGTH', 50)
 /** Minimum User-Agent string length to reject bots with obviously fake UA (Constitution §2.4) */

@@ -1274,3 +1274,70 @@ describe('Templates Rate Limits (Constitution §1.2 Safety + §4.6 PII)', () => 
     expect(ENV_VAR_NAMES).toContain('TEMPLATES_RATE_LIMIT_WINDOW_MS')
   })
 })
+
+describe('Prompts Rate Limits (Constitution §1.2 Safety + §4.6 PII)', () => {
+  // CYCLE=200 regression tests — guarantee the new PROMPTS_RATE_LIMIT_*
+  // defaults match the route-level rate-limiter construction in
+  // src/app/api/prompts/route.ts (POST) and src/app/api/prompts/[axis_id]/route.ts
+  // (PUT + DELETE), all gated AFTER JSON parse + body validation and BEFORE
+  // the `prompts` table write. system_prompt text is LLM-context-shaped and
+  // §4.6-adjacent (can carry user-confidential tuning instructions), so write
+  // endpoints must be rate-limit gated to prevent churn abuse. Each test
+  // isolates its own env var via process.env + vi.resetModules to match the
+  // convention from CYCLE=188..199.
+  const originalMax = process.env.PROMPTS_RATE_LIMIT_MAX
+  const originalWindow = process.env.PROMPTS_RATE_LIMIT_WINDOW_MS
+
+  afterEach(() => {
+    if (originalMax === undefined) {
+      delete process.env.PROMPTS_RATE_LIMIT_MAX
+    } else {
+      process.env.PROMPTS_RATE_LIMIT_MAX = originalMax
+    }
+    if (originalWindow === undefined) {
+      delete process.env.PROMPTS_RATE_LIMIT_WINDOW_MS
+    } else {
+      process.env.PROMPTS_RATE_LIMIT_WINDOW_MS = originalWindow
+    }
+    vi.resetModules()
+  })
+
+  it('PROMPTS_RATE_LIMIT_MAX defaults to 10 (per-user, authenticated — prompts table write surface + §4.6 LLM-context text)', async () => {
+    delete process.env.PROMPTS_RATE_LIMIT_MAX
+    vi.resetModules()
+    const { PROMPTS_RATE_LIMIT_MAX } = await import('./config')
+    expect(typeof PROMPTS_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(PROMPTS_RATE_LIMIT_MAX)).toBe(true)
+    expect(PROMPTS_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(PROMPTS_RATE_LIMIT_MAX).toBeLessThanOrEqual(50)
+  })
+
+  it('PROMPTS_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds — matches sibling Core Mission limiter budget)', async () => {
+    delete process.env.PROMPTS_RATE_LIMIT_WINDOW_MS
+    vi.resetModules()
+    const { PROMPTS_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(typeof PROMPTS_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(PROMPTS_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(PROMPTS_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('PROMPTS_RATE_LIMIT_MAX env override is read at module load', async () => {
+    process.env.PROMPTS_RATE_LIMIT_MAX = '25'
+    vi.resetModules()
+    const { PROMPTS_RATE_LIMIT_MAX } = await import('./config')
+    expect(PROMPTS_RATE_LIMIT_MAX).toBe(25)
+  })
+
+  it('PROMPTS_RATE_LIMIT_WINDOW_MS env override is read at module load', async () => {
+    process.env.PROMPTS_RATE_LIMIT_WINDOW_MS = '300000'
+    vi.resetModules()
+    const { PROMPTS_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(PROMPTS_RATE_LIMIT_WINDOW_MS).toBe(300000)
+  })
+
+  it('both new env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('PROMPTS_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('PROMPTS_RATE_LIMIT_WINDOW_MS')
+  })
+})

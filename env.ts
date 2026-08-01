@@ -224,6 +224,9 @@ export const ENV_VAR_NAMES = [
   // Templates (per-user, authenticated — pdf_templates PII-adjacent write surface, §1.2 Safety + §4.6)
   'TEMPLATES_RATE_LIMIT_MAX',
   'TEMPLATES_RATE_LIMIT_WINDOW_MS',
+  // Prompts (per-user, authenticated — prompts table write surface, §1.2 Safety + §4.6 LLM-context text)
+  'PROMPTS_RATE_LIMIT_MAX',
+  'PROMPTS_RATE_LIMIT_WINDOW_MS',
   // WordPress
   'WP_API_TIMEOUT_MS',
   'WP_SYNC_PER_PAGE',
