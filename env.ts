@@ -221,6 +221,9 @@ export const ENV_VAR_NAMES = [
   'CONTACT_ENHANCE_MESSAGE_MAX_LENGTH',
   'CONTACT_ENHANCE_CATEGORY_MAX_LENGTH',
   'MIN_USER_AGENT_LENGTH',
+  // Templates (per-user, authenticated — pdf_templates PII-adjacent write surface, §1.2 Safety + §4.6)
+  'TEMPLATES_RATE_LIMIT_MAX',
+  'TEMPLATES_RATE_LIMIT_WINDOW_MS',
   // WordPress
   'WP_API_TIMEOUT_MS',
   'WP_SYNC_PER_PAGE',

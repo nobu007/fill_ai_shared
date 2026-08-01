@@ -1206,3 +1206,71 @@ describe('Credits Checkout Rate Limits (Constitution §1.2 Safety)', () => {
     expect(ENV_VAR_NAMES).toContain('CREDITS_CHECKOUT_RATE_LIMIT_WINDOW_MS')
   })
 })
+
+describe('Templates Rate Limits (Constitution §1.2 Safety + §4.6 PII)', () => {
+  // CYCLE=199 regression tests — guarantee the new TEMPLATES_RATE_LIMIT_*
+  // defaults match the route-level rate-limiter construction in
+  // src/app/api/templates/route.ts and src/app/api/templates/[id]/route.ts
+  // (templates-api named singleton, gated AFTER JSON parse + body validation
+  // and BEFORE pdf_templates insert / delete). pdf_templates is the Core
+  // Mission cache of resolved <PLACEHOLDER> → user-data field mappings; the
+  // mappings table references user-data column names (PII-adjacent, §4.6),
+  // so write endpoints must be rate-limit gated to prevent churn abuse.
+  // Each test isolates its own env var via process.env + vi.resetModules to
+  // match the convention from CYCLE=188..198.
+  const originalMax = process.env.TEMPLATES_RATE_LIMIT_MAX
+  const originalWindow = process.env.TEMPLATES_RATE_LIMIT_WINDOW_MS
+
+  afterEach(() => {
+    if (originalMax === undefined) {
+      delete process.env.TEMPLATES_RATE_LIMIT_MAX
+    } else {
+      process.env.TEMPLATES_RATE_LIMIT_MAX = originalMax
+    }
+    if (originalWindow === undefined) {
+      delete process.env.TEMPLATES_RATE_LIMIT_WINDOW_MS
+    } else {
+      process.env.TEMPLATES_RATE_LIMIT_WINDOW_MS = originalWindow
+    }
+    vi.resetModules()
+  })
+
+  it('TEMPLATES_RATE_LIMIT_MAX defaults to 10 (per-user, authenticated — pdf_templates write surface + PII-adjacent mappings)', async () => {
+    delete process.env.TEMPLATES_RATE_LIMIT_MAX
+    vi.resetModules()
+    const { TEMPLATES_RATE_LIMIT_MAX } = await import('./config')
+    expect(typeof TEMPLATES_RATE_LIMIT_MAX).toBe('number')
+    expect(Number.isInteger(TEMPLATES_RATE_LIMIT_MAX)).toBe(true)
+    expect(TEMPLATES_RATE_LIMIT_MAX).toBeGreaterThan(0)
+    expect(TEMPLATES_RATE_LIMIT_MAX).toBeLessThanOrEqual(50)
+  })
+
+  it('TEMPLATES_RATE_LIMIT_WINDOW_MS defaults to 60000 (60 seconds — matches sibling Core Mission limiter budget)', async () => {
+    delete process.env.TEMPLATES_RATE_LIMIT_WINDOW_MS
+    vi.resetModules()
+    const { TEMPLATES_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(typeof TEMPLATES_RATE_LIMIT_WINDOW_MS).toBe('number')
+    expect(TEMPLATES_RATE_LIMIT_WINDOW_MS).toBeGreaterThan(0)
+    expect(TEMPLATES_RATE_LIMIT_WINDOW_MS).toBeLessThanOrEqual(600_000)
+  })
+
+  it('TEMPLATES_RATE_LIMIT_MAX env override is read at module load', async () => {
+    process.env.TEMPLATES_RATE_LIMIT_MAX = '25'
+    vi.resetModules()
+    const { TEMPLATES_RATE_LIMIT_MAX } = await import('./config')
+    expect(TEMPLATES_RATE_LIMIT_MAX).toBe(25)
+  })
+
+  it('TEMPLATES_RATE_LIMIT_WINDOW_MS env override is read at module load', async () => {
+    process.env.TEMPLATES_RATE_LIMIT_WINDOW_MS = '300000'
+    vi.resetModules()
+    const { TEMPLATES_RATE_LIMIT_WINDOW_MS } = await import('./config')
+    expect(TEMPLATES_RATE_LIMIT_WINDOW_MS).toBe(300000)
+  })
+
+  it('both new env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('TEMPLATES_RATE_LIMIT_MAX')
+    expect(ENV_VAR_NAMES).toContain('TEMPLATES_RATE_LIMIT_WINDOW_MS')
+  })
+})

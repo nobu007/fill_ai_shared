@@ -1005,6 +1005,35 @@ export const CONTACT_ENHANCE_CLEANUP_INTERVAL_MS = getEnvNumber('CONTACT_ENHANCE
 export const CONTACT_ENHANCE_DAILY_CAP_MAX = getEnvNumber('CONTACT_ENHANCE_DAILY_CAP_MAX', 100)
 /** Maximum message length for contact enhance API (Constitution §2.4) */
 export const CONTACT_ENHANCE_MESSAGE_MAX_LENGTH = getEnvNumber('CONTACT_ENHANCE_MESSAGE_MAX_LENGTH', 5000)
+
+// ─── Templates Rate Limits ──────────────────────────────────
+/**
+ * Maximum template API write requests per user within the rate limit window.
+ * Override via TEMPLATES_RATE_LIMIT_MAX env var.
+ *
+ * Templates cache the resolved `<PLACEHOLDER> → user-data field` mapping for a
+ * specific PDF (fingerprint-scoped). Both POST and DELETE are write endpoints
+ * and POST inserts into `pdf_templates` (PII-adjacent, §4.6: the mappings
+ * table references user data column names like 'name' / 'address'). Per-user
+ * budget so a single compromised token cannot starve other users.
+ *
+ * @example
+ *   # Default: 10 template mutations per 60-second window per user
+ *   TEMPLATES_RATE_LIMIT_MAX=20  # more relaxed
+ *   TEMPLATES_RATE_LIMIT_MAX=3   # stricter
+ */
+export const TEMPLATES_RATE_LIMIT_MAX = getEnvNumber('TEMPLATES_RATE_LIMIT_MAX', 10)
+/**
+ * Templates rate limit window in milliseconds.
+ * Sliding window: a request is allowed if (current_time - window_start) < this value
+ * and the request count within the window is below TEMPLATES_RATE_LIMIT_MAX.
+ * Override via TEMPLATES_RATE_LIMIT_WINDOW_MS env var.
+ *
+ * @example
+ *   TEMPLATES_RATE_LIMIT_WINDOW_MS=60000    # default: 60-second window
+ *   TEMPLATES_RATE_LIMIT_WINDOW_MS=300000   # 5-minute window (more relaxed)
+ */
+export const TEMPLATES_RATE_LIMIT_WINDOW_MS = getEnvNumber('TEMPLATES_RATE_LIMIT_WINDOW_MS', 60000)
 /** Maximum category length for contact enhance API (Constitution §2.4) */
 export const CONTACT_ENHANCE_CATEGORY_MAX_LENGTH = getEnvNumber('CONTACT_ENHANCE_CATEGORY_MAX_LENGTH', 50)
 /** Minimum User-Agent string length to reject bots with obviously fake UA (Constitution §2.4) */
