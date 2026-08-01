@@ -70,6 +70,9 @@ import {
   STRIPE_PRICE_ID,
   ALERTS_SECRET,
   SLACK_ALERTS_WEBHOOK_URL,
+  FILL_ALERT_ERROR_RATE_THRESHOLD,
+  FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS,
+  FILL_ALERT_TOKEN_THRESHOLD,
 } from './config'
 
 describe('Validation Limits (Constitution §4.5)', () => {
@@ -463,6 +466,76 @@ describe('Environment Variable Defaults — Alerts & Monitoring (Constitution §
   it('SLACK_ALERTS_WEBHOOK_URL defaults to empty string', () => {
     expect(typeof SLACK_ALERTS_WEBHOOK_URL).toBe('string')
     expect(SLACK_ALERTS_WEBHOOK_URL).toBe('')
+  })
+
+  // ── FILL_ALERT_* thresholds (Constitution §2.4 — centralised from
+  // src/lib/infra/alerts.ts hardcoded DEFAULT_THRESHOLDS into env-overridable
+  // exports so production can tune SLA / cost sensitivity without redeploy).
+  it('FILL_ALERT_ERROR_RATE_THRESHOLD defaults to 0.05 (5%)', () => {
+    expect(FILL_ALERT_ERROR_RATE_THRESHOLD).toBe(0.05)
+    expect(FILL_ALERT_ERROR_RATE_THRESHOLD).toBeGreaterThan(0)
+    expect(FILL_ALERT_ERROR_RATE_THRESHOLD).toBeLessThan(1)
+  })
+
+  it('FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS defaults to 2000 (2s)', () => {
+    expect(FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS).toBe(2000)
+    expect(Number.isInteger(FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS)).toBe(true)
+    expect(FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS).toBeGreaterThan(0)
+  })
+
+  it('FILL_ALERT_TOKEN_THRESHOLD defaults to 100000 (100k tokens)', () => {
+    expect(FILL_ALERT_TOKEN_THRESHOLD).toBe(100000)
+    expect(Number.isInteger(FILL_ALERT_TOKEN_THRESHOLD)).toBe(true)
+    expect(FILL_ALERT_TOKEN_THRESHOLD).toBeGreaterThan(0)
+  })
+
+  it('FILL_ALERT_ERROR_RATE_THRESHOLD env override flows through (string → number coercion via getEnvNumber)', async () => {
+    const original = process.env.FILL_ALERT_ERROR_RATE_THRESHOLD
+    try {
+      process.env.FILL_ALERT_ERROR_RATE_THRESHOLD = '0.15'
+      vi.resetModules()
+      const { FILL_ALERT_ERROR_RATE_THRESHOLD: fresh } = await import('./config')
+      expect(fresh).toBe(0.15)
+    } finally {
+      if (original === undefined) delete process.env.FILL_ALERT_ERROR_RATE_THRESHOLD
+      else process.env.FILL_ALERT_ERROR_RATE_THRESHOLD = original
+      vi.resetModules()
+    }
+  })
+
+  it('FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS env override flows through', async () => {
+    const original = process.env.FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS
+    try {
+      process.env.FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS = '1500'
+      vi.resetModules()
+      const { FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS: fresh } = await import('./config')
+      expect(fresh).toBe(1500)
+    } finally {
+      if (original === undefined) delete process.env.FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS
+      else process.env.FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS = original
+      vi.resetModules()
+    }
+  })
+
+  it('FILL_ALERT_TOKEN_THRESHOLD env override flows through', async () => {
+    const original = process.env.FILL_ALERT_TOKEN_THRESHOLD
+    try {
+      process.env.FILL_ALERT_TOKEN_THRESHOLD = '50000'
+      vi.resetModules()
+      const { FILL_ALERT_TOKEN_THRESHOLD: fresh } = await import('./config')
+      expect(fresh).toBe(50000)
+    } finally {
+      if (original === undefined) delete process.env.FILL_ALERT_TOKEN_THRESHOLD
+      else process.env.FILL_ALERT_TOKEN_THRESHOLD = original
+      vi.resetModules()
+    }
+  })
+
+  it('FILL_ALERT_* env vars appear in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_ALERT_ERROR_RATE_THRESHOLD')
+    expect(ENV_VAR_NAMES).toContain('FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS')
+    expect(ENV_VAR_NAMES).toContain('FILL_ALERT_TOKEN_THRESHOLD')
   })
 })
 

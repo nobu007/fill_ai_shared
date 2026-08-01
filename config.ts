@@ -435,6 +435,26 @@ export const BLOG_AUTO_AI_LIST_LIMIT = getEnvNumber('BLOG_AUTO_AI_LIST_LIMIT', 5
 /** Maximum recent duration samples retained per endpoint for P95/P99 metrics. */
 export const API_METRICS_DURATION_SAMPLE_LIMIT = getEnvNumber('API_METRICS_DURATION_SAMPLE_LIMIT', 100)
 
+/**
+ * Alert thresholds for /api/alerts/check (Constitution §2.4 — operational
+ * settings must be env-overridable). Previously hardcoded at module scope in
+ * src/lib/infra/alerts.ts as DEFAULT_THRESHOLDS; now centralised so production
+ * can tune SLA / cost sensitivity without a redeploy.
+ *
+ * - FILL_ALERT_ERROR_RATE_THRESHOLD: fraction (0..1) of 4xx+5xx / total_requests
+ *   above which an endpoint emits error_rate alert. Default 0.05 (5%).
+ * - FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS: P99 latency in ms above which an
+ *   endpoint emits slow_response alert. Default 2000 (2s) — matches PURPOSE
+ *   Phase 5 T-011 SLA direction (Fill API P99 < 1.5s in production; alerts at
+ *   2s give ~33% grace margin).
+ * - FILL_ALERT_TOKEN_THRESHOLD: total tokens (input+output) per-model per
+ *   uptime period above which a model emits cost_anomaly alert.
+ *   Default 100000 (100k tokens).
+ */
+export const FILL_ALERT_ERROR_RATE_THRESHOLD = getEnvNumber('FILL_ALERT_ERROR_RATE_THRESHOLD', 0.05)
+export const FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS = getEnvNumber('FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS', 2000)
+export const FILL_ALERT_TOKEN_THRESHOLD = getEnvNumber('FILL_ALERT_TOKEN_THRESHOLD', 100000)
+
 // ─── Fill API Rate Limits ──────────────────────────────────
 /**
  * Maximum fill API requests per user within the rate limit window.
