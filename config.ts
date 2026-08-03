@@ -160,6 +160,36 @@ export const FILL_PARALLEL_PAGE_THRESHOLD = getEnvNumber('FILL_PARALLEL_PAGE_THR
 export const FILL_PARALLEL_CONCURRENCY = getEnvNumber('FILL_PARALLEL_CONCURRENCY', 4)
 
 /**
+ * Print-iframe cleanup delay (ms) for the DownloadOptions print action.
+ *
+ * Single source of truth replacing the module-local `setTimeout(..., 2000)`
+ * hardcoded in `src/app/(dashboard)/fill/components/DownloadOptions.tsx`.
+ *
+ * The download component opens a hidden `<iframe>` whose `contentWindow.print()`
+ * is invoked once the iframe's `onload` fires. The cleanup `setTimeout` defers
+ * `iframe.remove()` so the browser's print dialog has time to take ownership of
+ * the document before the iframe is detached (otherwise some browsers cancel
+ * the print job the moment the iframe disappears from the DOM).
+ *
+ * 2000 ms is generous on most platforms but could legitimately need to grow in
+ * environments with slow printers, large PDF documents, or contested CPU. The
+ * constant is exposed for env-var tuning rather than left inline per
+ * Constitution §2.4 ("All hardcoded values, magic numbers, and environment
+ * variable references must be aggregated to src/config.ts").
+ *
+ * Override per environment via `FILL_PRINT_IFRAME_CLEANUP_MS` env var.
+ *   FILL_PRINT_IFRAME_CLEANUP_MS=3000   # slow printer queue
+ *   FILL_PRINT_IFRAME_CLEANUP_MS=500    # known-fast browser/OS combo
+ *
+ * Defaults to 2000 ms — matches the pre-centralization hard-coded constant so
+ * behaviour is unchanged on upgrade.
+ */
+export const FILL_PRINT_IFRAME_CLEANUP_MS = getEnvNumber(
+  'FILL_PRINT_IFRAME_CLEANUP_MS',
+  2000,
+)
+
+/**
  * PDF extraction cache: max entries (LRU cap).
  *
  * Single source of truth consumed by `src/lib/pdf/extraction-cache.ts`.
