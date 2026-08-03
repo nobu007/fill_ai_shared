@@ -261,6 +261,54 @@ export const FILL_RULE_MATCH_THRESHOLD = getEnvNumber('FILL_RULE_MATCH_THRESHOLD
  */
 export const FILL_DEFAULT_MATCHER_ID = getEnvWithDefault('FILL_DEFAULT_MATCHER_ID', 'rule-based')
 
+/**
+ * UI toast / saved-indicator auto-dismiss timeout (ms) for the dashboard.
+ *
+ * Single source of truth replacing the module-local `setTimeout(..., 3000)`
+ * hardcoded in:
+ *   - src/app/(dashboard)/sites/hooks/use-sites.ts (showToast)
+ *   - src/app/(dashboard)/sites/[id]/info/page.tsx (copyScript)
+ *   - src/app/(dashboard)/settings/components/ProfileSection.tsx
+ *       (handleSaveProfile "saved" indicator)
+ *   - src/app/(dashboard)/settings/components/InviteSection.tsx
+ *       (handleCopyUrl "copied" chip)
+ *
+ * Toast / saved-indicator messages in the dashboard auto-dismiss after this
+ * delay so users get feedback without needing to manually close the chip.
+ * 3000 ms is generous enough for a quick read; reduce for snappier UX or
+ * extend if accessibility reading-time studies show users need longer.
+ *
+ * Override per environment via `UI_TOAST_TIMEOUT_MS` env var.
+ *   UI_TOAST_TIMEOUT_MS=5000   # longer read time (a11y-tuned)
+ *   UI_TOAST_TIMEOUT_MS=1500   # snappier default
+ *
+ * Defaults to 3000 ms — matches the pre-centralization hard-coded constant so
+ * behaviour is unchanged on upgrade.
+ */
+export const UI_TOAST_TIMEOUT_MS = getEnvNumber('UI_TOAST_TIMEOUT_MS', 3000)
+
+/**
+ * UI sync-result-message auto-dismiss timeout (ms) for the WordPress sites
+ * dashboard.
+ *
+ * Single source of truth replacing the module-local `setTimeout(..., 8000)`
+ * hardcoded in `src/app/(dashboard)/sites/hooks/use-sites.ts` (handleSync
+ * finally block — the "✅ N件の新規・更新記事を同期しました" status line).
+ *
+ * Sync-result messages stay up longer than toast chips because they often
+ * contain numeric summaries the user wants to read (e.g. "全120件") before
+ * the next sync. 8000 ms is generous on most platforms but could legitimately
+ * need to grow in environments with slow connections or contested CPU.
+ *
+ * Override per environment via `UI_SYNC_MESSAGE_TIMEOUT_MS` env var.
+ *   UI_SYNC_MESSAGE_TIMEOUT_MS=15000   # slow-reading users / a11y
+ *   UI_SYNC_MESSAGE_TIMEOUT_MS=4000    # fast-paced power users
+ *
+ * Defaults to 8000 ms — matches the pre-centralization hard-coded constant
+ * so behaviour is unchanged on upgrade.
+ */
+export const UI_SYNC_MESSAGE_TIMEOUT_MS = getEnvNumber('UI_SYNC_MESSAGE_TIMEOUT_MS', 8000)
+
 // Phase Engine settings are defined in src/lib/engine/engine-config.ts
 // to avoid circular dependencies with fill_ai_shared.
 

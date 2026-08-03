@@ -73,6 +73,12 @@ import {
   FILL_ALERT_ERROR_RATE_THRESHOLD,
   FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS,
   FILL_ALERT_TOKEN_THRESHOLD,
+  // UI_*_TIMEOUT_MS env vars are loaded only via dynamic `import('./config')`
+  // inside the 'UI Toast / Sync-Message Timeout Configuration' describe block
+  // below (afterEach isolation requires vi.resetModules() before each test
+  // that touches process.env.UI_*_TIMEOUT_MS). They are intentionally not
+  // imported at module scope so the static getters do not capture the
+  // current process.env value before the test's afterEach hook runs.
 } from './config'
 
 describe('Validation Limits (Constitution §4.5)', () => {
@@ -1021,6 +1027,123 @@ describe('Default Matcher ID Configuration (matcher-registry.ts DEFAULT_MATCHER_
   it('FILL_DEFAULT_MATCHER_ID env var appears in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
     const { ENV_VAR_NAMES } = await import('./env')
     expect(ENV_VAR_NAMES).toContain('FILL_DEFAULT_MATCHER_ID')
+  })
+})
+
+// ── UI_*_TIMEOUT_MS (Constitution §2.4 — centralised from
+// module-local `setTimeout(..., 3000|2000|8000)` literals in 4 dashboard
+// source files: use-sites.ts, sites/[id]/info/page.tsx, ProfileSection.tsx,
+// InviteSection.tsx). The previous wave shipped FILL_PRINT_IFRAME_CLEANUP_MS
+// (CYCLE=223); this block extends the same §2.4 pattern to the dashboard
+// auto-dismiss feedback chips so all setTimeout-literal magic numbers in
+// user-facing surface code have a single source of truth.
+describe('UI Toast / Sync-Message Timeout Configuration (dashboard setTimeout literals)', () => {
+  const originalToast = process.env.UI_TOAST_TIMEOUT_MS
+  const originalSync = process.env.UI_SYNC_MESSAGE_TIMEOUT_MS
+
+  afterEach(() => {
+    if (originalToast === undefined) {
+      delete process.env.UI_TOAST_TIMEOUT_MS
+    } else {
+      process.env.UI_TOAST_TIMEOUT_MS = originalToast
+    }
+    if (originalSync === undefined) {
+      delete process.env.UI_SYNC_MESSAGE_TIMEOUT_MS
+    } else {
+      process.env.UI_SYNC_MESSAGE_TIMEOUT_MS = originalSync
+    }
+    vi.resetModules()
+  })
+
+  it('UI_TOAST_TIMEOUT_MS defaults to 3000 (use-sites.ts + sites/[id]/info + ProfileSection + InviteSection pre-centralization literals)', async () => {
+    delete process.env.UI_TOAST_TIMEOUT_MS
+    vi.resetModules()
+    const { UI_TOAST_TIMEOUT_MS: fresh } = await import('./config')
+    expect(fresh).toBe(3000)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('UI_SYNC_MESSAGE_TIMEOUT_MS defaults to 8000 (use-sites.ts handleSync finally block)', async () => {
+    delete process.env.UI_SYNC_MESSAGE_TIMEOUT_MS
+    vi.resetModules()
+    const { UI_SYNC_MESSAGE_TIMEOUT_MS: fresh } = await import('./config')
+    expect(fresh).toBe(8000)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('UI_TOAST_TIMEOUT_MS env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.UI_TOAST_TIMEOUT_MS = '5000'
+    vi.resetModules()
+    const { UI_TOAST_TIMEOUT_MS: fresh } = await import('./config')
+    expect(fresh).toBe(5000)
+  })
+
+  it('UI_SYNC_MESSAGE_TIMEOUT_MS env override flows through', async () => {
+    process.env.UI_SYNC_MESSAGE_TIMEOUT_MS = '15000'
+    vi.resetModules()
+    const { UI_SYNC_MESSAGE_TIMEOUT_MS: fresh } = await import('./config')
+    expect(fresh).toBe(15000)
+  })
+
+  it('UI_*_TIMEOUT_MS env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('UI_TOAST_TIMEOUT_MS')
+    expect(ENV_VAR_NAMES).toContain('UI_SYNC_MESSAGE_TIMEOUT_MS')
+  })
+
+  it('§2.4 regression — 4 dashboard files import the centralised constants and contain no raw 2000|3000|8000 setTimeout-literal magic numbers', async () => {
+    // File-reading regression test: if a future refactor reintroduces a
+    // hardcoded setTimeout literal in any of the 4 dashboard source files
+    // covered by the CYCLE=227 §2.4 wave, this test fails before commit.
+    // Pattern matches `setTimeout(<anything>, 2000|3000|8000)` and asserts
+    // both (a) the centralised constant is imported, and (b) no raw
+    // setTimeout-literal with the old magic numbers remains in the file.
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const files = [
+      'src/app/(dashboard)/sites/hooks/use-sites.ts',
+      'src/app/(dashboard)/sites/[id]/info/page.tsx',
+      'src/app/(dashboard)/settings/components/ProfileSection.tsx',
+      'src/app/(dashboard)/settings/components/InviteSection.tsx',
+    ] as const
+
+    for (const rel of files) {
+      const abs = path.resolve(process.cwd(), rel)
+      const source = await fs.readFile(abs, 'utf8')
+
+      // (a) Every migrated file must import at least one UI_*_TIMEOUT_MS
+      //     constant from @/shared/config. use-sites.ts imports BOTH
+      //     (UI_TOAST_TIMEOUT_MS for showToast, UI_SYNC_MESSAGE_TIMEOUT_MS
+      //     for handleSync). The other three files only need UI_TOAST_TIMEOUT_MS.
+      //     Regex matches EITHER:
+      //       - named import BEFORE `from` (TypeScript default style):
+      //         `import { UI_TOAST_TIMEOUT_MS } from '@/shared/config'`
+      //       - named import AFTER `from` (rare reverse-style):
+      //         `import { ... } from '@/shared/config' where the const
+      //         appears inside the same `@/shared/config` named-import block.
+      //     We check both forms so a future reformatting of the import line
+      //     does not break the regression test.
+      const importsFromConfig = source.match(
+        /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+      )
+      const importBlock = importsFromConfig?.[1] ?? ''
+      expect(
+        importBlock,
+        `${rel}: must import a UI_*_TIMEOUT_MS constant from @/shared/config (got import block: '${importBlock}')`,
+      ).toMatch(/UI_(TOAST|SYNC_MESSAGE)_TIMEOUT_MS/)
+
+      // (b) No raw setTimeout-literal with 2000|3000|8000 remains in the file.
+      //     Match `setTimeout(..., 2000)`, `setTimeout(..., 3000)`,
+      //     `setTimeout(..., 8000)`. Whitespace-tolerant.
+      const literalMatch = source.match(/setTimeout\([^,]+,\s*(2000|3000|8000)\s*\)/)
+      expect(
+        literalMatch,
+        `${rel}: must not contain a raw setTimeout literal with magic number 2000|3000|8000 (found: ${literalMatch?.[0] ?? 'none'}). Use the centralised UI_*_TIMEOUT_MS constant from @/shared/config.`,
+      ).toBeNull()
+    }
   })
 })
 
