@@ -1133,6 +1133,27 @@ export const TEMPLATES_RATE_LIMIT_MAX = getEnvNumber('TEMPLATES_RATE_LIMIT_MAX',
  */
 export const TEMPLATES_RATE_LIMIT_WINDOW_MS = getEnvNumber('TEMPLATES_RATE_LIMIT_WINDOW_MS', 60000)
 
+/**
+ * Maximum length of a user-supplied template `name` field on the Core Mission
+ * templates write surface (POST /api/templates). Single source of truth
+ * replacing the module-local `MAX_TEMPLATE_NAME_LENGTH = 120` literal in
+ *   - src/app/api/templates/route.ts (POST body validation, line ~10 + ~103)
+ *
+ * The 120-char ceiling mirrors typical form-input UX conventions: long enough
+ * for descriptive Japanese + English names (e.g. "2025年度 契約書_顧客A_v2"),
+ * short enough that the `name` column on the dashboard list view does not
+ * overflow its 1-line layout. Tightening this to 80 would force users to
+ * abbreviate; loosening to 200+ would break the templates-list column width.
+ *
+ * Override per environment via `TEMPLATES_NAME_MAX_LENGTH` env var.
+ *   TEMPLATES_NAME_MAX_LENGTH=80     # stricter (e.g. mobile-first UX)
+ *   TEMPLATES_NAME_MAX_LENGTH=200    # more permissive (e.g. power-user admin)
+ *
+ * Defaults to 120 — matches the pre-centralization hard-coded constant so
+ * behaviour is unchanged on upgrade.
+ */
+export const TEMPLATES_NAME_MAX_LENGTH = getEnvNumber('TEMPLATES_NAME_MAX_LENGTH', 120)
+
 // ─── Prompts Rate Limits ────────────────────────────────────
 /**
  * Maximum prompts API write requests per user within the rate limit window.

@@ -1147,6 +1147,88 @@ describe('UI Toast / Sync-Message Timeout Configuration (dashboard setTimeout li
   })
 })
 
+describe('Template Name Length Configuration (Constitution §2.4)', () => {
+  // CYCLE=228 regression tests — centralize the `MAX_TEMPLATE_NAME_LENGTH = 120`
+  // literal in src/app/api/templates/route.ts to the @/shared/config single
+  // source of truth. Mirrors the UI_*_TIMEOUT_MS pattern (CYCLE=227) so that
+  // a future tuning of the template-name cap can be deployed per-environment
+  // via the TEMPLATES_NAME_MAX_LENGTH env var without a code change.
+  const originalName = process.env.TEMPLATES_NAME_MAX_LENGTH
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.TEMPLATES_NAME_MAX_LENGTH
+    } else {
+      process.env.TEMPLATES_NAME_MAX_LENGTH = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('TEMPLATES_NAME_MAX_LENGTH defaults to 120 (templates/route.ts pre-centralization literal)', async () => {
+    delete process.env.TEMPLATES_NAME_MAX_LENGTH
+    vi.resetModules()
+    const { TEMPLATES_NAME_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(120)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('TEMPLATES_NAME_MAX_LENGTH env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.TEMPLATES_NAME_MAX_LENGTH = '200'
+    vi.resetModules()
+    const { TEMPLATES_NAME_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(200)
+  })
+
+  it('TEMPLATES_NAME_MAX_LENGTH env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('TEMPLATES_NAME_MAX_LENGTH')
+  })
+
+  it('§2.4 regression — templates/route.ts imports TEMPLATES_NAME_MAX_LENGTH from @/shared/config and no longer carries the raw 120 literal', async () => {
+    // File-reading regression test: if a future refactor reintroduces the
+    // hardcoded `MAX_TEMPLATE_NAME_LENGTH = 120` literal in the templates
+    // route, or removes the @/shared/config import, this test fails before
+    // commit. Mirrors the CYCLE=227 setTimeout-literal regression pattern.
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const rel = 'src/app/api/templates/route.ts'
+    const abs = path.resolve(process.cwd(), rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    // (a) The migrated file must import TEMPLATES_NAME_MAX_LENGTH from
+    //     @/shared/config. Regex matches a named import within the same
+    //     `@/shared/config` import block (so the test does not break if
+    //     the import is re-ordered or the import line is reformatted).
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import TEMPLATES_NAME_MAX_LENGTH from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/TEMPLATES_NAME_MAX_LENGTH/)
+
+    // (b) No raw `MAX_TEMPLATE_NAME_LENGTH = 120` literal remains in the
+    //     file. The pre-centralization constant declaration is exactly
+    //     `const MAX_TEMPLATE_NAME_LENGTH = 120`; the use site at
+    //     `name.length > MAX_TEMPLATE_NAME_LENGTH` would also be caught
+    //     here. Match either the declaration or the standalone use of
+    //     the obsolete identifier.
+    const declarationMatch = source.match(/MAX_TEMPLATE_NAME_LENGTH\s*=\s*120/)
+    expect(
+      declarationMatch,
+      `${rel}: must not redeclare a local MAX_TEMPLATE_NAME_LENGTH = 120 literal (found: ${declarationMatch?.[0] ?? 'none'}). Use the centralised TEMPLATES_NAME_MAX_LENGTH from @/shared/config.`,
+    ).toBeNull()
+    const staleUseMatch = source.match(/\bMAX_TEMPLATE_NAME_LENGTH\b/)
+    expect(
+      staleUseMatch,
+      `${rel}: must not reference the obsolete MAX_TEMPLATE_NAME_LENGTH identifier (found: ${staleUseMatch?.[0] ?? 'none'}). Use the centralised TEMPLATES_NAME_MAX_LENGTH from @/shared/config.`,
+    ).toBeNull()
+  })
+})
+
 describe('Stripe Subscription Rate Limits (Constitution §1.2 Safety)', () => {
   // CYCLE=196 regression tests — guarantee the new STRIPE_CHECKOUT_RATE_LIMIT_*
   // and STRIPE_CANCEL_RATE_LIMIT_* defaults match the route-level rate-limiter
