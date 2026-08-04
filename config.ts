@@ -1189,9 +1189,14 @@ export const TEMPLATES_RATE_LIMIT_WINDOW_MS = getEnvNumber('TEMPLATES_RATE_LIMIT
 
 /**
  * Maximum length of a user-supplied template `name` field on the Core Mission
- * templates write surface (POST /api/templates). Single source of truth
+ * templates write surface (POST /api/templates + dashboard SaveTemplateButton
+ * client-side <input maxLength={...}> enforcement). Single source of truth
  * replacing the module-local `MAX_TEMPLATE_NAME_LENGTH = 120` literal in
  *   - src/app/api/templates/route.ts (POST body validation, line ~10 + ~103)
+ *   - src/app/(dashboard)/fill/components/SaveTemplateButton.tsx (HTML
+ *     maxLength attribute on the template-name <input>, line ~70 — CYCLE=241
+ *     migration; previously `maxLength={120}` drifted silently from the API
+ *     validator and would have blocked any future bump at the UI layer).
  *
  * The 120-char ceiling mirrors typical form-input UX conventions: long enough
  * for descriptive Japanese + English names (e.g. "2025年度 契約書_顧客A_v2"),
