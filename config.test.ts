@@ -1801,3 +1801,92 @@ describe('Saved-Value Preview Max Chars Configuration (Constitution §2.4)', () 
     ).toBeNull()
   })
 })
+
+describe('Fill History Random ID Length Configuration (Constitution §2.4)', () => {
+  // CYCLE=240 regression tests — centralize the
+  // `Math.random().toString(36).slice(2, 8)` literal in
+  // src/app/(dashboard)/fill/components/FillHistory.tsx to the
+  // @/shared/config single source of truth. Mirrors the
+  // FILL_SAVED_VALUE_PREVIEW_MAX_CHARS pattern (CYCLE=239) so a future
+  // tuning of the local fill-history entry ID suffix length can be
+  // deployed per-environment via the FILL_HISTORY_RANDOM_ID_LENGTH env
+  // var without a code change.
+  const originalName = process.env.FILL_HISTORY_RANDOM_ID_LENGTH
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_HISTORY_RANDOM_ID_LENGTH
+    } else {
+      process.env.FILL_HISTORY_RANDOM_ID_LENGTH = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_HISTORY_RANDOM_ID_LENGTH defaults to 6 (FillHistory.tsx pre-centralization literal)', async () => {
+    delete process.env.FILL_HISTORY_RANDOM_ID_LENGTH
+    vi.resetModules()
+    const { FILL_HISTORY_RANDOM_ID_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(6)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('FILL_HISTORY_RANDOM_ID_LENGTH env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_HISTORY_RANDOM_ID_LENGTH = '10'
+    vi.resetModules()
+    const { FILL_HISTORY_RANDOM_ID_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(10)
+  })
+
+  it('FILL_HISTORY_RANDOM_ID_LENGTH env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_HISTORY_RANDOM_ID_LENGTH')
+  })
+
+  it('§2.4 regression — FillHistory.tsx imports FILL_HISTORY_RANDOM_ID_LENGTH from @/shared/config and no longer carries a hardcoded slice(2, 8) literal', async () => {
+    // File-reading regression test: if a future refactor reintroduces a
+    // hardcoded `slice(2, 8)` literal in the dashboard FillHistory
+    // component, or removes the @/shared/config import, this test fails
+    // before commit. Mirrors the CYCLE=235/239 file-reading pattern used
+    // for FILL_HISTORY_MAX_ITEMS and FILL_SAVED_VALUE_PREVIEW_MAX_CHARS.
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const rel = 'src/app/(dashboard)/fill/components/FillHistory.tsx'
+    // This test is invoked both from the parent workspace and directly
+    // from the src/shared submodule. Resolve the parent root explicitly
+    // in the latter case so the source-level §2.4 guard is stable in
+    // both contexts.
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    // (a) The migrated file must import FILL_HISTORY_RANDOM_ID_LENGTH
+    //     from @/shared/config. Regex matches a named import within the
+    //     same `@/shared/config` import block (so the test does not break
+    //     if the import is re-ordered or the import line is reformatted).
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import FILL_HISTORY_RANDOM_ID_LENGTH from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/FILL_HISTORY_RANDOM_ID_LENGTH/)
+
+    // (b) No raw `.slice(2, 8)` literal remains in the file. The
+    //     pre-centralization id-generation expression was exactly
+    //     `` `${Date.now()}-${Math.random().toString(36).slice(2, 8)}` ``;
+    //     the constant end-offset (8) must now flow through
+    //     FILL_HISTORY_RANDOM_ID_LENGTH. The centralised form is
+    //     `.slice(2, 2 + FILL_HISTORY_RANDOM_ID_LENGTH)` so we look for
+    //     the *hardcoded* `2, 8)` form rather than the variable form.
+    const staleSliceArg = source.match(/\.slice\(\s*2\s*,\s*8\s*\)/)
+    expect(
+      staleSliceArg,
+      `${rel}: must not retain a hardcoded '.slice(2, 8)' literal (found: ${staleSliceArg?.[0] ?? 'none'}). Use the centralised FILL_HISTORY_RANDOM_ID_LENGTH from @/shared/config.`,
+    ).toBeNull()
+  })
+})

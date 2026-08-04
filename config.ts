@@ -107,6 +107,23 @@ export const FILL_CORRECTION_SESSION_ID_MAX_LENGTH = getEnvNumber('FILL_CORRECTI
 /** Maximum locally retained fill-history entries (Constitution §2.4). */
 export const FILL_HISTORY_MAX_ITEMS = getEnvNumber('FILL_HISTORY_MAX_ITEMS', 50)
 /**
+ * Length of the random suffix appended to locally-generated fill-history
+ * entry identifiers (Constitution §2.4).
+ *
+ * The local fill-history feature in `src/app/(dashboard)/fill/components/
+ * FillHistory.tsx` mints each entry's `id` as
+ * `` `${Date.now()}-${Math.random().toString(36).slice(2, 2 + N)}` ``
+ * where `N` is this constant. With base-36 random characters the default
+ * `6` suffix yields ~31 bits of entropy per ID — comfortably below
+ * collision risk for the `FILL_HISTORY_MAX_ITEMS`-bounded local ring
+ * buffer (≤ 50 entries) but short enough that the rendered ID stays
+ * human-readable in dev-tools / Supabase row inspection. Centralizing
+ * this literal here means ops can raise it (collision-hardening for a
+ * hypothetical high-frequency local-history regime) or lower it (slimmer
+ * IDs in audit logs) without touching the component code.
+ */
+export const FILL_HISTORY_RANDOM_ID_LENGTH = getEnvNumber('FILL_HISTORY_RANDOM_ID_LENGTH', 6)
+/**
  * Maximum characters shown for a saved-data value preview chip in the
  * DataStep "saved data" picker. Values longer than this are truncated
  * with an ellipsis (`…`) and the full value is preserved via the
