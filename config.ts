@@ -157,6 +157,32 @@ export const FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT = getEnvNumber(
   100,
 )
 /**
+ * Number of decimal digits used to normalize PDF field coordinate bounds
+ * when computing structural fingerprints for template matching (Core Mission).
+ *
+ * Two call sites share this constant via §2.4 single source of truth:
+ *   - src/lib/pdf/template-service.ts (server-side, post-`Number(value.toFixed(...))`
+ *     fingerprint normalization that drives template-save / template-match
+ *     equality checks against `MappingStep`'s stored overrides)
+ *   - src/app/(dashboard)/fill/components/MappingStep.tsx (client-side,
+ *     `normalizeCoordinate` called inside `documentFingerprint` to compute
+ *     the same fingerprint over the live field set so client + server agree)
+ *
+ * The default `3` decimal digits (~1/1000 of a PDF point = ~1/720 inch at
+ * 72dpi) is more than enough resolution for any human-meaningful PDF
+ * coordinate difference, while avoiding float-drift noise (e.g. 72.0000001
+ * vs 72.0) that would otherwise break fingerprint equality and silently
+ * skip a "saved template" match. Centralizing here means a future bump
+ * (e.g. 4 for higher-resolution input, 2 for noisy OCR-derived bounds)
+ * can be deployed per-environment without coordinating two PRs.
+ *
+ * Centralized here per Constitution §2.4 (CYCLE=241).
+ */
+export const FILL_COORDINATE_PRECISION = getEnvNumber(
+  'FILL_COORDINATE_PRECISION',
+  3,
+)
+/**
  * Fill API fallback model chain (Constitution §3.2 + §1.3.1).
  *
  * Default order — read top-to-bottom — tries each provider in sequence

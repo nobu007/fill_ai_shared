@@ -1988,3 +1988,116 @@ describe('Saved-Template Confidence Percent Configuration (Constitution §2.4)',
     ).toBeNull()
   })
 })
+
+describe('Coordinate Precision Configuration (Constitution §2.4)', () => {
+  // CYCLE=241 regression tests — centralize the `COORDINATE_PRECISION = 3`
+  // literal in src/lib/pdf/template-service.ts (server-side template fingerprint
+  // normalization) AND the literal `toFixed(3)` call in
+  // src/app/(dashboard)/fill/components/MappingStep.tsx (client-side document
+  // fingerprint) to the @/shared/config single source of truth. Mirrors the
+  // FILL_HISTORY_MAX_ITEMS (CYCLE=235) / FILL_SAVED_VALUE_PREVIEW_MAX_CHARS
+  // (CYCLE=239) / FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT (CYCLE=240) pattern
+  // so a future tuning of the fingerprint-precision cap can be deployed
+  // per-environment via the FILL_COORDINATE_PRECISION env var without a
+  // code change. CRITICAL: client + server MUST agree on the precision,
+  // otherwise documentFingerprint (client) != templateFingerprint (server)
+  // and template matching silently fails.
+  const originalName = process.env.FILL_COORDINATE_PRECISION
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_COORDINATE_PRECISION
+    } else {
+      process.env.FILL_COORDINATE_PRECISION = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_COORDINATE_PRECISION defaults to 3 (pre-centralization literal in template-service.ts + MappingStep.tsx)', async () => {
+    delete process.env.FILL_COORDINATE_PRECISION
+    vi.resetModules()
+    const { FILL_COORDINATE_PRECISION: fresh } = await import('./config')
+    expect(fresh).toBe(3)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+    expect(fresh).toBeLessThanOrEqual(10) // sanity: toFixed accepts 0..100
+  })
+
+  it('FILL_COORDINATE_PRECISION env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_COORDINATE_PRECISION = '4'
+    vi.resetModules()
+    const { FILL_COORDINATE_PRECISION: fresh } = await import('./config')
+    expect(fresh).toBe(4)
+  })
+
+  it('FILL_COORDINATE_PRECISION env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_COORDINATE_PRECISION')
+  })
+
+  it('§2.4 regression — template-service.ts + MappingStep.tsx both import FILL_COORDINATE_PRECISION from @/shared/config (no raw COORDINATE_PRECISION=3 declaration AND no raw toFixed(3) literal)', async () => {
+    // Two-file file-reading regression: a future refactor that reintroduces
+    // either the server-side `const COORDINATE_PRECISION = 3` declaration
+    // OR the client-side `toFixed(3)` literal would silently desync the
+    // client and server fingerprint precision and break template matching.
+    // Both must flow through FILL_COORDINATE_PRECISION from @/shared/config.
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+
+    // (1) Server-side file: src/lib/pdf/template-service.ts
+    {
+      const rel = 'src/lib/pdf/template-service.ts'
+      const abs = path.resolve(workspaceRoot, rel)
+      const source = await fs.readFile(abs, 'utf8')
+
+      const importsFromConfig = source.match(
+        /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+      )
+      const importBlock = importsFromConfig?.[1] ?? ''
+      expect(
+        importBlock,
+        `${rel}: must import FILL_COORDINATE_PRECISION from @/shared/config (got import block: '${importBlock}')`,
+      ).toMatch(/FILL_COORDINATE_PRECISION/)
+
+      const declarationMatch = source.match(
+        /\bconst\s+COORDINATE_PRECISION\s*=\s*[0-9]+/,
+      )
+      expect(
+        declarationMatch,
+        `${rel}: must not redeclare a local COORDINATE_PRECISION literal (found: ${declarationMatch?.[0] ?? 'none'}). Use the centralised FILL_COORDINATE_PRECISION from @/shared/config.`,
+      ).toBeNull()
+
+      const staleUseMatch = source.match(/\bCOORDINATE_PRECISION\b/)
+      expect(
+        staleUseMatch,
+        `${rel}: must not reference the obsolete COORDINATE_PRECISION identifier (found: ${staleUseMatch?.[0] ?? 'none'}). Use the centralised FILL_COORDINATE_PRECISION from @/shared/config.`,
+      ).toBeNull()
+    }
+
+    // (2) Client-side file: src/app/(dashboard)/fill/components/MappingStep.tsx
+    {
+      const rel = 'src/app/(dashboard)/fill/components/MappingStep.tsx'
+      const abs = path.resolve(workspaceRoot, rel)
+      const source = await fs.readFile(abs, 'utf8')
+
+      const importsFromConfig = source.match(
+        /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+      )
+      const importBlock = importsFromConfig?.[1] ?? ''
+      expect(
+        importBlock,
+        `${rel}: must import FILL_COORDINATE_PRECISION from @/shared/config (got import block: '${importBlock}')`,
+      ).toMatch(/FILL_COORDINATE_PRECISION/)
+
+      const literalMatch = source.match(/\.toFixed\(\s*3\s*\)/)
+      expect(
+        literalMatch,
+        `${rel}: must not carry a raw toFixed(3) literal (found: ${literalMatch?.[0] ?? 'none'}). Use the centralised FILL_COORDINATE_PRECISION from @/shared/config.`,
+      ).toBeNull()
+    }
+  })
+})
