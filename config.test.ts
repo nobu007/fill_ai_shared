@@ -1890,3 +1890,101 @@ describe('Fill History Random ID Length Configuration (Constitution §2.4)', () 
     ).toBeNull()
   })
 })
+
+describe('Saved-Template Confidence Percent Configuration (Constitution §2.4)', () => {
+  // CYCLE=240 regression tests — centralize the hardcoded
+  // `SAVED_TEMPLATE_CONFIDENCE_PERCENT = 100` literal in
+  // src/app/(dashboard)/fill/components/TemplateStep.tsx to the
+  // @/shared/config single source of truth. Mirrors the CYCLE=235 /
+  // CYCLE=239 pattern so a future UX experiment (e.g. surfacing a
+  // partial-confidence % derived from saved-template fingerprint
+  // entropy, or labelling the chip "operator-confirmed") can tune the
+  // value via the FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT env var without
+  // a code change. Default `100` preserves the pre-centralization
+  // TemplateStep rendering verbatim.
+  const originalName = process.env.FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT
+    } else {
+      process.env.FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT defaults to 100 (TemplateStep.tsx pre-centralization literal)', async () => {
+    delete process.env.FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT
+    vi.resetModules()
+    const { FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT: fresh } = await import('./config')
+    expect(fresh).toBe(100)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+    expect(fresh).toBeLessThanOrEqual(100)
+  })
+
+  it('FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT = '95'
+    vi.resetModules()
+    const { FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT: fresh } = await import('./config')
+    expect(fresh).toBe(95)
+  })
+
+  it('FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT')
+  })
+
+  it('§2.4 regression — TemplateStep.tsx imports FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT from @/shared/config and no longer carries a hardcoded `SAVED_TEMPLATE_CONFIDENCE_PERCENT = 100` literal', async () => {
+    // File-reading regression test: if a future refactor reintroduces
+    // a hardcoded `SAVED_TEMPLATE_CONFIDENCE_PERCENT` constant in the
+    // dashboard TemplateStep component, or removes the @/shared/config
+    // import, this test fails before commit. Mirrors the CYCLE=235 /
+    // CYCLE=239 file-reading regression pattern.
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const rel = 'src/app/(dashboard)/fill/components/TemplateStep.tsx'
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    // (a) The migrated file must import FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT
+    //     from @/shared/config. Regex matches a named import within the
+    //     same `@/shared/config` import block (so the test does not break
+    //     if the import is re-ordered or the import line is reformatted).
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT/)
+
+    // (b) No hardcoded `SAVED_TEMPLATE_CONFIDENCE_PERCENT = 100`
+    //     declaration remains in the file. The pre-centralization form
+    //     was exactly `const SAVED_TEMPLATE_CONFIDENCE_PERCENT = 100`;
+    //     that literal must now flow through
+    //     FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT.
+    const declarationMatch = source.match(
+      /\bconst\s+SAVED_TEMPLATE_CONFIDENCE_PERCENT\s*=\s*[0-9]+/,
+    )
+    expect(
+      declarationMatch,
+      `${rel}: must not redeclare a local SAVED_TEMPLATE_CONFIDENCE_PERCENT literal (found: ${declarationMatch?.[0] ?? 'none'}). Use the centralised FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT from @/shared/config.`,
+    ).toBeNull()
+
+    // (c) No stale identifier `SAVED_TEMPLATE_CONFIDENCE_PERCENT`
+    //     remains in the file as a use-site. Any reference to the
+    //     obsolete identifier should have been replaced with
+    //     FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT.
+    const staleUseMatch = source.match(/\bSAVED_TEMPLATE_CONFIDENCE_PERCENT\b/)
+    expect(
+      staleUseMatch,
+      `${rel}: must not reference the obsolete SAVED_TEMPLATE_CONFIDENCE_PERCENT identifier (found: ${staleUseMatch?.[0] ?? 'none'}). Use the centralised FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT from @/shared/config.`,
+    ).toBeNull()
+  })
+})

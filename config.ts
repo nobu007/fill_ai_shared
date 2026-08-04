@@ -136,6 +136,27 @@ export const FILL_SAVED_VALUE_PREVIEW_MAX_CHARS = getEnvNumber(
   12,
 )
 /**
+ * Confidence percentage rendered for the saved-template mapping chip in
+ * TemplateStep's "saved template reuse" surface. The chip displays
+ * `保存済みマッピング: 高信頼度（{N}%） — {count} 件` whenever a
+ * fingerprint-matched template is selected (CYCLE=213 T-03 deliverable).
+ *
+ * Templates are stored only after the user has reviewed and confirmed
+ * the mapping, so the confidence number reflects an operator-curated
+ * "trusted-by-construction" baseline rather than a per-field LLM score.
+ * The default `100` preserves the pre-centralization UX verbatim; the
+ * env override exists so future UX experiments (e.g. labelling the chip
+ * "operator-confirmed" or surfacing a partial-confidence % derived from
+ * the saved-template fingerprint entropy) can tune the value without a
+ * code change.
+ *
+ * Centralized here per Constitution §2.4.
+ */
+export const FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT = getEnvNumber(
+  'FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT',
+  100,
+)
+/**
  * Fill API fallback model chain (Constitution §3.2 + §1.3.1).
  *
  * Default order — read top-to-bottom — tries each provider in sequence
