@@ -102,6 +102,8 @@ export const FILL_OCR_MODEL = getEnvWithDefault('FILL_OCR_MODEL', 'glm-ocr')
 export const FILL_AUTO_APPLY_THRESHOLD = getEnvNumber('FILL_AUTO_APPLY_THRESHOLD', 0.8)
 /** Maximum prompt size for LLM mapping requests (Constitution §1.2 Stability — prevent resource exhaustion) */
 export const MAX_MAPPING_PROMPT_LENGTH = getEnvNumber('MAX_MAPPING_PROMPT_LENGTH', 100000)
+/** Maximum length of an optional correction session identifier (Constitution §2.4 / §4.5). */
+export const FILL_CORRECTION_SESSION_ID_MAX_LENGTH = getEnvNumber('FILL_CORRECTION_SESSION_ID_MAX_LENGTH', 128)
 /**
  * Fill API fallback model chain (Constitution §3.2 + §1.3.1).
  *
