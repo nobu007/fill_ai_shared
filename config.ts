@@ -312,6 +312,27 @@ export const FILL_EXTRACTION_CACHE_TTL_MS = getEnvNumber(
   30 * 60 * 1000,
 )
 /**
+ * PDF extraction cache: SHA-256 truncation length (hex chars) used for cache keys.
+ *
+ * Single source of truth consumed by `src/lib/pdf/extraction-cache.ts`
+ * (`ExtractionCache.hashKey` — `.digest('hex').slice(0, N)`). Defaults to 16
+ * hex chars (64 bits of entropy) — matches the pre-centralization hard-coded
+ * constant. The truncation length is the cache-collision probability knob:
+ *   16 hex chars = 64 bits = ~5×10^9 entries before a 50% birthday-paradox
+ *   collision; 32 hex chars = full SHA-256 (no truncation) = negligible
+ *   collision risk but 2× larger in-memory key footprint. Reduce for tighter
+ *   memory bounds; increase when the cache is expected to hold >10^9 entries
+ *   (effectively never for serverless workloads).
+ *
+ * Override per environment via `FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH` env var.
+ *   FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH=32   # full SHA-256, no truncation
+ *   FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH=8    # 32-bit truncation (debug only)
+ */
+export const FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH = getEnvNumber(
+  'FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH',
+  16,
+)
+/**
  * Confidence threshold separating "high confidence" from "low confidence" mappings.
  *
  * Single source of truth consumed by both `src/lib/pdf/accuracy-tracker.ts`

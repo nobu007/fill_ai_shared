@@ -909,6 +909,7 @@ describe('LLM Fallback Chain (Constitution §3.2 + §1.3.1)', () => {
 describe('PDF Extraction Cache Configuration (extraction-cache.ts defaults)', () => {
   const originalMax = process.env.FILL_EXTRACTION_CACHE_MAX_ENTRIES
   const originalTtl = process.env.FILL_EXTRACTION_CACHE_TTL_MS
+  const originalKeyHexLen = process.env.FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH
 
   afterEach(() => {
     if (originalMax === undefined) {
@@ -920,6 +921,11 @@ describe('PDF Extraction Cache Configuration (extraction-cache.ts defaults)', ()
       delete process.env.FILL_EXTRACTION_CACHE_TTL_MS
     } else {
       process.env.FILL_EXTRACTION_CACHE_TTL_MS = originalTtl
+    }
+    if (originalKeyHexLen === undefined) {
+      delete process.env.FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH
+    } else {
+      process.env.FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH = originalKeyHexLen
     }
     vi.resetModules()
   })
@@ -938,6 +944,13 @@ describe('PDF Extraction Cache Configuration (extraction-cache.ts defaults)', ()
     expect(FILL_EXTRACTION_CACHE_TTL_MS).toBe(30 * 60 * 1000)
   })
 
+  it('FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH defaults to 16 (extraction-cache hashKey .slice(0, 16) truncation)', async () => {
+    delete process.env.FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH
+    vi.resetModules()
+    const { FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH } = await import('./config')
+    expect(FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH).toBe(16)
+  })
+
   it('FILL_EXTRACTION_CACHE_MAX_ENTRIES env override is read at module load', async () => {
     process.env.FILL_EXTRACTION_CACHE_MAX_ENTRIES = '256'
     vi.resetModules()
@@ -952,10 +965,38 @@ describe('PDF Extraction Cache Configuration (extraction-cache.ts defaults)', ()
     expect(FILL_EXTRACTION_CACHE_TTL_MS).toBe(600000)
   })
 
+  it('FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH env override is read at module load', async () => {
+    process.env.FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH = '32'
+    vi.resetModules()
+    const { FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH } = await import('./config')
+    expect(FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH).toBe(32)
+  })
+
   it('both new env vars appear in the ENV_VAR_NAMES allowlist (safety gate)', async () => {
     const { ENV_VAR_NAMES } = await import('./env')
     expect(ENV_VAR_NAMES).toContain('FILL_EXTRACTION_CACHE_MAX_ENTRIES')
     expect(ENV_VAR_NAMES).toContain('FILL_EXTRACTION_CACHE_TTL_MS')
+    expect(ENV_VAR_NAMES).toContain('FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH')
+  })
+
+  it('extraction-cache.ts imports FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH from @/shared/config and contains no hardcoded .slice(0, 16) literal in hashKey', async () => {
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+    // Resolve via the config module URL. config.test.ts lives at
+    // src/shared/config.test.ts; the target file is at src/lib/pdf/extraction-cache.ts.
+    // From `src/shared/`, go up one level to `src/`, then into `lib/pdf/`.
+    const here = new URL(import.meta.url)
+    const sharedDir = path.dirname(here.pathname) // src/shared
+    const sourcePath = path.join(sharedDir, '..', 'lib', 'pdf', 'extraction-cache.ts')
+    const source = await fs.readFile(sourcePath, 'utf8')
+
+    // 1) Must import the centralized constant from @/shared/config
+    expect(source).toMatch(
+      /import\s*\{[^}]*\bFILL_EXTRACTION_CACHE_KEY_HEX_LENGTH\b[^}]*\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+
+    // 2) Must NOT contain a hardcoded .slice(0, 16) literal in the hashKey body
+    expect(source).not.toMatch(/\.slice\(\s*0\s*,\s*16\s*\)/)
   })
 })
 
