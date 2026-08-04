@@ -183,6 +183,25 @@ export const FILL_COORDINATE_PRECISION = getEnvNumber(
   3,
 )
 /**
+ * Render scale used by `renderPdfPagePreview` in `src/lib/pdf/enhancer.ts`
+ * when generating the before/after preview thumbnails in the EnhanceStep
+ * UI. The default `1.5` matches the pre-centralization literal in
+ * `enhancer.ts` and yields ~108 DPI previews at 72 DPI source, which is
+ * sharp enough for a thumbnail comparison without the payload cost of a
+ * full 2x render.
+ *
+ * Centralized here per Constitution §2.4 (CYCLE=242) so future tuning of
+ * the preview sharpness / payload tradeoff can be deployed per-environment
+ * via the `FILL_PREVIEW_RENDER_SCALE` env var without a code change. This
+ * is a client-side-only concern (the preview is rendered in the browser
+ * via pdfjs-dist into a canvas and exported to a data URL), so no server
+ * counterpart needs to agree — single surface, single source of truth.
+ */
+export const FILL_PREVIEW_RENDER_SCALE = getEnvNumber(
+  'FILL_PREVIEW_RENDER_SCALE',
+  1.5,
+)
+/**
  * Fill API fallback model chain (Constitution §3.2 + §1.3.1).
  *
  * Default order — read top-to-bottom — tries each provider in sequence

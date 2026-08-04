@@ -2101,3 +2101,80 @@ describe('Coordinate Precision Configuration (Constitution §2.4)', () => {
     }
   })
 })
+
+describe('Fill Preview Render Scale Configuration (Constitution §2.4)', () => {
+  // CYCLE=242 regression tests — centralize the `scale: number = 1.5`
+  // default-argument literal in src/lib/pdf/enhancer.ts (renderPdfPagePreview)
+  // to the @/shared/config single source of truth. Mirrors the
+  // FILL_HISTORY_MAX_ITEMS (CYCLE=235) / FILL_SAVED_VALUE_PREVIEW_MAX_CHARS
+  // (CYCLE=239) / FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT (CYCLE=240) /
+  // FILL_COORDINATE_PRECISION (CYCLE=241) pattern so a future tuning of the
+  // EnhanceStep before/after preview thumbnail sharpness / payload tradeoff
+  // can be deployed per-environment via the FILL_PREVIEW_RENDER_SCALE env
+  // var without a code change.
+  const originalName = process.env.FILL_PREVIEW_RENDER_SCALE
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_PREVIEW_RENDER_SCALE
+    } else {
+      process.env.FILL_PREVIEW_RENDER_SCALE = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_PREVIEW_RENDER_SCALE defaults to 1.5 (enhancer.ts renderPdfPagePreview pre-centralization literal)', async () => {
+    delete process.env.FILL_PREVIEW_RENDER_SCALE
+    vi.resetModules()
+    const { FILL_PREVIEW_RENDER_SCALE: fresh } = await import('./config')
+    expect(fresh).toBe(1.5)
+    expect(typeof fresh).toBe('number')
+    expect(fresh).toBeGreaterThan(0)
+    expect(fresh).toBeLessThanOrEqual(4) // sanity: 4x render is a heavy upper bound
+  })
+
+  it('FILL_PREVIEW_RENDER_SCALE env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_PREVIEW_RENDER_SCALE = '2'
+    vi.resetModules()
+    const { FILL_PREVIEW_RENDER_SCALE: fresh } = await import('./config')
+    expect(fresh).toBe(2)
+  })
+
+  it('FILL_PREVIEW_RENDER_SCALE env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_PREVIEW_RENDER_SCALE')
+  })
+
+  it('§2.4 regression — enhancer.ts imports FILL_PREVIEW_RENDER_SCALE from @/shared/config and no longer carries a hardcoded `scale: number = 1.5` default-argument literal', async () => {
+    // File-reading regression test: if a future refactor reintroduces a
+    // hardcoded `scale: number = 1.5` default-argument literal in
+    // src/lib/pdf/enhancer.ts (renderPdfPagePreview), or removes the
+    // @/shared/config import, this test fails before commit. Mirrors the
+    // CYCLE=235/239/240/241 file-reading pattern.
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+
+    const rel = 'src/lib/pdf/enhancer.ts'
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import FILL_PREVIEW_RENDER_SCALE from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/FILL_PREVIEW_RENDER_SCALE/)
+
+    const literalMatch = source.match(/scale\s*:\s*number\s*=\s*1\.5/)
+    expect(
+      literalMatch,
+      `${rel}: must not carry a hardcoded 'scale: number = 1.5' default-argument literal (found: ${literalMatch?.[0] ?? 'none'}). Use the centralised FILL_PREVIEW_RENDER_SCALE from @/shared/config.`,
+    ).toBeNull()
+  })
+})
