@@ -107,6 +107,18 @@ export const FILL_CORRECTION_SESSION_ID_MAX_LENGTH = getEnvNumber('FILL_CORRECTI
 /** Maximum locally retained fill-history entries (Constitution §2.4). */
 export const FILL_HISTORY_MAX_ITEMS = getEnvNumber('FILL_HISTORY_MAX_ITEMS', 50)
 /**
+ * Maximum characters shown for a saved-data value preview chip in the
+ * DataStep "saved data" picker. Values longer than this are truncated
+ * with an ellipsis (`…`) and the full value is preserved via the
+ * `title`/`aria-label` attributes for accessibility. Centralized here
+ * per Constitution §2.4 so designers can tune preview width without
+ * touching component code.
+ */
+export const FILL_SAVED_VALUE_PREVIEW_MAX_CHARS = getEnvNumber(
+  'FILL_SAVED_VALUE_PREVIEW_MAX_CHARS',
+  12,
+)
+/**
  * Fill API fallback model chain (Constitution §3.2 + §1.3.1).
  *
  * Default order — read top-to-bottom — tries each provider in sequence

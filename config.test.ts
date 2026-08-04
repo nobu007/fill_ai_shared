@@ -1708,3 +1708,96 @@ describe('Fill History Max Items Configuration (Constitution §2.4)', () => {
     ).toBeNull()
   })
 })
+
+describe('Saved-Value Preview Max Chars Configuration (Constitution §2.4)', () => {
+  // CYCLE=239 regression tests — centralize the `value.length > 12` /
+  // `value.slice(0, 12)` literal in src/app/(dashboard)/fill/components/
+  // DataStep.tsx to the @/shared/config single source of truth. Mirrors
+  // the FILL_HISTORY_MAX_ITEMS pattern (CYCLE=235) so a future tuning of
+  // the saved-data picker preview width can be deployed per-environment
+  // via the FILL_SAVED_VALUE_PREVIEW_MAX_CHARS env var without a code
+  // change.
+  const originalName = process.env.FILL_SAVED_VALUE_PREVIEW_MAX_CHARS
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_SAVED_VALUE_PREVIEW_MAX_CHARS
+    } else {
+      process.env.FILL_SAVED_VALUE_PREVIEW_MAX_CHARS = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_SAVED_VALUE_PREVIEW_MAX_CHARS defaults to 12 (DataStep.tsx pre-centralization literal)', async () => {
+    delete process.env.FILL_SAVED_VALUE_PREVIEW_MAX_CHARS
+    vi.resetModules()
+    const { FILL_SAVED_VALUE_PREVIEW_MAX_CHARS: fresh } = await import('./config')
+    expect(fresh).toBe(12)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('FILL_SAVED_VALUE_PREVIEW_MAX_CHARS env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_SAVED_VALUE_PREVIEW_MAX_CHARS = '24'
+    vi.resetModules()
+    const { FILL_SAVED_VALUE_PREVIEW_MAX_CHARS: fresh } = await import('./config')
+    expect(fresh).toBe(24)
+  })
+
+  it('FILL_SAVED_VALUE_PREVIEW_MAX_CHARS env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_SAVED_VALUE_PREVIEW_MAX_CHARS')
+  })
+
+  it('§2.4 regression — DataStep.tsx imports FILL_SAVED_VALUE_PREVIEW_MAX_CHARS from @/shared/config and no longer carries a hardcoded preview-length literal of 12', async () => {
+    // File-reading regression test: if a future refactor reintroduces a
+    // hardcoded `length > 12` / `slice(0, 12)` literal in the dashboard
+    // DataStep component, or removes the @/shared/config import, this
+    // test fails before commit. Mirrors the CYCLE=235 file-reading
+    // pattern used for FILL_HISTORY_MAX_ITEMS.
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const rel = 'src/app/(dashboard)/fill/components/DataStep.tsx'
+    // This test is invoked both from the parent workspace and directly
+    // from the src/shared submodule. Resolve the parent root explicitly
+    // in the latter case so the source-level §2.4 guard is stable in
+    // both contexts.
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    // (a) The migrated file must import FILL_SAVED_VALUE_PREVIEW_MAX_CHARS
+    //     from @/shared/config. Regex matches a named import within the
+    //     same `@/shared/config` import block (so the test does not break
+    //     if the import is re-ordered or the import line is reformatted).
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import FILL_SAVED_VALUE_PREVIEW_MAX_CHARS from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/FILL_SAVED_VALUE_PREVIEW_MAX_CHARS/)
+
+    // (b) No raw `length > 12` / `slice(0, 12)` literal remains in the
+    //     file. The pre-centralization render expression was exactly
+    //     `item.value.length > 12 ? item.value.slice(0, 12) + '…' :
+    //     item.value`; both the comparison constant and the slice
+    //     argument must now flow through the centralised constant.
+    //     Match either the >-comparison or the slice argument — both
+    //     would mean a future regression to the inline literal.
+    const lengthComparison = source.match(/\.length\s*>\s*12\b/)
+    expect(
+      lengthComparison,
+      `${rel}: must not retain a hardcoded '.length > 12' literal (found: ${lengthComparison?.[0] ?? 'none'}). Use the centralised FILL_SAVED_VALUE_PREVIEW_MAX_CHARS from @/shared/config.`,
+    ).toBeNull()
+    const sliceArg = source.match(/\.slice\(\s*0\s*,\s*12\s*\)/)
+    expect(
+      sliceArg,
+      `${rel}: must not retain a hardcoded '.slice(0, 12)' literal (found: ${sliceArg?.[0] ?? 'none'}). Use the centralised FILL_SAVED_VALUE_PREVIEW_MAX_CHARS from @/shared/config.`,
+    ).toBeNull()
+  })
+})
