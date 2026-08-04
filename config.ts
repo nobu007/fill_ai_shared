@@ -104,6 +104,8 @@ export const FILL_AUTO_APPLY_THRESHOLD = getEnvNumber('FILL_AUTO_APPLY_THRESHOLD
 export const MAX_MAPPING_PROMPT_LENGTH = getEnvNumber('MAX_MAPPING_PROMPT_LENGTH', 100000)
 /** Maximum length of an optional correction session identifier (Constitution §2.4 / §4.5). */
 export const FILL_CORRECTION_SESSION_ID_MAX_LENGTH = getEnvNumber('FILL_CORRECTION_SESSION_ID_MAX_LENGTH', 128)
+/** Maximum locally retained fill-history entries (Constitution §2.4). */
+export const FILL_HISTORY_MAX_ITEMS = getEnvNumber('FILL_HISTORY_MAX_ITEMS', 50)
 /**
  * Fill API fallback model chain (Constitution §3.2 + §1.3.1).
  *

@@ -1619,3 +1619,92 @@ describe('Prompts Rate Limits (Constitution §1.2 Safety + §4.6 PII)', () => {
     expect(ENV_VAR_NAMES).toContain('PROMPTS_RATE_LIMIT_WINDOW_MS')
   })
 })
+
+describe('Fill History Max Items Configuration (Constitution §2.4)', () => {
+  // CYCLE=235 regression tests — centralize the `MAX_ITEMS = 50` literal in
+  // src/app/(dashboard)/fill/components/FillHistory.tsx to the @/shared/config
+  // single source of truth. Mirrors the TEMPLATES_NAME_MAX_LENGTH pattern
+  // (CYCLE=228) so that a future tuning of the local fill-history retention
+  // cap can be deployed per-environment via the FILL_HISTORY_MAX_ITEMS env
+  // var without a code change.
+  const originalName = process.env.FILL_HISTORY_MAX_ITEMS
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_HISTORY_MAX_ITEMS
+    } else {
+      process.env.FILL_HISTORY_MAX_ITEMS = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_HISTORY_MAX_ITEMS defaults to 50 (FillHistory.tsx pre-centralization literal)', async () => {
+    delete process.env.FILL_HISTORY_MAX_ITEMS
+    vi.resetModules()
+    const { FILL_HISTORY_MAX_ITEMS: fresh } = await import('./config')
+    expect(fresh).toBe(50)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('FILL_HISTORY_MAX_ITEMS env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_HISTORY_MAX_ITEMS = '25'
+    vi.resetModules()
+    const { FILL_HISTORY_MAX_ITEMS: fresh } = await import('./config')
+    expect(fresh).toBe(25)
+  })
+
+  it('FILL_HISTORY_MAX_ITEMS env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_HISTORY_MAX_ITEMS')
+  })
+
+  it('§2.4 regression — FillHistory.tsx imports FILL_HISTORY_MAX_ITEMS from @/shared/config and no longer carries a local MAX_ITEMS=50 literal', async () => {
+    // File-reading regression test: if a future refactor reintroduces a
+    // hardcoded MAX_ITEMS=50 literal in the dashboard FillHistory
+    // component, or removes the @/shared/config import, this test fails
+    // before commit. Mirrors the CYCLE=227/228 file-reading pattern.
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const rel = 'src/app/(dashboard)/fill/components/FillHistory.tsx'
+    // This test is invoked both from the parent workspace and directly from
+    // the src/shared submodule. Resolve the parent root explicitly in the
+    // latter case so the source-level §2.4 guard is stable in both contexts.
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    // (a) The migrated file must import FILL_HISTORY_MAX_ITEMS from
+    //     @/shared/config. Regex matches a named import within the same
+    //     `@/shared/config` import block (so the test does not break if
+    //     the import is re-ordered or the import line is reformatted).
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import FILL_HISTORY_MAX_ITEMS from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/FILL_HISTORY_MAX_ITEMS/)
+
+    // (b) No raw `MAX_ITEMS = 50` literal remains in the file. The
+    //     pre-centralization constant declaration was exactly
+    //     `const MAX_ITEMS = 50`; the use site at
+    //     `items.slice(0, MAX_ITEMS)` would also be caught here. Match
+    //     either the declaration or the standalone use of the obsolete
+    //     identifier.
+    const declarationMatch = source.match(/\bMAX_ITEMS\s*=\s*50\b/)
+    expect(
+      declarationMatch,
+      `${rel}: must not redeclare a local MAX_ITEMS = 50 literal (found: ${declarationMatch?.[0] ?? 'none'}). Use the centralised FILL_HISTORY_MAX_ITEMS from @/shared/config.`,
+    ).toBeNull()
+    const staleUseMatch = source.match(/\bMAX_ITEMS\b/)
+    expect(
+      staleUseMatch,
+      `${rel}: must not reference the obsolete MAX_ITEMS identifier (found: ${staleUseMatch?.[0] ?? 'none'}). Use the centralised FILL_HISTORY_MAX_ITEMS from @/shared/config.`,
+    ).toBeNull()
+  })
+})
