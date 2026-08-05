@@ -84,6 +84,11 @@ export const ERROR_MESSAGES = {
   pdfTooLarge: (maxMB: number) => `PDFファイルは${maxMB}MB以内にしてください`,
   pdfTooManyPages: (max: number, actual: number) => `PDFは${max}ページ以内にしてください (${actual}ページ)`,
   promptTooLarge: (max: number, actual: number) => `プロンプトが長すぎます（最大${max}文字、${actual}文字）`,
+  // CM-002 §4.5 Input-Validation — caps FormData string fields before JSON.parse
+  userDataRawTooLarge: (max: number, actual: number) => `user_dataが長すぎます（最大${max}文字、${actual}文字）`,
+  mappingsRawTooLarge: (max: number, actual: number) => `mappingsが長すぎます（最大${max}文字、${actual}文字）`,
+  modelOverrideTooLarge: (max: number, actual: number) => `modelが長すぎます（最大${max}文字、${actual}文字）`,
+  matcherIdTooLarge: (max: number, actual: number) => `matcher_idが長すぎます（最大${max}文字、${actual}文字）`,
 
   // --- user-data route messages ---
   labelRequired: 'ラベルが必要です',

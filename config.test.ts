@@ -2219,3 +2219,248 @@ describe('Fill Preview Render Scale Configuration (Constitution §2.4)', () => {
     ).toBeNull()
   })
 })
+
+// ─── CM-002 §4.5 Input-Validation — Request size caps for /api/fill/process FormData fields ────────
+
+describe('CM-002 §4.5 Input-Validation — FILL_USER_DATA_RAW_MAX_LENGTH (Constitution §2.4 + §4.5)', () => {
+  // CYCLE=247 regression tests — cap the JSON-encoded `user_data` FormData
+  // field accepted by /api/fill/process (and /stream) so a maliciously
+  // oversized payload cannot exhaust V8 heap before validateRequiredUserData
+  // calls JSON.parse (Constitution §1.2 Safety + §4.5 Input Validation).
+  // Mirrors the FILL_SAVED_VALUE_PREVIEW_MAX_CHARS pattern (CYCLE=239).
+  const originalName = process.env.FILL_USER_DATA_RAW_MAX_LENGTH
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_USER_DATA_RAW_MAX_LENGTH
+    } else {
+      process.env.FILL_USER_DATA_RAW_MAX_LENGTH = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_USER_DATA_RAW_MAX_LENGTH defaults to 50000 (~500 typical user-data entries)', async () => {
+    delete process.env.FILL_USER_DATA_RAW_MAX_LENGTH
+    vi.resetModules()
+    const { FILL_USER_DATA_RAW_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(50000)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('FILL_USER_DATA_RAW_MAX_LENGTH env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_USER_DATA_RAW_MAX_LENGTH = '100000'
+    vi.resetModules()
+    const { FILL_USER_DATA_RAW_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(100000)
+  })
+
+  it('FILL_USER_DATA_RAW_MAX_LENGTH env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_USER_DATA_RAW_MAX_LENGTH')
+  })
+
+  it('§4.5 regression — fill-service.ts imports FILL_USER_DATA_RAW_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async () => {
+    // File-reading regression test: if a future refactor removes the
+    // @/shared/config import (and the FILL_USER_DATA_RAW_MAX_LENGTH use
+    // in validateFillInputs), this test fails before commit. Mirrors the
+    // CYCLE=235/239/240/241 file-reading pattern.
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+
+    const rel = 'src/lib/pdf/fill-service.ts'
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import FILL_USER_DATA_RAW_MAX_LENGTH from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/FILL_USER_DATA_RAW_MAX_LENGTH/)
+  })
+})
+
+describe('CM-002 §4.5 Input-Validation — FILL_MAPPINGS_RAW_MAX_LENGTH (Constitution §2.4 + §4.5)', () => {
+  // CYCLE=247 regression tests — cap the JSON-encoded `mappings` FormData
+  // field accepted by /api/fill/process (and /stream) so a maliciously
+  // oversized payload cannot exhaust V8 heap before parsePreConfirmedMappings
+  // calls JSON.parse. Mirrors FILL_USER_DATA_RAW_MAX_LENGTH pattern.
+  const originalName = process.env.FILL_MAPPINGS_RAW_MAX_LENGTH
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_MAPPINGS_RAW_MAX_LENGTH
+    } else {
+      process.env.FILL_MAPPINGS_RAW_MAX_LENGTH = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_MAPPINGS_RAW_MAX_LENGTH defaults to 100000 (~500 pre-confirmed field mappings)', async () => {
+    delete process.env.FILL_MAPPINGS_RAW_MAX_LENGTH
+    vi.resetModules()
+    const { FILL_MAPPINGS_RAW_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(100000)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('FILL_MAPPINGS_RAW_MAX_LENGTH env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_MAPPINGS_RAW_MAX_LENGTH = '50000'
+    vi.resetModules()
+    const { FILL_MAPPINGS_RAW_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(50000)
+  })
+
+  it('FILL_MAPPINGS_RAW_MAX_LENGTH env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_MAPPINGS_RAW_MAX_LENGTH')
+  })
+
+  it('§4.5 regression — fill-service.ts imports FILL_MAPPINGS_RAW_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async () => {
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+
+    const rel = 'src/lib/pdf/fill-service.ts'
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import FILL_MAPPINGS_RAW_MAX_LENGTH from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/FILL_MAPPINGS_RAW_MAX_LENGTH/)
+  })
+})
+
+describe('CM-002 §4.5 Input-Validation — FILL_MODEL_OVERRIDE_MAX_LENGTH (Constitution §2.4 + §4.5)', () => {
+  // CYCLE=247 regression tests — cap the `model` FormData field override
+  // before isValidModelOverride runs its regex check so a 1MB string cannot
+  // bypass the regex's expected short-input invariant.
+  const originalName = process.env.FILL_MODEL_OVERRIDE_MAX_LENGTH
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_MODEL_OVERRIDE_MAX_LENGTH
+    } else {
+      process.env.FILL_MODEL_OVERRIDE_MAX_LENGTH = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_MODEL_OVERRIDE_MAX_LENGTH defaults to 128 (longest LLM model id in catalogue: ~16 chars)', async () => {
+    delete process.env.FILL_MODEL_OVERRIDE_MAX_LENGTH
+    vi.resetModules()
+    const { FILL_MODEL_OVERRIDE_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(128)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('FILL_MODEL_OVERRIDE_MAX_LENGTH env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_MODEL_OVERRIDE_MAX_LENGTH = '256'
+    vi.resetModules()
+    const { FILL_MODEL_OVERRIDE_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(256)
+  })
+
+  it('FILL_MODEL_OVERRIDE_MAX_LENGTH env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_MODEL_OVERRIDE_MAX_LENGTH')
+  })
+
+  it('§4.5 regression — fill-service.ts imports FILL_MODEL_OVERRIDE_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async () => {
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+
+    const rel = 'src/lib/pdf/fill-service.ts'
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import FILL_MODEL_OVERRIDE_MAX_LENGTH from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/FILL_MODEL_OVERRIDE_MAX_LENGTH/)
+  })
+})
+
+describe('CM-002 §4.5 Input-Validation — FILL_MATCHER_ID_MAX_LENGTH (Constitution §2.4 + §4.5)', () => {
+  // CYCLE=247 regression tests — cap the `matcher_id` FormData field before
+  // the registry `.includes()` lookup so a 1MB string cannot bypass the
+  // registry's expected short-input invariant.
+  const originalName = process.env.FILL_MATCHER_ID_MAX_LENGTH
+
+  afterEach(() => {
+    if (originalName === undefined) {
+      delete process.env.FILL_MATCHER_ID_MAX_LENGTH
+    } else {
+      process.env.FILL_MATCHER_ID_MAX_LENGTH = originalName
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_MATCHER_ID_MAX_LENGTH defaults to 128 (matches FILL_CORRECTION_SESSION_ID_MAX_LENGTH ceiling for ID-like fields)', async () => {
+    delete process.env.FILL_MATCHER_ID_MAX_LENGTH
+    vi.resetModules()
+    const { FILL_MATCHER_ID_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(128)
+    expect(Number.isInteger(fresh)).toBe(true)
+    expect(fresh).toBeGreaterThan(0)
+  })
+
+  it('FILL_MATCHER_ID_MAX_LENGTH env override flows through (string → number coercion via getEnvNumber)', async () => {
+    process.env.FILL_MATCHER_ID_MAX_LENGTH = '64'
+    vi.resetModules()
+    const { FILL_MATCHER_ID_MAX_LENGTH: fresh } = await import('./config')
+    expect(fresh).toBe(64)
+  })
+
+  it('FILL_MATCHER_ID_MAX_LENGTH env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_MATCHER_ID_MAX_LENGTH')
+  })
+
+  it('§4.5 regression — fill-service.ts imports FILL_MATCHER_ID_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async () => {
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+
+    const rel = 'src/lib/pdf/fill-service.ts'
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    const importsFromConfig = source.match(
+      /import\s*\{([^}]*)\}\s*from\s*['"]@\/shared\/config['"]/,
+    )
+    const importBlock = importsFromConfig?.[1] ?? ''
+    expect(
+      importBlock,
+      `${rel}: must import FILL_MATCHER_ID_MAX_LENGTH from @/shared/config (got import block: '${importBlock}')`,
+    ).toMatch(/FILL_MATCHER_ID_MAX_LENGTH/)
+  })
+})

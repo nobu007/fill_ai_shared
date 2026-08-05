@@ -102,6 +102,52 @@ export const FILL_OCR_MODEL = getEnvWithDefault('FILL_OCR_MODEL', 'glm-ocr')
 export const FILL_AUTO_APPLY_THRESHOLD = getEnvNumber('FILL_AUTO_APPLY_THRESHOLD', 0.8)
 /** Maximum prompt size for LLM mapping requests (Constitution §1.2 Stability — prevent resource exhaustion) */
 export const MAX_MAPPING_PROMPT_LENGTH = getEnvNumber('MAX_MAPPING_PROMPT_LENGTH', 100000)
+/**
+ * Maximum length of the JSON-encoded `user_data` FormData field accepted by
+ * /api/fill/process (and /stream). Default 50,000 characters is enough for
+ * ~500 typical user-data entries (label+category+value). Tunable via
+ * FILL_USER_DATA_RAW_MAX_LENGTH env var.
+ *
+ * CM-002 §4.5 Input-Validation kickoff — caps the request body before
+ * `validateRequiredUserData` calls `JSON.parse` so a maliciously oversized
+ * payload cannot exhaust V8 heap on the hot path (Constitution §1.2 Safety).
+ */
+export const FILL_USER_DATA_RAW_MAX_LENGTH = getEnvNumber('FILL_USER_DATA_RAW_MAX_LENGTH', 50000)
+/**
+ * Maximum length of the JSON-encoded `mappings` FormData field accepted by
+ * /api/fill/process (and /stream). Default 100,000 characters mirrors
+ * `MAX_MAPPING_PROMPT_LENGTH` (also 100,000) and is enough for ~500 pre-
+ * confirmed field mappings (placeholder+category+confidence). Tunable via
+ * FILL_MAPPINGS_RAW_MAX_LENGTH env var.
+ *
+ * CM-002 §4.5 Input-Validation kickoff — caps the request body before
+ * `parsePreConfirmedMappings` calls `JSON.parse` so a maliciously oversized
+ * payload cannot exhaust V8 heap on the hot path (Constitution §1.2 Safety).
+ */
+export const FILL_MAPPINGS_RAW_MAX_LENGTH = getEnvNumber('FILL_MAPPINGS_RAW_MAX_LENGTH', 100000)
+/**
+ * Maximum length of the `model` FormData field override accepted by
+ * /api/fill/process (and /stream). Default 128 characters is enough for any
+ * LLM model identifier in the catalogue (longest: claude-3.5-sonnet ≈ 16).
+ * Tunable via FILL_MODEL_OVERRIDE_MAX_LENGTH env var.
+ *
+ * CM-002 §4.5 Input-Validation kickoff — caps the override string before
+ * `isValidModelOverride` runs the regex check so a 1MB string cannot bypass
+ * the regex's expected short-input invariant (Constitution §1.2 Safety).
+ */
+export const FILL_MODEL_OVERRIDE_MAX_LENGTH = getEnvNumber('FILL_MODEL_OVERRIDE_MAX_LENGTH', 128)
+/**
+ * Maximum length of the `matcher_id` FormData field accepted by
+ * /api/fill/process (and /stream). Default 128 characters matches the
+ * `FILL_CORRECTION_SESSION_ID_MAX_LENGTH` ceiling (same ID-like use case) and
+ * is enough for any matcher registry key (longest in the registry:
+ * `rule-based` ≈ 10). Tunable via FILL_MATCHER_ID_MAX_LENGTH env var.
+ *
+ * CM-002 §4.5 Input-Validation kickoff — caps the matcher ID string before
+ * the registry `.includes()` lookup so a 1MB string cannot bypass the
+ * registry's expected short-input invariant (Constitution §1.2 Safety).
+ */
+export const FILL_MATCHER_ID_MAX_LENGTH = getEnvNumber('FILL_MATCHER_ID_MAX_LENGTH', 128)
 /** Maximum length of an optional correction session identifier (Constitution §2.4 / §4.5). */
 export const FILL_CORRECTION_SESSION_ID_MAX_LENGTH = getEnvNumber('FILL_CORRECTION_SESSION_ID_MAX_LENGTH', 128)
 /** Maximum locally retained fill-history entries (Constitution §2.4). */
