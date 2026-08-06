@@ -73,6 +73,7 @@ import {
   FILL_ALERT_ERROR_RATE_THRESHOLD,
   FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS,
   FILL_ALERT_TOKEN_THRESHOLD,
+  FILL_API_P99_SLA_MS,
   // UI_*_TIMEOUT_MS env vars are loaded only via dynamic `import('./config')`
   // inside the 'UI Toast / Sync-Message Timeout Configuration' describe block
   // below (afterEach isolation requires vi.resetModules() before each test
@@ -542,6 +543,37 @@ describe('Environment Variable Defaults — Alerts & Monitoring (Constitution §
     expect(ENV_VAR_NAMES).toContain('FILL_ALERT_ERROR_RATE_THRESHOLD')
     expect(ENV_VAR_NAMES).toContain('FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS')
     expect(ENV_VAR_NAMES).toContain('FILL_ALERT_TOKEN_THRESHOLD')
+  })
+
+  it('FILL_API_P99_SLA_MS defaults to 1500 (PURPOSE Phase 5 T-011 SLA ceiling)', () => {
+    expect(FILL_API_P99_SLA_MS).toBe(1500)
+    expect(Number.isInteger(FILL_API_P99_SLA_MS)).toBe(true)
+    expect(FILL_API_P99_SLA_MS).toBeGreaterThan(0)
+  })
+
+  it('FILL_API_P99_SLA_MS env override flows through', async () => {
+    const original = process.env.FILL_API_P99_SLA_MS
+    try {
+      process.env.FILL_API_P99_SLA_MS = '2000'
+      vi.resetModules()
+      const { FILL_API_P99_SLA_MS: fresh } = await import('./config')
+      expect(fresh).toBe(2000)
+    } finally {
+      if (original === undefined) delete process.env.FILL_API_P99_SLA_MS
+      else process.env.FILL_API_P99_SLA_MS = original
+      vi.resetModules()
+    }
+  })
+
+  it('FILL_API_P99_SLA_MS appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES).toContain('FILL_API_P99_SLA_MS')
+  })
+
+  it('FILL_API_P99_SLA_MS is strictly less than FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS (SLA before alert)', () => {
+    // Acceptance ceiling must be below the alert-emission threshold so the
+    // CM-202 guard test enforces the SLA before /api/alerts/check emits alerts.
+    expect(FILL_API_P99_SLA_MS).toBeLessThan(FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS)
   })
 })
 

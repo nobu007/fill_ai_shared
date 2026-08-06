@@ -699,6 +699,26 @@ export const FILL_ALERT_ERROR_RATE_THRESHOLD = getEnvNumber('FILL_ALERT_ERROR_RA
 export const FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS = getEnvNumber('FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS', 2000)
 export const FILL_ALERT_TOKEN_THRESHOLD = getEnvNumber('FILL_ALERT_TOKEN_THRESHOLD', 100000)
 
+/**
+ * Phase 5 T-011 P99 latency SLA ceiling for the Core Mission Fill API
+ * endpoints (/api/fill/process, /api/fill/process/stream, /api/fill/extract,
+ * /api/fill/map). Distinct from FILL_ALERT_RESPONSE_TIME_THRESHOLD_MS (the
+ * alert-emission threshold at 2s); this constant is the **acceptance** ceiling
+ * the CM-202 P99 guard test enforces.
+ *
+ * PURPOSE.md Phase 5 T-011: "Fill API 全ルートの P99 < 1.5s" — overriding this
+ * constant via env var relaxes/strictens the acceptance gate without code
+ * change. The companion CM-202 test asserts p99DurationMs (from
+ * src/lib/infra/api-metrics nearest-rank percentile) stays below this value
+ * across the 4 Core Mission endpoints.
+ *
+ * @example
+ *   # Default 1500ms — matches PURPOSE Phase 5 T-011 SLA
+ *   FILL_API_P99_SLA_MS=2000   # relax to 2s (e.g. during LLM provider tail-latency incident)
+ *   FILL_API_P99_SLA_MS=1000   # tighten to 1s (e.g. for high-performance cohort)
+ */
+export const FILL_API_P99_SLA_MS = getEnvNumber('FILL_API_P99_SLA_MS', 1500)
+
 // ─── Fill API Rate Limits ──────────────────────────────────
 /**
  * Maximum fill API requests per user within the rate limit window.
