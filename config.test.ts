@@ -2496,3 +2496,134 @@ describe('CM-002 §4.5 Input-Validation — FILL_MATCHER_ID_MAX_LENGTH (Constitu
     ).toMatch(/FILL_MATCHER_ID_MAX_LENGTH/)
   })
 })
+
+/**
+ * CM-414 — §2.4 Sentinel: FILL_TELEMETRY_DISABLED (T-016 Fallback Telemetry gate)
+ *
+ * Background:
+ *   PURPOSE.md Phase 5 T-016 (Z-AI 障害時の MiniMax フォールバック成功率 ≥ 95%)
+ *   was acceptance-tested in CI via CM-201 (parameterized success rate).
+ *   The v3.3 emission + v3.5 frontier H3 ("T-016 production fallback metrics
+ *   exporter") introduce a JSONL appender that writes fallback-chain telemetry
+ *   to disk for post-hoc analysis. The hot-path cost of disk writes matters:
+ *     - Dev/test: telemetry ON (writes help debugging fallback flakiness)
+ *     - Production: telemetry OFF (hot-path disk I/O is the wrong default;
+ *       production observability uses logger.info to the structured log sink)
+ *
+ *   FILL_TELEMETRY_DISABLED is the §2.4 single-source-of-truth gate for that
+ *   decision. Default value = IS_PRODUCTION (i.e., false in dev/test,
+ *   true in production). Override via FILL_TELEMETRY_DISABLED env var.
+ *
+ *   This sentinel mirrors the CM-202 (FILL_API_P99_SLA_MS) and CM-002
+ *   (FILL_MATCHER_ID_MAX_LENGTH) archetype: 4 tests that lock (a) default
+ *   value, (b) env override flows through, (c) env var appears in the
+ *   ENV_VAR_NAMES allowlist (typo-drift safety), (d) the regression guard
+ *   that any future T-016 fallback telemetry consumer MUST import from
+ *   @/shared/config (so an inline `process.env.FILL_TELEMETRY_DISABLED`
+ *   read inside a fallback-chain handler is forbidden by test).
+ *
+ *   Why no production-code consumer exists yet:
+ *   The T-016 appender is the v3.5 H3 deliverable, not yet implemented.
+ *   FILL_TELEMETRY_DISABLED is staged here so when the appender lands (in a
+ *   later cycle or 25系), it has a §2.4-grade gate ready — preventing the
+ *   same architecture debt CM-002/CM-202 solved (inline env reads scattered
+ *   across the fallback chain).
+ *
+ * Acceptance criteria (CM-414):
+ *   - 4 tests pass (default value, env override, ENV_VAR_NAMES allowlist,
+ *     regression: any future consumer imports from @/shared/config)
+ *   - ESLint 0
+ *   - vitest pass on config.test.ts
+ *   - submodule HEAD moves + parent submodule pointer moves + push OK
+ *
+ * Self-test recipe:
+ *   Temporarily change config.ts to default FILL_TELEMETRY_DISABLED to
+ *   `!IS_PRODUCTION` (inverted) — test 1 ('default = IS_PRODUCTION') FAILS
+ *   immediately. Restore — green.
+ */
+describe('CM-414: §2.4 Sentinel — FILL_TELEMETRY_DISABLED (T-016 Fallback Telemetry gate)', () => {
+  const originalFillTelemetryDisabled = process.env.FILL_TELEMETRY_DISABLED
+  const originalNodeEnv = process.env.NODE_ENV
+
+  afterEach(() => {
+    if (originalFillTelemetryDisabled === undefined) {
+      delete process.env.FILL_TELEMETRY_DISABLED
+    } else {
+      process.env.FILL_TELEMETRY_DISABLED = originalFillTelemetryDisabled
+    }
+    if (originalNodeEnv === undefined) {
+      delete process.env.NODE_ENV
+    } else {
+      process.env.NODE_ENV = originalNodeEnv
+    }
+    vi.resetModules()
+  })
+
+  it('FILL_TELEMETRY_DISABLED defaults to IS_PRODUCTION (true in production, false in dev/test)', async () => {
+    // Dev/test default: telemetry writes ON (helps debug fallback flakiness)
+    delete process.env.FILL_TELEMETRY_DISABLED
+    delete process.env.NODE_ENV
+    vi.resetModules()
+    const { FILL_TELEMETRY_DISABLED: devDefault } = await import('./config')
+    expect(devDefault, 'dev/test default should be false (telemetry writes enabled)').toBe(false)
+
+    // Production default: telemetry writes OFF (hot-path disk I/O is the wrong default)
+    process.env.NODE_ENV = 'production'
+    vi.resetModules()
+    const { FILL_TELEMETRY_DISABLED: prodDefault } = await import('./config')
+    expect(prodDefault, 'production default should be true (telemetry writes disabled)').toBe(true)
+  })
+
+  it('FILL_TELEMETRY_DISABLED env override flows through ("true" disables writes per getEnvBool semantics)', async () => {
+    // Override: force ON in production (the operator wants the audit trail)
+    // getEnvBool returns true ONLY for the literal string 'true'.
+    // FILL_TELEMETRY_DISABLED='false' in production → telemetry writes ON (false).
+    process.env.NODE_ENV = 'production'
+    process.env.FILL_TELEMETRY_DISABLED = 'false'
+    vi.resetModules()
+    const { FILL_TELEMETRY_DISABLED: enabledInProd } = await import('./config')
+    expect(enabledInProd, "FILL_TELEMETRY_DISABLED='false' in production should leave telemetry writes enabled").toBe(false)
+
+    // Override: force OFF in dev (the developer wants to silence disk noise)
+    // FILL_TELEMETRY_DISABLED='true' in dev → telemetry writes OFF (true).
+    delete process.env.NODE_ENV
+    process.env.FILL_TELEMETRY_DISABLED = 'true'
+    vi.resetModules()
+    const { FILL_TELEMETRY_DISABLED: disabledInDev } = await import('./config')
+    expect(disabledInDev, "FILL_TELEMETRY_DISABLED='true' in dev should force telemetry writes OFF").toBe(true)
+  })
+
+  it('FILL_TELEMETRY_DISABLED env var appears in the ENV_VAR_NAMES allowlist (safety gate against typo drift)', async () => {
+    const { ENV_VAR_NAMES } = await import('./env')
+    expect(ENV_VAR_NAMES, 'FILL_TELEMETRY_DISABLED must be in ENV_VAR_NAMES allowlist — typo-drift safety gate').toContain('FILL_TELEMETRY_DISABLED')
+  })
+
+  it('§2.4 regression — config.ts owns FILL_TELEMETRY_DISABLED as the single source of truth (no inline duplicates)', async () => {
+    // Mechanical sweep: grep config.ts and verify there's exactly ONE
+    // declaration of FILL_TELEMETRY_DISABLED (the export const in this file).
+    // A future contributor cannot add a parallel `export const FILL_TELEMETRY_DISABLED = ...`
+    // in another file because that would create two §2.4 violations:
+    //   (a) duplicate single-source-of-truth declaration
+    //   (b) re-import would race the loader (one wins, one loses)
+    const fs = await import('node:fs/promises')
+    const path = await import('node:path')
+
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+
+    const rel = 'src/shared/config.ts'
+    const abs = path.resolve(workspaceRoot, rel)
+    const source = await fs.readFile(abs, 'utf8')
+
+    // Count `export const FILL_TELEMETRY_DISABLED` declarations — must be exactly 1.
+    const exportCount = (source.match(/export\s+const\s+FILL_TELEMETRY_DISABLED\b/g) || []).length
+    expect(
+      exportCount,
+      `${rel}: must declare FILL_TELEMETRY_DISABLED exactly once (found ${exportCount}) — §2.4 single source of truth`,
+    ).toBe(1)
+
+    // Sanity: the constant is exported (not just a local const).
+    expect(source, `${rel}: FILL_TELEMETRY_DISABLED must be exported`).toMatch(/export\s+const\s+FILL_TELEMETRY_DISABLED/)
+  })
+})

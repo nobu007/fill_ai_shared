@@ -1519,5 +1519,16 @@ export const STORAGE_CLEANUP_ENABLED = getEnvBool('STORAGE_CLEANUP_ENABLED', tru
 export const PROOFREAD_MODEL_USAGE_ENABLED = getEnvBool('PROOFREAD_MODEL_USAGE_ENABLED', true)
 export const PROOFREAD_MODEL_USAGE_VERBOSE = getEnvBool('PROOFREAD_MODEL_USAGE_VERBOSE', false)
 
+// ─── T-016 Fallback Telemetry (CM-414) ─────────────────────
+/**
+ * Whether the T-016 fallback JSONL appender writes to disk. Default ON
+ * in dev/test, OFF in production to avoid hot-path disk writes on the
+ * fallback chain — production observability uses logger.info only.
+ * Override via FILL_TELEMETRY_DISABLED env var (getEnvBool semantics):
+ *   "true"               = disable writes
+ *   anything else / unset = IS_PRODUCTION default applies
+ */
+export const FILL_TELEMETRY_DISABLED = getEnvBool('FILL_TELEMETRY_DISABLED', IS_PRODUCTION)
+
 // ─── Middleware / Auth ─────────────────────────────────────
 export const AUTH_PUBLIC_PATHS = ['/', '/auth', '/api', '/terms', '/privacy', '/commercial-law', '/contact', '/invite'] as const
