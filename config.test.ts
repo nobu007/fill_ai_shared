@@ -1176,6 +1176,13 @@ describe('UI Toast / Sync-Message Timeout Configuration (dashboard setTimeout li
     const fs = await import('node:fs/promises')
     const path = await import('node:path')
 
+    // This test is invoked both from the parent workspace and directly from
+    // the src/shared submodule. Resolve the parent root explicitly in the
+    // latter case so the source-level §2.4 guard is stable in both contexts.
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+
     const files = [
       'src/app/(dashboard)/sites/hooks/use-sites.ts',
       'src/app/(dashboard)/sites/[id]/info/page.tsx',
@@ -1184,7 +1191,7 @@ describe('UI Toast / Sync-Message Timeout Configuration (dashboard setTimeout li
     ] as const
 
     for (const rel of files) {
-      const abs = path.resolve(process.cwd(), rel)
+      const abs = path.resolve(workspaceRoot, rel)
       const source = await fs.readFile(abs, 'utf8')
 
       // (a) Every migrated file must import at least one UI_*_TIMEOUT_MS
@@ -1266,8 +1273,15 @@ describe('Template Name Length Configuration (Constitution §2.4)', () => {
     const fs = await import('node:fs/promises')
     const path = await import('node:path')
 
+    // This test is invoked both from the parent workspace and directly from
+    // the src/shared submodule. Resolve the parent root explicitly in the
+    // latter case so the source-level §2.4 guard is stable in both contexts.
+    const workspaceRoot = process.cwd().endsWith('/src/shared')
+      ? path.resolve(process.cwd(), '../..')
+      : process.cwd()
+
     const rel = 'src/app/api/templates/route.ts'
-    const abs = path.resolve(process.cwd(), rel)
+    const abs = path.resolve(workspaceRoot, rel)
     const source = await fs.readFile(abs, 'utf8')
 
     // (a) The migrated file must import TEMPLATES_NAME_MAX_LENGTH from
