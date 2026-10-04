@@ -81,6 +81,21 @@ import {
   // imported at module scope so the static getters do not capture the
   // current process.env value before the test's afterEach hook runs.
 } from './config'
+import { existsSync } from 'node:fs'
+import { resolve as resolvePath } from 'node:path'
+
+// §2.4/§4.5 sentinel guards may target consumer-specific files: the PDF
+// fill-feature files exist only in fill_ai, while the dashboard
+// sites/settings files exist in every consumer workspace. A guard whose
+// target is absent from the current workspace is skipped there and stays
+// enforced wherever the file exists. Same root resolution as the
+// workspaceRoot logic inside the file-reading tests below.
+const SENTINEL_WORKSPACE_ROOT = process.cwd().endsWith('/src/shared')
+  ? resolvePath(process.cwd(), '../..')
+  : process.cwd()
+
+const sentinelTargetMissing = (...rels: string[]) =>
+  !rels.some(rel => existsSync(resolvePath(SENTINEL_WORKSPACE_ROOT, rel)))
 
 describe('Validation Limits (Constitution §4.5)', () => {
   it('MAX_NAME_LENGTH defaults to 200', () => {
@@ -1011,7 +1026,8 @@ describe('PDF Extraction Cache Configuration (extraction-cache.ts defaults)', ()
     expect(ENV_VAR_NAMES).toContain('FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH')
   })
 
-  it('extraction-cache.ts imports FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH from @/shared/config and contains no hardcoded .slice(0, 16) literal in hashKey', async () => {
+  it('extraction-cache.ts imports FILL_EXTRACTION_CACHE_KEY_HEX_LENGTH from @/shared/config and contains no hardcoded .slice(0, 16) literal in hashKey', async (ctx) => {
+    if (sentinelTargetMissing('src/lib/pdf/extraction-cache.ts')) return ctx.skip()
     const fs = await import('node:fs/promises')
     const path = await import('node:path')
     // Resolve via the config module URL. config.test.ts lives at
@@ -1265,7 +1281,8 @@ describe('Template Name Length Configuration (Constitution §2.4)', () => {
     expect(ENV_VAR_NAMES).toContain('TEMPLATES_NAME_MAX_LENGTH')
   })
 
-  it('§2.4 regression — templates/route.ts imports TEMPLATES_NAME_MAX_LENGTH from @/shared/config and no longer carries the raw 120 literal', async () => {
+  it('§2.4 regression — templates/route.ts imports TEMPLATES_NAME_MAX_LENGTH from @/shared/config and no longer carries the raw 120 literal', async (ctx) => {
+    if (sentinelTargetMissing('src/app/api/templates/route.ts')) return ctx.skip()
     // File-reading regression test: if a future refactor reintroduces the
     // hardcoded `MAX_TEMPLATE_NAME_LENGTH = 120` literal in the templates
     // route, or removes the @/shared/config import, this test fails before
@@ -1746,7 +1763,8 @@ describe('Fill History Max Items Configuration (Constitution §2.4)', () => {
     expect(ENV_VAR_NAMES).toContain('FILL_HISTORY_MAX_ITEMS')
   })
 
-  it('§2.4 regression — FillHistory.tsx imports FILL_HISTORY_MAX_ITEMS from @/shared/config and no longer carries a local MAX_ITEMS=50 literal', async () => {
+  it('§2.4 regression — FillHistory.tsx imports FILL_HISTORY_MAX_ITEMS from @/shared/config and no longer carries a local MAX_ITEMS=50 literal', async (ctx) => {
+    if (sentinelTargetMissing('src/app/(dashboard)/fill/components/FillHistory.tsx')) return ctx.skip()
     // File-reading regression test: if a future refactor reintroduces a
     // hardcoded MAX_ITEMS=50 literal in the dashboard FillHistory
     // component, or removes the @/shared/config import, this test fails
@@ -1836,7 +1854,8 @@ describe('Saved-Value Preview Max Chars Configuration (Constitution §2.4)', () 
     expect(ENV_VAR_NAMES).toContain('FILL_SAVED_VALUE_PREVIEW_MAX_CHARS')
   })
 
-  it('§2.4 regression — DataStep.tsx imports FILL_SAVED_VALUE_PREVIEW_MAX_CHARS from @/shared/config and no longer carries a hardcoded preview-length literal of 12', async () => {
+  it('§2.4 regression — DataStep.tsx imports FILL_SAVED_VALUE_PREVIEW_MAX_CHARS from @/shared/config and no longer carries a hardcoded preview-length literal of 12', async (ctx) => {
+    if (sentinelTargetMissing('src/app/(dashboard)/fill/components/DataStep.tsx')) return ctx.skip()
     // File-reading regression test: if a future refactor reintroduces a
     // hardcoded `length > 12` / `slice(0, 12)` literal in the dashboard
     // DataStep component, or removes the @/shared/config import, this
@@ -1930,7 +1949,8 @@ describe('Fill History Random ID Length Configuration (Constitution §2.4)', () 
     expect(ENV_VAR_NAMES).toContain('FILL_HISTORY_RANDOM_ID_LENGTH')
   })
 
-  it('§2.4 regression — FillHistory.tsx imports FILL_HISTORY_RANDOM_ID_LENGTH from @/shared/config and no longer carries a hardcoded slice(2, 8) literal', async () => {
+  it('§2.4 regression — FillHistory.tsx imports FILL_HISTORY_RANDOM_ID_LENGTH from @/shared/config and no longer carries a hardcoded slice(2, 8) literal', async (ctx) => {
+    if (sentinelTargetMissing('src/app/(dashboard)/fill/components/FillHistory.tsx')) return ctx.skip()
     // File-reading regression test: if a future refactor reintroduces a
     // hardcoded `slice(2, 8)` literal in the dashboard FillHistory
     // component, or removes the @/shared/config import, this test fails
@@ -2022,7 +2042,8 @@ describe('Saved-Template Confidence Percent Configuration (Constitution §2.4)',
     expect(ENV_VAR_NAMES).toContain('FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT')
   })
 
-  it('§2.4 regression — TemplateStep.tsx imports FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT from @/shared/config and no longer carries a hardcoded `SAVED_TEMPLATE_CONFIDENCE_PERCENT = 100` literal', async () => {
+  it('§2.4 regression — TemplateStep.tsx imports FILL_SAVED_TEMPLATE_CONFIDENCE_PERCENT from @/shared/config and no longer carries a hardcoded `SAVED_TEMPLATE_CONFIDENCE_PERCENT = 100` literal', async (ctx) => {
+    if (sentinelTargetMissing('src/app/(dashboard)/fill/components/TemplateStep.tsx')) return ctx.skip()
     // File-reading regression test: if a future refactor reintroduces
     // a hardcoded `SAVED_TEMPLATE_CONFIDENCE_PERCENT` constant in the
     // dashboard TemplateStep component, or removes the @/shared/config
@@ -2122,7 +2143,8 @@ describe('Coordinate Precision Configuration (Constitution §2.4)', () => {
     expect(ENV_VAR_NAMES).toContain('FILL_COORDINATE_PRECISION')
   })
 
-  it('§2.4 regression — template-service.ts + MappingStep.tsx both import FILL_COORDINATE_PRECISION from @/shared/config (no raw COORDINATE_PRECISION=3 declaration AND no raw toFixed(3) literal)', async () => {
+  it('§2.4 regression — template-service.ts + MappingStep.tsx both import FILL_COORDINATE_PRECISION from @/shared/config (no raw COORDINATE_PRECISION=3 declaration AND no raw toFixed(3) literal)', async (ctx) => {
+    if (sentinelTargetMissing('src/lib/pdf/template-service.ts', 'src/app/(dashboard)/fill/components/MappingStep.tsx')) return ctx.skip()
     // Two-file file-reading regression: a future refactor that reintroduces
     // either the server-side `const COORDINATE_PRECISION = 3` declaration
     // OR the client-side `toFixed(3)` literal would silently desync the
@@ -2232,7 +2254,8 @@ describe('Fill Preview Render Scale Configuration (Constitution §2.4)', () => {
     expect(ENV_VAR_NAMES).toContain('FILL_PREVIEW_RENDER_SCALE')
   })
 
-  it('§2.4 regression — enhancer.ts imports FILL_PREVIEW_RENDER_SCALE from @/shared/config and no longer carries a hardcoded `scale: number = 1.5` default-argument literal', async () => {
+  it('§2.4 regression — enhancer.ts imports FILL_PREVIEW_RENDER_SCALE from @/shared/config and no longer carries a hardcoded `scale: number = 1.5` default-argument literal', async (ctx) => {
+    if (sentinelTargetMissing('src/lib/pdf/enhancer.ts')) return ctx.skip()
     // File-reading regression test: if a future refactor reintroduces a
     // hardcoded `scale: number = 1.5` default-argument literal in
     // src/lib/pdf/enhancer.ts (renderPdfPagePreview), or removes the
@@ -2306,7 +2329,8 @@ describe('CM-002 §4.5 Input-Validation — FILL_USER_DATA_RAW_MAX_LENGTH (Const
     expect(ENV_VAR_NAMES).toContain('FILL_USER_DATA_RAW_MAX_LENGTH')
   })
 
-  it('§4.5 regression — fill-service.ts imports FILL_USER_DATA_RAW_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async () => {
+  it('§4.5 regression — fill-service.ts imports FILL_USER_DATA_RAW_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async (ctx) => {
+    if (sentinelTargetMissing('src/lib/pdf/fill-service.ts')) return ctx.skip()
     // File-reading regression test: if a future refactor removes the
     // @/shared/config import (and the FILL_USER_DATA_RAW_MAX_LENGTH use
     // in validateFillInputs), this test fails before commit. Mirrors the
@@ -2370,7 +2394,8 @@ describe('CM-002 §4.5 Input-Validation — FILL_MAPPINGS_RAW_MAX_LENGTH (Consti
     expect(ENV_VAR_NAMES).toContain('FILL_MAPPINGS_RAW_MAX_LENGTH')
   })
 
-  it('§4.5 regression — fill-service.ts imports FILL_MAPPINGS_RAW_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async () => {
+  it('§4.5 regression — fill-service.ts imports FILL_MAPPINGS_RAW_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async (ctx) => {
+    if (sentinelTargetMissing('src/lib/pdf/fill-service.ts')) return ctx.skip()
     const fs = await import('node:fs/promises')
     const path = await import('node:path')
 
@@ -2429,7 +2454,8 @@ describe('CM-002 §4.5 Input-Validation — FILL_MODEL_OVERRIDE_MAX_LENGTH (Cons
     expect(ENV_VAR_NAMES).toContain('FILL_MODEL_OVERRIDE_MAX_LENGTH')
   })
 
-  it('§4.5 regression — fill-service.ts imports FILL_MODEL_OVERRIDE_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async () => {
+  it('§4.5 regression — fill-service.ts imports FILL_MODEL_OVERRIDE_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async (ctx) => {
+    if (sentinelTargetMissing('src/lib/pdf/fill-service.ts')) return ctx.skip()
     const fs = await import('node:fs/promises')
     const path = await import('node:path')
 
@@ -2488,7 +2514,8 @@ describe('CM-002 §4.5 Input-Validation — FILL_MATCHER_ID_MAX_LENGTH (Constitu
     expect(ENV_VAR_NAMES).toContain('FILL_MATCHER_ID_MAX_LENGTH')
   })
 
-  it('§4.5 regression — fill-service.ts imports FILL_MATCHER_ID_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async () => {
+  it('§4.5 regression — fill-service.ts imports FILL_MATCHER_ID_MAX_LENGTH from @/shared/config for validateFillInputs length cap', async (ctx) => {
+    if (sentinelTargetMissing('src/lib/pdf/fill-service.ts')) return ctx.skip()
     const fs = await import('node:fs/promises')
     const path = await import('node:path')
 
