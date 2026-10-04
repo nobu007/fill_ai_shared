@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { metrics, trackApiRequest, trackPdfProcessing, trackLlmCall } from './api-metrics'
 
 describe('ApiMetricsCollector', () => {
@@ -197,13 +197,19 @@ describe('ApiMetricsCollector', () => {
     })
 
     it('records response time', async () => {
-      await trackApiRequest('proofread/v2', 'GET', async () => {
-        await new Promise(resolve => setTimeout(resolve, 10))
-        return new Response('ok', { status: 200 })
-      })
-
-      const ep = metrics.snapshot().endpoints['GET proofread/v2']
-      expect(ep.totalDurationMs).toBeGreaterThanOrEqual(10)
+      const clock = vi.spyOn(performance, 'now')
+        .mockReturnValueOnce(100)
+        .mockReturnValueOnce(112.5)
+      try {
+        const response = await trackApiRequest('proofread/v2', 'GET', async () =>
+          new Response('ok', { status: 200 }),
+        )
+        const ep = metrics.snapshot().endpoints['GET proofread/v2']
+        expect(response.status).toBe(200)
+        expect(ep.totalDurationMs).toBe(12.5)
+      } finally {
+        clock.mockRestore()
+      }
     })
   })
 
