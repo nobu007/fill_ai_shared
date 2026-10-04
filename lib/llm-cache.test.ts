@@ -55,15 +55,17 @@ describe('llm-cache', () => {
   })
 
   describe('configureLlmCache', () => {
-    it('should configure cache settings', () => {
+    it('should persist the merged config (observable via isLlmCacheEnabled)', () => {
+      process.env.LLM_CACHE_PROVIDER = 'local'
+      configureLlmCache({ enabled: false })
+      expect(isLlmCacheEnabled()).toBe(false)
       configureLlmCache({
         enabled: true,
         cacheDir: '/test',
         ttlMs: 3600000,
         maxEntries: 100,
       })
-      
-      expect(true).toBe(true)
+      expect(isLlmCacheEnabled()).toBe(true)
     })
   })
 
