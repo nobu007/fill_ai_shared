@@ -261,6 +261,20 @@ export const ENV_VAR_NAMES = [
 
 export type EnvVarName = (typeof ENV_VAR_NAMES)[number]
 
+/** Next.js only inlines literal NEXT_PUBLIC_* references into browser bundles. */
+function readEnv(key: EnvVarName): string | undefined {
+  switch (key) {
+    case 'NEXT_PUBLIC_SUPABASE_URL': return process.env.NEXT_PUBLIC_SUPABASE_URL
+    case 'NEXT_PUBLIC_SUPABASE_ANON_KEY': return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    case 'NEXT_PUBLIC_APP_NAME': return process.env.NEXT_PUBLIC_APP_NAME
+    case 'NEXT_PUBLIC_APP_DESCRIPTION': return process.env.NEXT_PUBLIC_APP_DESCRIPTION
+    case 'NEXT_PUBLIC_APP_ICON': return process.env.NEXT_PUBLIC_APP_ICON
+    case 'NEXT_PUBLIC_APP_URL': return process.env.NEXT_PUBLIC_APP_URL
+    case 'NEXT_PUBLIC_VERCEL_URL': return process.env.NEXT_PUBLIC_VERCEL_URL
+    default: return process.env[key]
+  }
+}
+
 /**
  * Type-safe env var getter.
  * Returns the value as a string, or empty string if not set.
@@ -269,7 +283,7 @@ export type EnvVarName = (typeof ENV_VAR_NAMES)[number]
  *   const url = getEnv('NEXT_PUBLIC_SUPABASE_URL')
  */
 export function getEnv<K extends EnvVarName>(key: K): string {
-  return process.env[key] ?? ''
+  return readEnv(key) ?? ''
 }
 
 /**
@@ -281,7 +295,7 @@ export function getEnv<K extends EnvVarName>(key: K): string {
  *   const key = requireEnv('ENCRYPTION_KEY')
  */
 export function requireEnv<K extends EnvVarName>(key: K): string {
-  const value = process.env[key] ?? ''
+  const value = readEnv(key) ?? ''
   if (!value) {
     // Only throw at runtime in production to allow dev/test flexibility
     if (process.env.NODE_ENV === 'production') {
@@ -298,7 +312,7 @@ export function requireEnv<K extends EnvVarName>(key: K): string {
  *   const level = getEnvWithDefault('LOG_LEVEL', 'info')
  */
 export function getEnvWithDefault<K extends EnvVarName>(key: K, defaultValue: string): string {
-  return process.env[key] ?? defaultValue
+  return readEnv(key) ?? defaultValue
 }
 
 /**
@@ -309,7 +323,7 @@ export function getEnvWithDefault<K extends EnvVarName>(key: K, defaultValue: st
  *   const timeout = getEnvNumber('LLM_REQUEST_TIMEOUT_MS', 120000)
  */
 export function getEnvNumber<K extends EnvVarName>(key: K, defaultValue: number): number {
-  const raw = process.env[key]
+  const raw = readEnv(key)
   if (raw === undefined || raw === '') return defaultValue
   const parsed = Number(raw)
   return Number.isNaN(parsed) ? defaultValue : parsed
@@ -323,7 +337,7 @@ export function getEnvNumber<K extends EnvVarName>(key: K, defaultValue: number)
  *   const enabled = getEnvBool('PROOFREAD_MODEL_USAGE_ENABLED', false)
  */
 export function getEnvBool<K extends EnvVarName>(key: K, defaultValue: boolean): boolean {
-  const raw = process.env[key]
+  const raw = readEnv(key)
   if (raw === undefined || raw === '') return defaultValue
   return raw === 'true'
 }
