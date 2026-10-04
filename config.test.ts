@@ -2558,6 +2558,8 @@ describe('CM-002 §4.5 Input-Validation — FILL_MATCHER_ID_MAX_LENGTH (Constitu
 describe('CM-414: §2.4 Sentinel — FILL_TELEMETRY_DISABLED (T-016 Fallback Telemetry gate)', () => {
   const originalFillTelemetryDisabled = process.env.FILL_TELEMETRY_DISABLED
   const originalNodeEnv = process.env.NODE_ENV
+  // Consumer repos (Next.js) type process.env.NODE_ENV as readonly; mutate via a widened alias
+  const nodeEnv = process.env as Record<string, string | undefined>
 
   afterEach(() => {
     if (originalFillTelemetryDisabled === undefined) {
@@ -2566,9 +2568,9 @@ describe('CM-414: §2.4 Sentinel — FILL_TELEMETRY_DISABLED (T-016 Fallback Tel
       process.env.FILL_TELEMETRY_DISABLED = originalFillTelemetryDisabled
     }
     if (originalNodeEnv === undefined) {
-      delete process.env.NODE_ENV
+      delete nodeEnv.NODE_ENV
     } else {
-      process.env.NODE_ENV = originalNodeEnv
+      nodeEnv.NODE_ENV = originalNodeEnv
     }
     vi.resetModules()
   })
@@ -2576,13 +2578,13 @@ describe('CM-414: §2.4 Sentinel — FILL_TELEMETRY_DISABLED (T-016 Fallback Tel
   it('FILL_TELEMETRY_DISABLED defaults to IS_PRODUCTION (true in production, false in dev/test)', async () => {
     // Dev/test default: telemetry writes ON (helps debug fallback flakiness)
     delete process.env.FILL_TELEMETRY_DISABLED
-    delete process.env.NODE_ENV
+    delete nodeEnv.NODE_ENV
     vi.resetModules()
     const { FILL_TELEMETRY_DISABLED: devDefault } = await import('./config')
     expect(devDefault, 'dev/test default should be false (telemetry writes enabled)').toBe(false)
 
     // Production default: telemetry writes OFF (hot-path disk I/O is the wrong default)
-    process.env.NODE_ENV = 'production'
+    nodeEnv.NODE_ENV = 'production'
     vi.resetModules()
     const { FILL_TELEMETRY_DISABLED: prodDefault } = await import('./config')
     expect(prodDefault, 'production default should be true (telemetry writes disabled)').toBe(true)
@@ -2592,7 +2594,7 @@ describe('CM-414: §2.4 Sentinel — FILL_TELEMETRY_DISABLED (T-016 Fallback Tel
     // Override: force ON in production (the operator wants the audit trail)
     // getEnvBool returns true ONLY for the literal string 'true'.
     // FILL_TELEMETRY_DISABLED='false' in production → telemetry writes ON (false).
-    process.env.NODE_ENV = 'production'
+    nodeEnv.NODE_ENV = 'production'
     process.env.FILL_TELEMETRY_DISABLED = 'false'
     vi.resetModules()
     const { FILL_TELEMETRY_DISABLED: enabledInProd } = await import('./config')
@@ -2600,7 +2602,7 @@ describe('CM-414: §2.4 Sentinel — FILL_TELEMETRY_DISABLED (T-016 Fallback Tel
 
     // Override: force OFF in dev (the developer wants to silence disk noise)
     // FILL_TELEMETRY_DISABLED='true' in dev → telemetry writes OFF (true).
-    delete process.env.NODE_ENV
+    delete nodeEnv.NODE_ENV
     process.env.FILL_TELEMETRY_DISABLED = 'true'
     vi.resetModules()
     const { FILL_TELEMETRY_DISABLED: disabledInDev } = await import('./config')
