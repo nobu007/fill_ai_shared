@@ -348,8 +348,8 @@ describe('LLM Mapping Config (Constitution §2.4)', () => {
     expect(FILL_VISION_MODEL.length).toBeGreaterThan(0)
   })
 
-  it('FILL_VISION_MODEL defaults to glm-4.6v-flash', () => {
-    expect(FILL_VISION_MODEL).toBe('glm-4.6v-flash')
+  it('FILL_VISION_MODEL defaults to glm-5.3-flash', () => {
+    expect(FILL_VISION_MODEL).toBe('glm-5.3-flash')
   })
 
   it('FILL_VISION_TEMPERATURE is a number between 0 and 1', () => {
@@ -870,11 +870,10 @@ describe('PDF Enhancement Constants (Core Mission — Constitution §2.4)', () =
 })
 
 describe('LLM Fallback Chain (Constitution §3.2 + §1.3.1)', () => {
-  // CYCLE=180 regression tests — guarantee the default fallback order
-  // matches Constitution §3.2 (Z-AI primary chain) + §1.3.1 (MiniMax fallback tail).
-  // Prior cycle (≤179) shipped a wrong default 'glm-4.7-flash,glm-5-turbo,MiniMax-M3'
-  // that (a) put the flash model first (cheapest, fastest but least accurate),
-  // (b) omitted glm-4.7-coding entirely, and (c) lacked visible ordering.
+  // Regression tests — guarantee the default fallback order matches
+  // Constitution §3.2 (Z-AI primary chain) + §1.3.1 (MiniMax fallback tail).
+  // 2026-10: model catalog refreshed to glm-5.2/glm-5.3 + MiniMax-M3.1-Flash
+  // (mirrors openclaw_litellm_proxy fleet routing); glm-4.x and MiniMax-M3 retired.
   const originalFallbackModels = process.env.FILL_FALLBACK_MODELS
   const originalTimeouts = process.env.FILL_MODEL_TIMEOUT_OVERRIDES
 
@@ -896,10 +895,9 @@ describe('LLM Fallback Chain (Constitution §3.2 + §1.3.1)', () => {
     vi.resetModules()
     const { FILL_FALLBACK_MODELS } = await import('./config')
     expect(FILL_FALLBACK_MODELS).toEqual([
-      'glm-5-turbo',
-      'glm-4.7-coding',
-      'glm-4.7-flash',
-      'MiniMax-M3',
+      'glm-5.2',
+      'glm-5.3',
+      'MiniMax-M3.1-Flash-Preview',
     ])
   })
 
@@ -907,23 +905,22 @@ describe('LLM Fallback Chain (Constitution §3.2 + §1.3.1)', () => {
     delete process.env.FILL_FALLBACK_MODELS
     vi.resetModules()
     const { FILL_FALLBACK_MODELS } = await import('./config')
-    const minIndex = FILL_FALLBACK_MODELS.indexOf('MiniMax-M3')
+    const minIndex = FILL_FALLBACK_MODELS.indexOf('MiniMax-M3.1-Flash-Preview')
     expect(minIndex).toBeGreaterThan(0)
-    for (const model of ['glm-5-turbo', 'glm-4.7-coding', 'glm-4.7-flash']) {
+    for (const model of ['glm-5.2', 'glm-5.3']) {
       const idx = FILL_FALLBACK_MODELS.indexOf(model)
       expect(idx).toBeGreaterThanOrEqual(0)
       expect(idx).toBeLessThan(minIndex)
     }
   })
 
-  it('FILL_FALLBACK_MODELS contains all four §3.2 + §1.3.1 chain models', async () => {
+  it('FILL_FALLBACK_MODELS contains all §3.2 + §1.3.1 chain models', async () => {
     delete process.env.FILL_FALLBACK_MODELS
     vi.resetModules()
     const { FILL_FALLBACK_MODELS } = await import('./config')
-    expect(FILL_FALLBACK_MODELS).toContain('glm-4.7-coding')
-    expect(FILL_FALLBACK_MODELS).toContain('glm-5-turbo')
-    expect(FILL_FALLBACK_MODELS).toContain('glm-4.7-flash')
-    expect(FILL_FALLBACK_MODELS).toContain('MiniMax-M3')
+    expect(FILL_FALLBACK_MODELS).toContain('glm-5.2')
+    expect(FILL_FALLBACK_MODELS).toContain('glm-5.3')
+    expect(FILL_FALLBACK_MODELS).toContain('MiniMax-M3.1-Flash-Preview')
   })
 
   it('FILL_MODEL_TIMEOUT_OVERRIDES provides per-model timeouts for all default fallback models', async () => {
@@ -937,18 +934,15 @@ describe('LLM Fallback Chain (Constitution §3.2 + §1.3.1)', () => {
     }
   })
 
-  it('FILL_MODEL_TIMEOUT_OVERRIDES respects ordering: flash < turbo < coding < MiniMax', async () => {
+  it('FILL_MODEL_TIMEOUT_OVERRIDES respects ordering: glm-5.2 < glm-5.3 < MiniMax', async () => {
     delete process.env.FILL_MODEL_TIMEOUT_OVERRIDES
     vi.resetModules()
     const { FILL_MODEL_TIMEOUT_OVERRIDES } = await import('./config')
-    expect(FILL_MODEL_TIMEOUT_OVERRIDES['glm-4.7-flash']).toBeLessThan(
-      FILL_MODEL_TIMEOUT_OVERRIDES['glm-5-turbo']
+    expect(FILL_MODEL_TIMEOUT_OVERRIDES['glm-5.2']).toBeLessThan(
+      FILL_MODEL_TIMEOUT_OVERRIDES['glm-5.3']
     )
-    expect(FILL_MODEL_TIMEOUT_OVERRIDES['glm-5-turbo']).toBeLessThan(
-      FILL_MODEL_TIMEOUT_OVERRIDES['glm-4.7-coding']
-    )
-    expect(FILL_MODEL_TIMEOUT_OVERRIDES['glm-4.7-coding']).toBeLessThan(
-      FILL_MODEL_TIMEOUT_OVERRIDES['MiniMax-M3']
+    expect(FILL_MODEL_TIMEOUT_OVERRIDES['glm-5.3']).toBeLessThan(
+      FILL_MODEL_TIMEOUT_OVERRIDES['MiniMax-M3.1-Flash-Preview']
     )
   })
 })

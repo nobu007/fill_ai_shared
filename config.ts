@@ -24,16 +24,20 @@ export const GEMINI_API_KEY = getEnv('GEMINI_API_KEY')
 export const GEMINI_THINKING_LEVEL = (getEnv('GEMINI_THINKING_LEVEL') as 'minimal' | 'low' | 'medium' | 'high') || 'high'
 export const ANTHROPIC_API_URL = getEnvWithDefault('ANTHROPIC_API_URL', 'https://api.anthropic.com/v1/messages')
 
-// ─── MiniMax LLM（fallback tail — Amendment #3）──────────────
+// ─── MiniMax LLM（デフォルト / fallback — openai互換エンドポイント）──
 export const MINIMAX_API_KEY = getEnv('MINIMAX_API_KEY')
 export const MINIMAX_BASE_URL = getEnvWithDefault('MINIMAX_BASE_URL', 'https://api.minimax.io/v1')
+export const MINIMAX_MODEL = getEnvWithDefault('MINIMAX_MODEL', 'MiniMax-M3.1-Flash-Preview')
+
+// ─── Google Gemini（fallback用・モデルIDは GEMINI_MODEL で制御）──
+export const GEMINI_MODEL = getEnvWithDefault('GEMINI_MODEL', 'gemini-3.8-flash')
 
 // ─── Default AI Model ───────────────────────────────────────
-export const DEFAULT_AI_MODEL = getEnvWithDefault('DEFAULT_AI_MODEL', 'glm-5-turbo')
+export const DEFAULT_AI_MODEL = getEnvWithDefault('DEFAULT_AI_MODEL', MINIMAX_MODEL)
 
 // ─── Quality Evaluation Settings ───────────────────────────
 /** LLM model used for quality evaluation benchmarks (§2.4 centralized config) */
-export const EVAL_MODEL = getEnvWithDefault('EVAL_MODEL', 'glm-5-turbo')
+export const EVAL_MODEL = getEnvWithDefault('EVAL_MODEL', 'glm-5.3')
 /** LLM model override for benchmark runner CLI */
 export const BENCHMARK_MODEL = getEnvWithDefault('BENCHMARK_MODEL', DEFAULT_AI_MODEL)
 
@@ -92,7 +96,7 @@ export const MAX_PDF_PAGES = getEnvNumber('MAX_PDF_PAGES', 50)
 export const FILL_MAPPING_TIMEOUT_MS = getEnvNumber('FILL_MAPPING_TIMEOUT_MS', 30000)
 export const FILL_VISION_LLM_TIMEOUT_MS = getEnvNumber('FILL_VISION_LLM_TIMEOUT_MS', 90000)
 /** VLM model for vision-based PDF field extraction */
-export const FILL_VISION_MODEL = getEnvWithDefault('FILL_VISION_MODEL', 'glm-4.6v-flash')
+export const FILL_VISION_MODEL = getEnvWithDefault('FILL_VISION_MODEL', 'glm-5.3-flash')
 /** Temperature for VLM field detection (low = deterministic) */
 export const FILL_VISION_TEMPERATURE = getEnvNumber('FILL_VISION_TEMPERATURE', 0.1)
 /** Max tokens for VLM field detection response */
@@ -252,15 +256,14 @@ export const FILL_PREVIEW_RENDER_SCALE = getEnvNumber(
  *
  * Default order — read top-to-bottom — tries each provider in sequence
  * until one succeeds:
- *   1. glm-5-turbo      (Z-AI primary, fast general model)
- *   2. glm-4.7-coding   (Z-AI secondary, slower but more accurate)
- *   3. glm-4.7-flash    (Z-AI tertiary, ultra-low latency)
- *   4. MiniMax-M3        (Amendment #3 fallback tail — Anthropic Messages API)
+ *   1. glm-5.2                    (Z-AI primary, stable anchor)
+ *   2. glm-5.3                    (Z-AI secondary, latest quality tier)
+ *   3. MiniMax-M3.1-Flash-Preview (fallback tail — OpenAI-compatible API)
  *
  * Override via `FILL_FALLBACK_MODELS` env var (comma-separated). The fallback
  * sequence is identical whether the override is set or the default applies.
  */
-export const FILL_FALLBACK_MODELS = (getEnv('FILL_FALLBACK_MODELS') || 'glm-5-turbo,glm-4.7-coding,glm-4.7-flash,MiniMax-M3').split(',').filter(Boolean)
+export const FILL_FALLBACK_MODELS = (getEnv('FILL_FALLBACK_MODELS') || 'glm-5.2,glm-5.3,MiniMax-M3.1-Flash-Preview').split(',').filter(Boolean)
 
 /**
  * Per-model LLM timeout overrides (ms) — Constitution §1.2 Stability.
@@ -272,7 +275,7 @@ export const FILL_FALLBACK_MODELS = (getEnv('FILL_FALLBACK_MODELS') || 'glm-5-tu
  *
  * Single source of truth — consumed by `src/lib/pdf/llm.ts` `resolveModelTimeout()`.
  * Override per-model via `FILL_MODEL_TIMEOUT_OVERRIDES` env var as a JSON object
- * (e.g. `{"MiniMax-M3": 25000}`).
+ * (e.g. `{"MiniMax-M3.1-Flash-Preview": 25000}`).
  */
 export const FILL_MODEL_TIMEOUT_OVERRIDES: Readonly<Record<string, number>> = (() => {
   const raw = getEnv('FILL_MODEL_TIMEOUT_OVERRIDES')
@@ -287,10 +290,9 @@ export const FILL_MODEL_TIMEOUT_OVERRIDES: Readonly<Record<string, number>> = ((
     }
   }
   return {
-    'glm-4.7-flash': 5_000,    // Ultra-low-latency: < 5s
-    'glm-5-turbo': 10_000,     // Fast general model: < 10s
-    'glm-4.7-coding': 15_000,  // Coding model: < 15s (slower but more accurate)
-    'MiniMax-M3': 20_000,      // Fallback tail: Anthropic Messages API, < 20s
+    'glm-5.2': 10_000,               // 安定アンカー: < 10s
+    'glm-5.3': 15_000,               // 高品質: < 15s
+    'MiniMax-M3.1-Flash-Preview': 20_000, // Fallback tail: < 20s
   }
 })()
 /** VLM compression threshold in KB — PDFs below this size skip JPEG compression */
@@ -479,8 +481,8 @@ export const UI_SYNC_MESSAGE_TIMEOUT_MS = getEnvNumber('UI_SYNC_MESSAGE_TIMEOUT_
 // to avoid circular dependencies with fill_ai_shared.
 
 // ─── LLM Fallback Settings ────────────────────────────────
-export const LLM_FALLBACK_STABLE_MODELS = (getEnv('LLM_FALLBACK_STABLE_MODELS') || 'glm-5-turbo').split(',').filter(Boolean)
-export const LLM_FALLBACK_DEFAULT_MODELS = (getEnv('LLM_FALLBACK_DEFAULT_MODELS') || 'glm-5-turbo,glm-4.7-flash').split(',').filter(Boolean)
+export const LLM_FALLBACK_STABLE_MODELS = (getEnv('LLM_FALLBACK_STABLE_MODELS') || 'glm-5.2').split(',').filter(Boolean)
+export const LLM_FALLBACK_DEFAULT_MODELS = (getEnv('LLM_FALLBACK_DEFAULT_MODELS') || 'glm-5.2,glm-5.3').split(',').filter(Boolean)
 export const LLM_FALLBACK_CHAIN: Record<string, string[]> = (() => {
   try {
     const raw = getEnv('LLM_FALLBACK_CHAIN')
@@ -494,47 +496,29 @@ export const LLM_FALLBACK_CHAIN: Record<string, string[]> = (() => {
 // BYOKユーザー向けのコスト最適化フォールバックチェーン
 // 安定モデルでもここに明示的に定義されたチェーンを使用
 export const COST_OPTIMIZED_FALLBACK_CHAIN: Record<string, string[]> = {
-  // 安定モデル：glm-5-turbo のフォールバックチェーン（便宜順）
-  'glm-5-turbo': [
-    'glm-4.7-flash',      // 最安価 (low-tier)
-    'glm-4.7-coding',     // 中価値 (mid-tier)
-    'glm-4.7',           // 高品質 (mid-tier)
-    'glm-4.6',           // 代替 (mid-tier)
-    'gemini-3.1-flash-lite', // 高価値 (high-tier) - 最後の手段
+  // proxy 'default' ポリシー踏襲: MiniMax主体 → glm-5.2 安定アンカー
+  [MINIMAX_MODEL]: [
+    'glm-5.2',
+    'glm-5.3',
   ],
-  // glm-5 系列のフォールバックチェーン
-  'glm-5': [
-    'glm-4.7-flash',      // 最安価
-    'glm-4.7-coding',     // 中価値
-    'glm-4.7',           // 高品質
-    'glm-4.6',           // 代替
-    'glm-5-turbo',       // 同系列の安定モデル
+  'glm-5.2': [
+    MINIMAX_MODEL,       // proxy: glm-5.2 → minimax-m3.1 相互フォールバック
+    'glm-5.3',
   ],
-  // glm-4.7 系列のフォールバックチェーン
-  'glm-4.7': [
-    'glm-4.7-flash',     // 安価な代替
-    'glm-4.7-coding',    // コーディング向け
-    'glm-4.6',           // 安定した代替
-    'glm-4.5-air',       // 最も安価
+  'glm-5.3': [
+    'glm-5.2',
+    MINIMAX_MODEL,
   ],
-  // 軽量モデルのフォールバックチェーン
-  'glm-4.7-flash': [
-    'glm-4.5-air',       // 最も安価
-    'glm-4.7-coding',    // より高価だが信頼性の高い代替
+  // Geminiモデルのフォールバックチェーン
+  [GEMINI_MODEL]: [
+    'glm-5.2',
+    'glm-5.3',
   ],
-  // ジェミニモデルのフォールバックチェーン
-  'gemini-3.1-flash-lite': [
-    'glm-5-turbo',       // 安定した代替（ZAI API経由）
-    'glm-4.7-flash',     // 安価な代替
-  ],
-  // デフォルトのBYOKフォールバックチェーン（コスト順）
+  // デフォルトのBYOKフォールバックチェーン
   'default-byok': [
-    'glm-4.7-flash',     // 最安価
-    'glm-4.7-coding',    // 中価値
-    'glm-4.7',          // 高品質
-    'glm-4.6',          // 代替
-    'glm-5-turbo',      // 安定モデル
-    'glm-4.5-air',      // 最も安価
+    'glm-5.2',
+    'glm-5.3',
+    MINIMAX_MODEL,
   ]
 }
 
@@ -1479,16 +1463,14 @@ export const PROVIDER_MODELS: Record<string, ProviderModelOption[]> = {
     { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
   ],
   gemini: [
-    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash' },
-    { value: 'gemini-2.5-pro', label: 'Gemini 2.5 Pro' },
-    { value: 'gemini-2.0-flash', label: 'Gemini 2.0 Flash' },
+    { value: GEMINI_MODEL, label: 'Gemini 3.8 Flash' },
   ],
 }
 
 export const DEFAULT_PROVIDER_MODEL: Record<string, string> = {
   openai: 'gpt-4.1-mini',
   claude: 'claude-sonnet-4-20250514',
-  gemini: 'gemini-2.5-flash',
+  gemini: GEMINI_MODEL,
 }
 
 export const PROVIDER_LABELS: Record<string, string> = {

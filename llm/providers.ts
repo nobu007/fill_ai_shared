@@ -2,9 +2,9 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import {
   ZAI_API_URL, ZAI_API_KEY, DEFAULT_AI_MODEL,
-  MINIMAX_API_KEY, MINIMAX_BASE_URL,
+  MINIMAX_API_KEY, MINIMAX_BASE_URL, MINIMAX_MODEL,
   PORTKEY_API_KEY, PORTKEY_GATEWAY_URL, PORTKEY_CONFIG_SLUG,
-  GEMINI_API_KEY, GEMINI_THINKING_LEVEL,
+  GEMINI_API_KEY, GEMINI_MODEL, GEMINI_THINKING_LEVEL,
 } from '../config'
 import { logger } from '../lib/logger'
 import { getCacheProvider } from '../lib/llm-cache-stats'
@@ -34,11 +34,11 @@ function getZaiProvider(portkeyConfig?: { provider: string; virtualKey: string }
 }
 
 function getMinimaxProvider(apiKey: string) {
+  // MiniMax は OpenAI 互換エンドポイント（api.minimax.io/v1）で提供される
   return createOpenAICompatible({
-    name: 'minimax-anthropic',
+    name: 'minimax',
     baseURL: MINIMAX_BASE_URL,
     apiKey,
-    headers: { 'anthropic-version': '2023-06-01' },
   })
 }
 
@@ -102,18 +102,13 @@ export interface ModelInfo {
 }
 
 export const MODELS: Record<string, ModelInfo> = {
-  // Z-AI General & Coding API（共通）
-  'glm-5-turbo': { provider: 'zai_general', modelId: 'glm-5-turbo', tier: 'high', supportsThinking: true, portkeyProvider: 'zai_coding' },
-  'glm-5':       { provider: 'zai_general', modelId: 'glm-5',       tier: 'high', supportsThinking: true, portkeyProvider: 'zai_coding' },
-  'glm-4.7':     { provider: 'zai_general', modelId: 'glm-4.7',     tier: 'mid',  supportsThinking: true, portkeyProvider: 'zai_coding' },
-  'glm-4.6':     { provider: 'zai_general', modelId: 'glm-4.6',     tier: 'mid',  supportsThinking: true, portkeyProvider: 'zai_coding' },
-  'glm-4.5-air': { provider: 'zai_general', modelId: 'glm-4.5-air', tier: 'low',  supportsThinking: true, portkeyProvider: 'zai_coding' },
-  'glm-4.7-coding': { provider: 'zai_general', modelId: 'glm-4.7-coding', tier: 'mid', supportsThinking: true, portkeyProvider: 'zai_coding' },
-  'glm-4.7-flash': { provider: 'zai_general', modelId: 'glm-4.7-flash', tier: 'low', supportsThinking: true, portkeyProvider: 'zai_coding' },
-  // MiniMax-M3 uses the Anthropic Messages API as the fallback tail.
-  'MiniMax-M3': { provider: 'minimax', modelId: 'MiniMax-M3', tier: 'mid', supportsThinking: false },
-  // Google Gemini（fallback用）
-  'gemini-3.1-flash-lite': { provider: 'gemini', modelId: 'gemini-3.1-flash-lite-preview', tier: 'high', supportsThinking: true, thinkingLevel: GEMINI_THINKING_LEVEL, portkeyProvider: 'google' },
+  // Z-AI（フォールバック主力・openai互換）
+  'glm-5.2': { provider: 'zai_general', modelId: 'glm-5.2', tier: 'high', supportsThinking: true, portkeyProvider: 'zai_coding' },
+  'glm-5.3': { provider: 'zai_general', modelId: 'glm-5.3', tier: 'high', supportsThinking: true, portkeyProvider: 'zai_coding' },
+  // MiniMax（デフォルト・思考常時ON）
+  [MINIMAX_MODEL]: { provider: 'minimax', modelId: MINIMAX_MODEL, tier: 'mid', supportsThinking: true },
+  // Google Gemini（fallback用・モデルIDは GEMINI_MODEL で制御）
+  [GEMINI_MODEL]: { provider: 'gemini', modelId: GEMINI_MODEL, tier: 'high', supportsThinking: true, thinkingLevel: GEMINI_THINKING_LEVEL, portkeyProvider: 'google' },
 }
 
 export function getModelInfo(modelId: string): ModelInfo | undefined {
@@ -189,7 +184,7 @@ export function getAiSdkModel(modelId: string, userApiKey?: string) {
 
   if (info.provider === 'minimax') {
     if (!MINIMAX_API_KEY) {
-      throw new Error('MINIMAX_API_KEY not set for MiniMax-M3')
+      throw new Error(`MINIMAX_API_KEY not set for ${MINIMAX_MODEL}`)
     }
     return getMinimaxProvider(MINIMAX_API_KEY)(info.modelId)
   }
@@ -218,11 +213,13 @@ export function getAvailableModels(): Array<{
 
   if (hasZaiKey) {
     models.push(
-      { id: 'glm-5-turbo', provider: 'zai', label: 'GLM-5 Turbo', desc: '高品質・高速（Z-AI）', tier: 'high', localOnly: false },
-      { id: 'glm-5',       provider: 'zai', label: 'GLM-5',       desc: '高品質（Z-AI）', tier: 'high', localOnly: false },
-      { id: 'glm-4.7',     provider: 'zai', label: 'GLM-4.7',     desc: 'バランス（Z-AI）', tier: 'mid', localOnly: false },
-      { id: 'glm-4.6',     provider: 'zai', label: 'GLM-4.6',     desc: '標準（Z-AI）', tier: 'mid', localOnly: false },
-      { id: 'glm-4.5-air', provider: 'zai', label: 'GLM-4.5 Air', desc: '軽量・高速（Z-AI）', tier: 'low', localOnly: false },
+      { id: 'glm-5.2', provider: 'zai', label: 'GLM-5.2', desc: '安定・高品質（Z-AI）', tier: 'high', localOnly: false },
+      { id: 'glm-5.3', provider: 'zai', label: 'GLM-5.3', desc: '最新・高品質（Z-AI）', tier: 'high', localOnly: false },
+    )
+  }
+  if (MINIMAX_API_KEY) {
+    models.push(
+      { id: MINIMAX_MODEL, provider: 'minimax', label: 'MiniMax M3.1 Flash', desc: 'デフォルト・高速（MiniMax）', tier: 'mid', localOnly: false },
     )
   }
   return models

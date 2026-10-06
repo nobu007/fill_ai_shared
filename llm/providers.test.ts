@@ -24,8 +24,10 @@ const mockConfig = vi.hoisted(() => ({
   zaiApiKey: '',
   minimaxApiKey: '',
   minimaxBaseUrl: 'https://api.minimax.test/v1',
+  minimaxModel: 'MiniMax-M3.1-Flash-Preview',
   geminiApiKey: '',
-  defaultAiModel: 'glm-5-turbo',
+  geminiModel: 'gemini-3.8-flash',
+  defaultAiModel: 'MiniMax-M3.1-Flash-Preview',
   geminiThinkingLevel: 'high' as string,
 }))
 
@@ -56,11 +58,13 @@ vi.mock('../config', () => ({
   get ZAI_API_KEY() { return mockConfig.zaiApiKey },
   get MINIMAX_API_KEY() { return mockConfig.minimaxApiKey },
   get MINIMAX_BASE_URL() { return mockConfig.minimaxBaseUrl },
+  get MINIMAX_MODEL() { return mockConfig.minimaxModel },
   get DEFAULT_AI_MODEL() { return mockConfig.defaultAiModel },
   get PORTKEY_API_KEY() { return mockConfig.portkeyApiKey },
   get PORTKEY_GATEWAY_URL() { return mockConfig.portkeyGatewayUrl },
   get PORTKEY_CONFIG_SLUG() { return mockConfig.portkeyConfigSlug },
   get GEMINI_API_KEY() { return mockConfig.geminiApiKey },
+  get GEMINI_MODEL() { return mockConfig.geminiModel },
   get GEMINI_THINKING_LEVEL() { return mockConfig.geminiThinkingLevel },
 }))
 
@@ -80,7 +84,9 @@ describe('providers', () => {
     mockConfig.minimaxApiKey = ''
     mockConfig.minimaxBaseUrl = 'https://api.minimax.test/v1'
     mockConfig.geminiApiKey = ''
-    mockConfig.defaultAiModel = 'glm-5-turbo'
+    mockConfig.geminiModel = 'gemini-3.8-flash'
+    mockConfig.minimaxModel = 'MiniMax-M3.1-Flash-Preview'
+    mockConfig.defaultAiModel = 'MiniMax-M3.1-Flash-Preview'
     mockConfig.geminiThinkingLevel = 'high'
     // Reset environment variables (used by resolvePortkeyConfig which reads process.env directly)
     delete process.env.PORTKEY_API_KEY
@@ -112,10 +118,10 @@ describe('providers', () => {
 
   describe('getModelInfo', () => {
     it('should return model info for known model', () => {
-      const info = getModelInfo('glm-5-turbo')
+      const info = getModelInfo('glm-5.2')
       expect(info).toEqual({
         provider: 'zai_general',
-        modelId: 'glm-5-turbo',
+        modelId: 'glm-5.2',
         tier: 'high',
         supportsThinking: true,
         portkeyProvider: 'zai_coding'
@@ -130,9 +136,8 @@ describe('providers', () => {
 
   describe('getModelTier', () => {
     it('should return correct tier for known models', () => {
-      expect(getModelTier('glm-5-turbo')).toBe('high')
-      expect(getModelTier('glm-4.7')).toBe('mid')
-      expect(getModelTier('glm-4.5-air')).toBe('low')
+      expect(getModelTier('glm-5.2')).toBe('high')
+      expect(getModelTier('MiniMax-M3.1-Flash-Preview')).toBe('mid')
     })
 
     it('should return low tier for unknown model', () => {
@@ -244,27 +249,27 @@ describe('providers', () => {
   })
 
   describe('MODELS', () => {
-    it('should register MiniMax-M3 as the Anthropic Messages API fallback model', () => {
-      expect(MODELS['MiniMax-M3']).toEqual({
+    it('should register the MiniMax default model (OpenAI-compatible endpoint)', () => {
+      expect(MODELS['MiniMax-M3.1-Flash-Preview']).toEqual({
         provider: 'minimax',
-        modelId: 'MiniMax-M3',
+        modelId: 'MiniMax-M3.1-Flash-Preview',
         tier: 'mid',
-        supportsThinking: false,
+        supportsThinking: true,
       })
     })
 
     it('should have correct model definitions', () => {
-      expect(MODELS['glm-5-turbo']).toEqual({
+      expect(MODELS['glm-5.2']).toEqual({
         provider: 'zai_general',
-        modelId: 'glm-5-turbo',
+        modelId: 'glm-5.2',
         tier: 'high',
         supportsThinking: true,
         portkeyProvider: 'zai_coding'
       })
 
-      expect(MODELS['gemini-3.1-flash-lite']).toEqual({
+      expect(MODELS['gemini-3.8-flash']).toEqual({
         provider: 'gemini',
-        modelId: 'gemini-3.1-flash-lite-preview',
+        modelId: 'gemini-3.8-flash',
         tier: 'high',
         supportsThinking: true,
         thinkingLevel: 'high',
@@ -274,45 +279,39 @@ describe('providers', () => {
   })
 
   describe('getAiSdkModel', () => {
-    // --- MiniMax fallback paths ---
+    // --- MiniMax default paths ---
 
-    it('should use MiniMax server key with the Anthropic Messages API base URL', () => {
+    it('should use MiniMax server key with the OpenAI-compatible base URL', () => {
       mockConfig.minimaxApiKey = 'minimax-server-key'
 
-      const result = getAiSdkModel('MiniMax-M3')
+      const result = getAiSdkModel('MiniMax-M3.1-Flash-Preview')
 
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: 'minimax-anthropic',
+          name: 'minimax',
           baseURL: 'https://api.minimax.test/v1',
           apiKey: 'minimax-server-key',
-          headers: expect.objectContaining({
-            'anthropic-version': '2023-06-01',
-          }),
         })
       )
     })
 
-    it('should throw when MiniMax-M3 is requested without MINIMAX_API_KEY', () => {
+    it('should throw when MiniMax model is requested without MINIMAX_API_KEY', () => {
       mockConfig.minimaxApiKey = ''
-      expect(() => getAiSdkModel('MiniMax-M3')).toThrow('MINIMAX_API_KEY not set for MiniMax-M3')
+      expect(() => getAiSdkModel('MiniMax-M3.1-Flash-Preview')).toThrow('MINIMAX_API_KEY not set for MiniMax-M3.1-Flash-Preview')
     })
 
-    it('should use a valid BYOK key for MiniMax with Anthropic headers', () => {
+    it('should use a valid BYOK key for MiniMax', () => {
       const userKey = 'valid-minimax-key-1234567890'
 
-      const result = getAiSdkModel('MiniMax-M3', userKey)
+      const result = getAiSdkModel('MiniMax-M3.1-Flash-Preview', userKey)
 
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: 'minimax-anthropic',
+          name: 'minimax',
           baseURL: 'https://api.minimax.test/v1',
           apiKey: 'valid-minimax-key-1234567890',
-          headers: expect.objectContaining({
-            'anthropic-version': '2023-06-01',
-          }),
         })
       )
     })
@@ -320,7 +319,7 @@ describe('providers', () => {
     // --- Default ZAI paths (no BYOK, no Portkey) ---
 
     it('should return ZAI model for known modelId without BYOK or Portkey', () => {
-      const result = getAiSdkModel('glm-5-turbo')
+      const result = getAiSdkModel('glm-5.2')
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -330,8 +329,8 @@ describe('providers', () => {
       )
     })
 
-    it('should use ZAI provider for mid-tier model without Portkey', () => {
-      const result = getAiSdkModel('glm-4.7')
+    it('should use ZAI provider for other ZAI model without Portkey', () => {
+      const result = getAiSdkModel('glm-5.3')
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({ name: 'zai-general' })
@@ -346,7 +345,7 @@ describe('providers', () => {
       process.env.PORTKEY_VIRTUAL_KEY_ZAI_CODING = 'vk-zai'
       process.env.PORTKEY_PROVIDER_NAME_ZAI_CODING = 'zai_coding'
 
-      const result = getAiSdkModel('glm-5-turbo')
+      const result = getAiSdkModel('glm-5.2')
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -364,7 +363,7 @@ describe('providers', () => {
       process.env.PORTKEY_VIRTUAL_KEY_GOOGLE = 'vk-google'
       process.env.PORTKEY_PROVIDER_NAME_GOOGLE = 'google'
 
-      const result = getAiSdkModel('gemini-3.1-flash-lite')
+      const result = getAiSdkModel('gemini-3.8-flash')
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -379,7 +378,7 @@ describe('providers', () => {
     it('should use Gemini server key when GEMINI_API_KEY is set', () => {
       mockConfig.geminiApiKey = 'gemini-test-key'
 
-      const result = getAiSdkModel('gemini-3.1-flash-lite')
+      const result = getAiSdkModel('gemini-3.8-flash')
       expect(result).toBe('mock-gemini')
       expect(mockCreateGemini).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -391,7 +390,7 @@ describe('providers', () => {
     it('should fallback to ZAI when GEMINI_API_KEY is not set for Gemini model', () => {
       mockConfig.geminiApiKey = ''
 
-      const result = getAiSdkModel('gemini-3.1-flash-lite')
+      const result = getAiSdkModel('gemini-3.8-flash')
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalled()
       expect(logger.warn).toHaveBeenCalledWith(
@@ -404,7 +403,7 @@ describe('providers', () => {
 
     it('should use BYOK key for Gemini model with thinkingConfig', () => {
       const userKey = 'valid-gemini-key-1234567890'
-      const result = getAiSdkModel('gemini-3.1-flash-lite', userKey)
+      const result = getAiSdkModel('gemini-3.8-flash', userKey)
       expect(result).toBe('mock-gemini')
       expect(mockCreateGemini).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -416,11 +415,11 @@ describe('providers', () => {
 
     it('should use BYOK key for ZAI model (default provider case)', () => {
       const userKey = 'valid-zai-key-12345678901'
-      const result = getAiSdkModel('glm-4.7', userKey)
+      const result = getAiSdkModel('glm-5.3', userKey)
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: 'byok-glm-4.7',
+          name: 'byok-glm-5.3',
           baseURL: 'https://api.example.com',
           apiKey: userKey,
         })
@@ -429,18 +428,19 @@ describe('providers', () => {
 
     it('should warn and fall back to default for short BYOK key (< 20 chars)', () => {
       const shortKey = 'tooshort'
-      const result = getAiSdkModel('glm-5-turbo', shortKey)
+      const result = getAiSdkModel('glm-5.2', shortKey)
       expect(result).toBe('mock-model')
       expect(logger.warn).toHaveBeenCalledWith(
         'providers',
         expect.stringContaining('too short'),
-        expect.objectContaining({ modelId: 'glm-5-turbo' })
+        expect.objectContaining({ modelId: 'glm-5.2' })
       )
     })
 
     // --- Unknown model fallback ---
 
     it('should fallback to DEFAULT_AI_MODEL for unknown modelId', () => {
+      mockConfig.defaultAiModel = 'glm-5.2'
       const result = getAiSdkModel('unknown-model-xyz')
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalledWith(
@@ -461,9 +461,9 @@ describe('providers', () => {
       // Note: MODELS is a module-level constant. Its thinkingLevel is set from
       // GEMINI_THINKING_LEVEL at module load time. Changing the mock after
       // load has no effect on existing MODELS entries.
-      // gemini-3.1-flash-lite has thinkingLevel: 'high' in MODELS.
+      // gemini-3.8-flash has thinkingLevel: 'high' in MODELS.
       const userKey = 'valid-gemini-key-1234567890'
-      const result = getAiSdkModel('gemini-3.1-flash-lite', userKey)
+      const result = getAiSdkModel('gemini-3.8-flash', userKey)
       expect(result).toBe('mock-gemini')
       expect(mockCreateGemini).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -476,11 +476,11 @@ describe('providers', () => {
 
     it('should handle BYOK default case for zai_general provider', () => {
       const userKey = 'valid-zai-key-12345678901'
-      const result = getAiSdkModel('glm-5', userKey)
+      const result = getAiSdkModel('glm-5.2', userKey)
       expect(result).toBe('mock-model')
       expect(mockCreateOpenAI).toHaveBeenCalledWith(
         expect.objectContaining({
-          name: 'byok-glm-5',
+          name: 'byok-glm-5.2',
           apiKey: userKey,
         })
       )
